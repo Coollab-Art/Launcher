@@ -71,9 +71,9 @@ target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json CURL::libcurl miniz)
 
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE Lab/Cool/lib/stringify/lib/fmt)
+add_subdirectory(Lab/Cool/lib/stringify/lib/fmt)
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${CMAKE_SOURCE_DIR}/Cool/lib/expected/include)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE Lab/Cool/lib/expected/include)
 
 # ---------------------
 # ---CPack---
@@ -94,8 +94,8 @@ endif()
 set(CPACK_PACKAGE_NAME "Coollab-Launcher")
 set(CPACK_PACKAGE_VERSION "${COOLLAB_VERSION}")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Coollab") # Don't put this in a Coollab parent folder. In NSIS this messes up the install and prevents our app to appear in "Apps and Features" to uninstall it for example.
-set(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}/app-resources${SEP}installer_banner.bmp") # Seems like it has to be .bmp, at least for NSIS. NB: if there is any transparency in the image, NSIS won't be able to render it at all. Exporting a fully opaque .bmp from Paint.net works. 150x57 pixels is the ideal size to avoid uggly downscale artifacts.
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}${SEP}LICENSE.txt")
+set(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}${SEP}Lab${SEP}app-resources${SEP}installer_banner.bmp") # Seems like it has to be .bmp, at least for NSIS. NB: if there is any transparency in the image, NSIS won't be able to render it at all. Exporting a fully opaque .bmp from Paint.net works. 150x57 pixels is the ideal size to avoid uggly downscale artifacts.
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}${SEP}Lab${SEP}LICENSE.txt")
 set(CPACK_PACKAGE_VENDOR "Coollab")
 set(CPACK_PACKAGE_EXECUTABLES "Coollab-Launcher" "Coollab") # Creates Start Menu shortcuts
 set(CPACK_PACKAGE_CONTACT "coollab.lib@gmail.com")
@@ -115,7 +115,7 @@ set(CPACK_PACKAGE_FILE_NAME "Coollab-Launcher-${OS_NAME}")
 
 # NSIS specifics
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
-set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\Coollab.exe")
+set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\Coollab.exe") # TODO(Launcher)
 
 # .coollab extension
 # --- Windows
@@ -139,8 +139,8 @@ set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
 
 # MacOS Bundle specifics
 set(CPACK_BUNDLE_NAME "Coollab")
-set(CPACK_BUNDLE_PLIST "${CMAKE_SOURCE_DIR}/app-resources/Info.plist")
-set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/app-resources/icon.icns")
+set(CPACK_BUNDLE_PLIST "${CMAKE_SOURCE_DIR}/Lab/app-resources/Info.plist")
+set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/Lab/app-resources/icon.icns")
 
 #
 include(CPack)

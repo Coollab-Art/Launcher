@@ -2,6 +2,7 @@
 
 #include <sys/stat.h>
 #include <vector>
+#include <string>
 
 // Callback function to write data to a file
 auto write_memory_callback(void *contents, size_t size, size_t nmemb,

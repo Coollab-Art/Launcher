@@ -35,7 +35,7 @@ jobs:
           - {
               name: MacOS,
               os: macos-latest,
-              cmake_configure_args: -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -G Ninja -D OPENSSL_ROOT_DIR=/usr/local/opt/openssl -D OPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include,
+              cmake_configure_args: -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -G Ninja -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib,
               cpack_generator: Bundle,
               installer_name: Coollab-Launcher-Mac.dmg,
             }
@@ -57,6 +57,11 @@ jobs:
         uses: hendrikmuhs/ccache-action@main
         with:
           key: ${{matrix.config.name}} Clang-Release # Key name should match the one used in build_and_run_tests.yml so that we can reuse its cache.
+
+      - name: Install MacOS dependencies
+        if: runner.os == 'MacOS'
+        run: |
+          brew install openssl
 
       - name: Build
         uses: lukka/run-cmake@v3

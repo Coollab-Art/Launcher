@@ -1,5 +1,4 @@
 #include <curl/curl.h>
-#include <string_view>
 #include <tl/expected.hpp>
 
 #include "release.hpp"

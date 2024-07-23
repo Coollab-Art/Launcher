@@ -1,5 +1,6 @@
 #pragma once
 #include <nlohmann/json.hpp>
+#include <string_view>
 #include <tl/expected.hpp>
 
 using json = nlohmann::json;

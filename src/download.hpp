@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <string_view>
 #include <tl/expected.hpp>
 #include "nlohmann/json.hpp"
 

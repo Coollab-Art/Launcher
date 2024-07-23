@@ -1,4 +1,5 @@
 #include "extractor.hpp"
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -22,11 +23,15 @@ auto extract_zip(const std::vector<char>& zip, std::string_view const& version) 
     for (int i = 0; i < num_files; ++i)
     {
         mz_zip_archive_file_stat file_stat;
+
         if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
         {
             std::cerr << "Failed to get file info for index " << i << std::endl;
             continue;
         }
+        
+        if (file_stat.m_is_directory)
+            continue;
 
         const char* name = file_stat.m_filename;
         if (name && std::string(name).find("_MACOSX") != std::string::npos)
@@ -60,10 +65,6 @@ auto extract_zip(const std::vector<char>& zip, std::string_view const& version) 
 #endif
 
         std::cout << "Created file: " << full_path << std::endl;
-
-        mz_zip_reader_end(&zip_archive);
-        return;
     }
-
     mz_zip_reader_end(&zip_archive);
 }

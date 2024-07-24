@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(Coollab-Launcher)
+project(Coollab)
 add_executable(${PROJECT_NAME})
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
@@ -86,13 +86,13 @@ else()
 endif()
 
 # Installer Info
-set(CPACK_PACKAGE_NAME "Coollab-Launcher")
+set(CPACK_PACKAGE_NAME "Coollab")
 set(CPACK_PACKAGE_VERSION "${COOLLAB_VERSION}")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Coollab-Launcher") # Don't put this in a Coollab parent folder. In NSIS this messes up the install and prevents our app to appear in "Apps and Features" to uninstall it for example.
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Coollab") # Don't put this in a Coollab parent folder. In NSIS this messes up the install and prevents our app to appear in "Apps and Features" to uninstall it for example.
 set(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}${SEP}Lab${SEP}app-resources${SEP}installer_banner.bmp") # Seems like it has to be .bmp, at least for NSIS. NB: if there is any transparency in the image, NSIS won't be able to render it at all. Exporting a fully opaque .bmp from Paint.net works. 150x57 pixels is the ideal size to avoid uggly downscale artifacts.
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}${SEP}Lab${SEP}LICENSE.txt")
 set(CPACK_PACKAGE_VENDOR "Coollab")
-set(CPACK_PACKAGE_EXECUTABLES "Coollab-Launcher" "Coollab-Launcher") # Creates Start Menu shortcuts
+set(CPACK_PACKAGE_EXECUTABLES "Coollab" "Coollab") # Creates Start Menu shortcuts
 set(CPACK_PACKAGE_CONTACT "coollab.lib@gmail.com")
 
 # TODO(Launcher) Quand on désinsrtalle le launchze, déqinstaller toutes les vrsions de coollab
@@ -106,7 +106,7 @@ else()
     set(OS_NAME "Linux")
 endif()
 
-set(CPACK_PACKAGE_FILE_NAME "Coollab-Launcher-${OS_NAME}")
+set(CPACK_PACKAGE_FILE_NAME "Coollab-${OS_NAME}")
 
 # NSIS specifics
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
@@ -119,11 +119,11 @@ set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
     WriteRegStr HKCR 'CoollabFile' '' 'Coollab File'
     WriteRegStr HKCR 'CoollabFile\\\\shell' '' 'open'
     WriteRegStr HKCR 'CoollabFile\\\\DefaultIcon' \\\\
-    '' '$INSTDIR\\\\bin\\\\coollab-launcher.exe,0'
+    '' '$INSTDIR\\\\bin\\\\Coollab.exe,0'
     WriteRegStr HKCR 'CoollabFile\\\\shell\\\\open\\\\command' \\\\
-    '' '$INSTDIR\\\\bin\\\\coollab-launcher.exe \\\"%1\\\"'
+    '' '$INSTDIR\\\\bin\\\\Coollab.exe \\\"%1\\\"'
     WriteRegStr HKCR 'CoollabFile\\\\shell\\\\edit\\\\command' \\\\
-    '' '$INSTDIR\\\\bin\\\\coollab-launcher.exe \\\"%1\\\"'
+    '' '$INSTDIR\\\\bin\\\\Coollab.exe \\\"%1\\\"'
     System::Call \\\\
     'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
 ")
@@ -133,7 +133,7 @@ set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
 ")
 
 # MacOS Bundle specifics
-set(CPACK_BUNDLE_NAME "Coollab-Launcher")
+set(CPACK_BUNDLE_NAME "Coollab")
 set(CPACK_BUNDLE_PLIST "${CMAKE_SOURCE_DIR}/Lab/app-resources/Info.plist")
 set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/Lab/app-resources/icon.icns")
 

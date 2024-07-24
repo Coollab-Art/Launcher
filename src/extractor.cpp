@@ -2,7 +2,9 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <vector>
+#include "fmt/core.h"
 #include "miniz.h"
 #include "utils.hpp"
 
@@ -13,11 +15,14 @@ auto extract_zip(const std::vector<char>& zip, std::string_view const& version) 
     mz_zip_archive zip_archive;
     memset(&zip_archive, 0, sizeof(zip_archive));
 
-    mz_zip_reader_init_mem(&zip_archive, zip.data(), zip.size(), 0);
+    if (!mz_zip_reader_init_mem(&zip_archive, zip.data(), zip.size(), 0))
+        throw std::runtime_error{fmt::format("Failed to unzip: {}", mz_zip_get_error_string(mz_zip_get_last_error(&zip_archive)))};
 
     std::filesystem::path parent_folder = get_PATH() / std::string(version);
     if (!fs::exists(parent_folder))
         fs::create_directories(parent_folder);
+
+    assert(fs::exists(parent_folder));
 
     int num_files = mz_zip_reader_get_num_files(&zip_archive);
     for (int i = 0; i < num_files; ++i)

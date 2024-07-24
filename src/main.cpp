@@ -4,6 +4,7 @@
 #include "download.hpp"
 #include "extractor.hpp"
 #include "release.hpp"
+#include "utils.hpp"
 
 auto main() -> int
 {
@@ -25,7 +26,7 @@ auto main() -> int
             std::cout << "✅ Coollab " << requested_version << " is installed! ";
         }
         else
-            std::cout << "❌ Coollab " << requested_version << " is already installed." << std::endl;
+            std::cout << "❌ Coollab " << requested_version << " is already installed in : " << get_PATH() << std::endl;
     }
     catch (const std::exception& e)
     {

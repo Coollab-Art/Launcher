@@ -15,7 +15,7 @@ auto extract_zip(const std::vector<char>& zip, std::string_view const& version) 
 
     mz_zip_reader_init_mem(&zip_archive, zip.data(), zip.size(), 0);
 
-    std::string parent_folder = get_PATH() + std::string(version);
+    std::filesystem::path parent_folder = get_PATH() / std::string(version);
     if (!fs::exists(parent_folder))
         fs::create_directories(parent_folder);
 
@@ -29,7 +29,7 @@ auto extract_zip(const std::vector<char>& zip, std::string_view const& version) 
             std::cerr << "Failed to get file info for index " << i << std::endl;
             continue;
         }
-        
+
         if (file_stat.m_is_directory)
             continue;
 
@@ -39,7 +39,7 @@ auto extract_zip(const std::vector<char>& zip, std::string_view const& version) 
             continue;
         }
 
-        std::string full_path = parent_folder + "/" + name;
+        std::filesystem::path full_path = parent_folder / name;
 
         fs::create_directories(fs::path(full_path).parent_path());
 

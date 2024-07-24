@@ -1,5 +1,6 @@
-#include <cstddef>
 #include "utils.hpp"
+#include <cstddef>
+#include "exe_path/exe_path.h"
 
 // Vérifier les permissions sur le dossier /Applications
 
@@ -32,15 +33,7 @@ auto get_OS() -> std::string
 #endif
 }
 
-auto get_PATH() -> std::string
+auto get_PATH() -> std::filesystem::path
 {
-#ifdef __APPLE__
-    return "/Applications/Coollab/";
-#elif defined(_WIN32)
-    return "C:\\Program Files\\Coolab\\";
-#elif defined(__linux__)
-    return "/usr/local/Coollab/";
-#else
-    static_assert(false);
-#endif
+    return exe_path::user_data() / "Coollab-Launcher";
 }

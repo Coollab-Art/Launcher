@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sys/stat.h>
+#include <filesystem>
 #include <vector>
 #include <string>
 
@@ -12,4 +13,4 @@ auto string_write_callback(void *ptr, size_t size, size_t nmemb,
 
 //get the OS
 auto get_OS() -> std::string;
-auto get_PATH() -> std::string;
+auto get_PATH() -> std::filesystem::path;

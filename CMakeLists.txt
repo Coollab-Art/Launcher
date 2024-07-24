@@ -32,20 +32,12 @@ include(FetchContent)
 # Make sure we link the static version
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static library" FORCE)
 set(BULD_STATIC_LIBS ON CACHE BOOL "" FORCE)
-set(CURL_STATICLIB ON CACHE BOOL "" FORCE)
-set(CURL_ZLIB OFF CACHE BOOL "" FORCE)
 
 # JSON
 FetchContent_Declare(
     json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
     GIT_TAG v3.11.3
-)
-
-# CURL
-FetchContent_Declare(
-    curl
-    URL https://curl.se/download/curl-7.80.0.tar.gz
 )
 
 # MINIZ
@@ -59,9 +51,6 @@ FetchContent_Declare(
 # Get and build JSON
 FetchContent_MakeAvailable(json)
 
-# Get and build CURL
-FetchContent_MakeAvailable(curl)
-
 FetchContent_MakeAvailable(miniz)
 
 # # Grab all the source files
@@ -69,11 +58,17 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json CURL::libcurl miniz)
+target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json miniz)
 
 add_subdirectory(Lab/Cool/lib/stringify/lib/fmt)
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+add_subdirectory(Lab/lib/cpp-httplib)
+target_link_libraries(${PROJECT_NAME} PRIVATE httplib)
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE Lab/Cool/lib/expected/include)
+
+# exe_path
+add_subdirectory(Lab/Cool/lib/exe_path)
+target_link_libraries(${PROJECT_NAME} PRIVATE exe_path::exe_path)
 
 # ---------------------
 # ---CPack---

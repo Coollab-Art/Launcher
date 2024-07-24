@@ -13,4 +13,4 @@ auto install_ffmpeg() -> void;
 // check if Coollab version is already installed
 auto coollab_version_is_installed(std::string_view const& version) -> bool;
 // download zip and return it
-auto download_zip(nlohmann::basic_json<> const& release) -> tl::expected<std::vector<char>, std::string>;
+auto download_zip(nlohmann::basic_json<> const& release) -> tl::expected<std::string, std::string>;

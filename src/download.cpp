@@ -10,7 +10,7 @@
 namespace fs = std::filesystem;
 
 // download file from url
-auto download_zip(nlohmann::json const& release) -> tl::expected<std::vector<char>, std::string>
+auto download_zip(nlohmann::json const& release) -> tl::expected<std::string, std::string>
 {
     std::string     url = "https://github.com";
     httplib::Client cli(url);
@@ -20,11 +20,7 @@ auto download_zip(nlohmann::json const& release) -> tl::expected<std::vector<cha
 
     auto res = cli.Get(path);
     if (res && res->status == 200)
-    {
-        // Copy the response body into a vector
-        std::vector<char> zip_data(res->body.begin(), res->body.end());
-        return zip_data;
-    }
+        return res->body;
     return tl::unexpected("Failed to download the file. Status code: " + std::to_string(res->status));
 }
 

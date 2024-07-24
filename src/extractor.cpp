@@ -10,7 +10,7 @@
 
 namespace fs = std::filesystem;
 
-auto extract_zip(const std::vector<char>& zip, std::string_view const& version) -> void
+auto extract_zip(std::string const& zip, std::string_view const& version) -> void
 {
     mz_zip_archive zip_archive;
     memset(&zip_archive, 0, sizeof(zip_archive));

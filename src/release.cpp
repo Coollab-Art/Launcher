@@ -1,39 +1,34 @@
-#include <curl/curl.h>
-#include <tl/expected.hpp>
-
 #include "release.hpp"
+#include <tl/expected.hpp>
 #include "fmt/core.h"
+#include "httplib.h"
 #include "utils.hpp"
 
-auto get_release(std::string_view const& version) -> tl::expected<nlohmann::basic_json<>, std::string>
+auto get_release(std::string_view const& version) -> tl::expected<nlohmann::json, std::string>
 {
-    CURL* curl = curl_easy_init();
-    if (!curl)
-        return tl::make_unexpected("Failed to initialize curl");
+    std::string url = fmt::format("https://api.github.com/repos/CoolLibs/Lab/releases/tags/{}", version);
 
-    std::string const url = fmt::format("https://api.github.com/repos/CoolLibs/Lab/releases/tags/{}", version); // TODO(Launcher) Don't hardcode the url to the release
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "curl/7.68.0");
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, string_write_callback);
-    std::string readBuffer;
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-    CURLcode res = curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
+    httplib::Client cli("https://api.github.com");
+    cli.set_follow_location(true);
 
-    if (res != CURLE_OK)
-        return tl::make_unexpected(fmt::format("Failed to fetch release info: {}", curl_easy_strerror(res)));
+    auto res = cli.Get(url.c_str());
 
-    // Parse JSON response
+    if (!res || res->status != 200)
+    {
+        return tl::make_unexpected(fmt::format("Failed to fetch release info: {}", res ? res->status : -1));
+    }
+
     try
     {
-        auto const jsonResponse = json::parse(readBuffer);
+        auto jsonResponse = nlohmann::json::parse(res->body);
         if (!jsonResponse.contains("assets") || jsonResponse["assets"].empty())
+        {
             return tl::make_unexpected("No assets found in the release.");
-        nlohmann::basic_json<> const& assets = jsonResponse["assets"];
+        }
+        nlohmann::json const& assets = jsonResponse["assets"];
         return assets;
     }
-    catch (json::parse_error const& e)
+    catch (nlohmann::json::parse_error const& e)
     {
         return tl::make_unexpected(fmt::format("JSON parse error: {}", e.what()));
     }
@@ -42,6 +37,7 @@ auto get_release(std::string_view const& version) -> tl::expected<nlohmann::basi
         return tl::make_unexpected(fmt::format("Error: {}", e.what()));
     }
 }
+
 auto get_coollab_download_url(nlohmann::basic_json<> const& release) -> std::string
 {
     auto os_path = get_OS();

@@ -44,7 +44,7 @@ auto get_coollab_download_url(nlohmann::basic_json<> const& release) -> std::str
     for (const auto& asset : release)
     {
         std::string url = asset["browser_download_url"];
-        if (url.find(os_path) != std::string::npos)
+        if (url.find(os_path + ".zip") != std::string::npos)
             return url;
     }
 }

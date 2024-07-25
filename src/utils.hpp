@@ -14,3 +14,5 @@ auto string_write_callback(void *ptr, size_t size, size_t nmemb,
 //get the OS
 auto get_OS() -> std::string;
 auto get_PATH() -> std::filesystem::path;
+
+//except pre-release

@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <string_view>
+#include <vector>
 #include "download.hpp"
 #include "extractor.hpp"
 #include "release.hpp"
@@ -8,7 +9,12 @@
 
 auto main() -> int
 {
-    get_all_release();
+    tl::expected<std::vector<Release>, std::string> all_release;
+    all_release = get_all_release();
+    for (auto const& release : *all_release)
+    {
+        std::cout << release.name << " : " << release.download_url << std::endl;
+    }
     //     try
     //     {
     // #ifdef __APPLE__

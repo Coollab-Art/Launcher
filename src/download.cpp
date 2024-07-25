@@ -1,13 +1,11 @@
 #include "download.hpp"
 #include <cstdlib>
-#include <filesystem>
 #include <iostream>
 #include <vector>
 #include "httplib.h"
 #include "release.hpp"
 #include "utils.hpp"
 
-namespace fs = std::filesystem;
 
 // download file from url
 auto download_zip(nlohmann::json const& release) -> tl::expected<std::string, std::string>
@@ -66,7 +64,3 @@ auto install_ffmpeg() -> void
     std::cout << "FFmpeg successfully installed." << std::endl;
 }
 
-auto coollab_version_is_installed(std::string_view const& version) -> bool
-{
-    return fs::exists(get_PATH() / version);
-}

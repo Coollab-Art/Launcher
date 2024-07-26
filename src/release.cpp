@@ -125,8 +125,3 @@ auto get_coollab_download_url(nlohmann::basic_json<> const& release) -> std::str
             return url;
     }
 }
-
-auto coollab_version_is_installed(std::string_view const& version) -> bool
-{
-    return fs::exists(get_PATH() / version);
-}

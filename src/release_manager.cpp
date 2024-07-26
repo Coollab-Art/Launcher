@@ -1,16 +1,18 @@
 #include "release_manager.hpp"
 #include <httplib.h>
+#include <algorithm>
 #include <optional>
 #include <tl/expected.hpp>
 #include "fmt/format.h"
 #include "release.hpp"
 #include "utils.hpp"
 
+namespace fs = std::filesystem;
+
 ReleaseManager::ReleaseManager()
 {
     this->latest_release_tag = get_latest_release_tag();
     this->get_all_release_available();
-    // this->get_all_release_installed();
 }
 
 auto ReleaseManager::get_latest_release_tag() -> std::string
@@ -54,17 +56,21 @@ auto ReleaseManager::get_all_release_available() -> std::optional<std::string>
         for (const auto& release : jsonResponse)
             if (!release["prerelease"]) // we keep only non pre-release version
             {
-                bool latest_release = false;
+                Release _release;
+                _release.name = release["name"];
+
                 // if it's the latest release
                 if (release["tag_name"] == this->latest_release_tag)
-                    latest_release = true;
+                    _release.is_latest = true;
 
                 for (const auto& asset : release["assets"]) // for all download file of the current release
                 {
-                    // check if a zip download file exists (Only one per OS)
+                    // Good release = check if a zip download file exists on the release (Only one per OS)
                     if (is_zip_download(asset))
                     {
-                        this->all_release_available.push_back({release["name"], asset["browser_download_url"], latest_release});
+                        _release.download_url = asset["browser_download_url"];
+                        _release.is_installed = release_is_installed(_release.name);
+                        this->all_release_available.push_back(_release);
                         break;
                     }
                 }
@@ -83,7 +89,6 @@ auto ReleaseManager::get_all_release_available() -> std::optional<std::string>
 
 auto ReleaseManager::display_all_release_available() -> void
 {
-    std::cout << "Releases available : " << std::endl;
     for (auto const& release : this->all_release_available)
     {
         std::cout << release.name << " : " << release.download_url;
@@ -99,17 +104,26 @@ auto ReleaseManager::display_all_release_available() -> void
     }
 }
 
+// auto ReleaseManager::install_release(bool const& latest) -> std::optional<std::string>
+// {
+//     if (latest)
+//     {
+//         for (Release& release : this->all_release_available)
+//             if (release.is_latest)
+//             {
+//                 release.install();
+//                 return std::nullopt;
+//             }
+//     }
+//     // install another release
+// }
 
-auto ReleaseManager::install_release(bool const& latest) -> std::optional<std::string>
+auto ReleaseManager::latest_release_is_installed() -> bool
 {
-    if (latest)
-    {
-        for (Release& release : this->all_release_available)
-            if (release.is_latest)
-            {
-                release.install();
-                return std::nullopt;
-            }
-    }
-    // install another release
+    return std::any_of(this->all_release_installed.begin(), this->all_release_installed.end(), [](const Release& release) { return release.is_latest; });
+}
+
+auto ReleaseManager::release_is_installed(std::string_view const& release_name) -> bool
+{
+    return fs::exists(get_PATH() / release_name);
 }

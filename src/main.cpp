@@ -15,8 +15,15 @@ auto main() -> int
     ReleaseManager release_manager;
     release_manager.display_all_release_available();
 
+    if (release_manager.latest_release_is_installed())
+        std::cout << "latest is installed" << std::endl;
+    else
+        std::cout << "latest is not installed" << std::endl;
+
     if (release_manager.all_release_installed.empty()) // no release install
         release_manager.install_release(true);         //     install latest release
+
+    // if (!release_manager.all_release_installed.empty() && release_manager.l)
 
     // everytime user use the launcher -> set the requested version as latest one
     // if (no_release_installed)

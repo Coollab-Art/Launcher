@@ -2,10 +2,10 @@
 #include <iostream>
 #include <string_view>
 #include <vector>
+#include "ReleaseManager.hpp"
 #include "download.hpp"
 #include "extractor.hpp"
 #include "release.hpp"
-#include "release_manager.hpp"
 #include "utils.hpp"
 
 auto main() -> int
@@ -13,15 +13,15 @@ auto main() -> int
     // install all necessary dependencies
 
     ReleaseManager release_manager;
-    release_manager.display_all_release_available();
+    release_manager.display_all_release();
 
     if (release_manager.latest_release_is_installed())
         std::cout << "latest is installed" << std::endl;
     else
         std::cout << "latest is not installed" << std::endl;
 
-    if (release_manager.all_release_installed.empty()) // no release install
-        release_manager.install_release(true);         //     install latest release
+    // if (release_manager.all_release_installed.empty()) // no release install
+    //     release_manager.install_release(true);         //     install latest release
 
     // if (!release_manager.all_release_installed.empty() && release_manager.l)
 

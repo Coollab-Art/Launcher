@@ -3,11 +3,17 @@
 #include <string>
 #include <tl/expected.hpp>
 #include <unordered_map>
+#include <vector>
 #include "fmt/core.h"
 #include "httplib.h"
 #include "utils.hpp"
 
 namespace fs = std::filesystem;
+
+auto Release::is_installed() const -> bool
+{
+    return fs::exists(get_PATH() / this->name);
+}
 
 auto get_all_release() -> tl::expected<std::vector<Release>, std::string>
 {

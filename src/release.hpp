@@ -8,8 +8,8 @@ struct Release {
     std::string name;
     std::string download_url;
     bool        is_latest    = false;
-    bool        is_installed = false;
 
+    [[nodiscard]] auto is_installed() const -> bool;
     auto install() -> void;
 };
 

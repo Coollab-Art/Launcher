@@ -1,21 +1,12 @@
-#include "release_manager.hpp"
 #include <httplib.h>
 #include <algorithm>
-#include <optional>
 #include <tl/expected.hpp>
 #include "fmt/format.h"
 #include "release.hpp"
+#include "release_manager.hpp"
 #include "utils.hpp"
 
-namespace fs = std::filesystem;
-
-ReleaseManager::ReleaseManager()
-{
-    this->latest_release_tag = get_latest_release_tag();
-    this->get_all_release_available();
-}
-
-auto ReleaseManager::get_latest_release_tag() -> std::string
+static auto fetch_latest_release_name() -> tl::expected<std::string, std::string>
 {
     std::filesystem::path url = "https://api.github.com/repos/CoolLibs/Lab/releases/latest";
     httplib::Client       cli("https://api.github.com");
@@ -23,24 +14,26 @@ auto ReleaseManager::get_latest_release_tag() -> std::string
 
     auto res = cli.Get(url.c_str());
     if (!res || res->status != 200)
-        return fmt::format("Failed to fetch release info: {}", res ? res->status : -1);
+    {
+        return tl::make_unexpected(fmt::format("Failed to fetch release info: {}", res ? res->status : -1));
+    }
 
     try
     {
         auto jsonResponse = nlohmann::json::parse(res->body);
-        return jsonResponse["tag_name"];
+        return jsonResponse["name"];
     }
     catch (nlohmann::json::parse_error const& e)
     {
-        return fmt::format("JSON parse error: {}", e.what());
+        return tl::make_unexpected(fmt::format("JSON parse error: {}", e.what()));
     }
     catch (std::exception& e)
     {
-        return fmt::format("Error: {}", e.what());
+        return tl::make_unexpected(fmt::format("Error: {}", e.what()));
     }
 }
 
-auto ReleaseManager::get_all_release_available() -> std::optional<std::string>
+auto get_all_release() -> tl::expected<std::vector<Release>, std::string>
 {
     std::filesystem::path url = "https://api.github.com/repos/CoolLibs/Lab/releases";
     httplib::Client       cli("https://api.github.com");
@@ -48,11 +41,13 @@ auto ReleaseManager::get_all_release_available() -> std::optional<std::string>
 
     auto res = cli.Get(url.c_str());
     if (!res || res->status != 200)
-        return fmt::format("Failed to fetch release info: {}", res ? res->status : -1);
+        return tl::make_unexpected(fmt::format("Failed to fetch release info: {}", res ? res->status : -1));
 
     try
     {
-        auto jsonResponse = nlohmann::json::parse(res->body);
+        auto                                   jsonResponse        = nlohmann::json::parse(res->body);
+        tl::expected<std::string, std::string> latest_release_name = fetch_latest_release_name();
+        std::vector<Release>                   all_release;
         for (const auto& release : jsonResponse)
             if (!release["prerelease"]) // we keep only non pre-release version
             {
@@ -60,8 +55,12 @@ auto ReleaseManager::get_all_release_available() -> std::optional<std::string>
                 _release.name = release["name"];
 
                 // if it's the latest release
-                if (release["tag_name"] == this->latest_release_tag)
-                    _release.is_latest = true;
+                if (latest_release_name.has_value())
+                    _release.is_latest = release["name"] == latest_release_name.value();
+                else
+                {
+                    // TODO : if not tag latest release -> give the most recent release
+                }
 
                 for (const auto& asset : release["assets"]) // for all download file of the current release
                 {
@@ -69,37 +68,40 @@ auto ReleaseManager::get_all_release_available() -> std::optional<std::string>
                     if (is_zip_download(asset))
                     {
                         _release.download_url = asset["browser_download_url"];
-                        _release.is_installed = release_is_installed(_release.name);
-                        this->all_release_available.push_back(_release);
+                        all_release.push_back(_release);
                         break;
                     }
                 }
             }
-        return std::nullopt;
+        return all_release;
     }
     catch (nlohmann::json::parse_error const& e)
     {
-        return fmt::format("JSON parse error: {}", e.what());
+        return tl::make_unexpected(fmt::format("JSON parse error: {}", e.what()));
     }
     catch (std::exception& e)
     {
-        return fmt::format("Error: {}", e.what());
+        return tl::make_unexpected(fmt::format("Error: {}", e.what()));
     }
 }
 
-auto ReleaseManager::display_all_release_available() -> void
+ReleaseManager::ReleaseManager()
+    : all_release{get_all_release()}
+{}
+
+auto ReleaseManager::display_all_release() -> void
 {
-    for (auto const& release : this->all_release_available)
+    for (auto const& release : this->all_release.value())
     {
         std::cout << release.name << " : " << release.download_url;
-        if (!release.is_latest)
-            std::cout << " (old version)";
-        else
+        if (release.is_latest)
             std::cout << " (latest)";
-        if (!release.is_installed)
-            std::cout << " -> ❌ not installed";
         else
+            std::cout << " (old version)";
+        if (release.is_installed())
             std::cout << " -> ✅ installed";
+        else
+            std::cout << " -> ❌ not installed";
         std::cout << std::endl;
     }
 }
@@ -108,7 +110,7 @@ auto ReleaseManager::display_all_release_available() -> void
 // {
 //     if (latest)
 //     {
-//         for (Release& release : this->all_release_available)
+//         for (Release& release : this->all_release)
 //             if (release.is_latest)
 //             {
 //                 release.install();
@@ -120,10 +122,5 @@ auto ReleaseManager::display_all_release_available() -> void
 
 auto ReleaseManager::latest_release_is_installed() -> bool
 {
-    return std::any_of(this->all_release_installed.begin(), this->all_release_installed.end(), [](const Release& release) { return release.is_latest; });
-}
-
-auto ReleaseManager::release_is_installed(std::string_view const& release_name) -> bool
-{
-    return fs::exists(get_PATH() / release_name);
+    return std::any_of(all_release.value().begin(), all_release.value().end(), [](const Release& release) { return release.is_latest; });
 }

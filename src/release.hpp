@@ -7,7 +7,10 @@
 struct Release {
     std::string name;
     std::string download_url;
-    bool        latest = false;
+    bool        is_latest    = false;
+    bool        is_installed = false;
+
+    auto install() -> void;
 };
 
 using json = nlohmann::json;

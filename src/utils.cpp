@@ -1,23 +1,7 @@
 #include "utils.hpp"
 #include <cstddef>
+#include <iostream>
 #include "exe_path/exe_path.h"
-
-// Vérifier les permissions sur le dossier /Applications
-
-auto write_memory_callback(void* contents, size_t size, size_t nmemb, std::vector<char>* userp) -> size_t
-{
-    size_t realsize = size * nmemb;
-    userp->insert(userp->end(), (char*)contents, (char*)contents + realsize);
-    return realsize;
-}
-
-// Callback function to write data to a string
-auto string_write_callback(void* ptr, size_t size, size_t nmemb, void* userdata) -> size_t
-{
-    std::string* str = static_cast<std::string*>(userdata);
-    str->append(static_cast<char*>(ptr), size * nmemb);
-    return size * nmemb;
-}
 
 auto get_OS() -> std::string
 {
@@ -36,4 +20,9 @@ auto get_OS() -> std::string
 auto get_PATH() -> std::filesystem::path
 {
     return exe_path::user_data() / "Coollab-Launcher";
+}
+
+auto is_zip_download(const nlohmann::basic_json<>& asset) -> bool
+{
+    return (std::string(asset["browser_download_url"]).find(get_OS() + ".zip") != std::string::npos);
 }

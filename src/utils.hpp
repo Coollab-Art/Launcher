@@ -2,17 +2,12 @@
 
 #include <sys/stat.h>
 #include <filesystem>
-#include <vector>
 #include <string>
+#include "nlohmann/json.hpp"
 
-// Callback function to write data to a file
-auto write_memory_callback(void *contents, size_t size, size_t nmemb,
-                           std::vector<char> *userp) -> size_t;
-auto string_write_callback(void *ptr, size_t size, size_t nmemb,
-                           void *userdata) -> size_t;
-
-//get the OS
+// get the OS
 auto get_OS() -> std::string;
 auto get_PATH() -> std::filesystem::path;
+auto is_zip_download(const nlohmann::basic_json<>& asset) -> bool;
 
-//except pre-release
+// except pre-release

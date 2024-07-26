@@ -5,16 +5,25 @@
 #include "download.hpp"
 #include "extractor.hpp"
 #include "release.hpp"
+#include "release_manager.hpp"
 #include "utils.hpp"
 
 auto main() -> int
 {
-    tl::expected<std::vector<Release>, std::string> all_release;
-    all_release = get_all_release();
-    for (auto const& release : *all_release)
-    {
-        std::cout << release.name << " : " << release.download_url << std::endl;
-    }
+    // install all necessary dependencies
+
+    ReleaseManager release_manager;
+    release_manager.display_all_release_available();
+
+    if (release_manager.all_release_installed.empty()) // no release install
+        release_manager.install_release(true);         //     install latest release
+
+    // everytime user use the launcher -> set the requested version as latest one
+    // if (no_release_installed)
+
+    // if (!no_release_installed() && !latest_release_installed())
+    //     propose to install latest_release
+
     //     try
     //     {
     // #ifdef __APPLE__

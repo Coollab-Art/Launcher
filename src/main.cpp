@@ -1,7 +1,5 @@
 #include <cstdlib>
 #include <iostream>
-#include <string_view>
-#include <vector>
 #include "ReleaseManager.hpp"
 #include "download.hpp"
 #include "extractor.hpp"

@@ -7,8 +7,9 @@
 struct Release {
     std::string name;
     std::string download_url;
-    bool        is_latest    = false;
+    std::string release_date; //Change type : std::chrono::timepoint?
 
+    [[nodiscard]] auto is_latest() const -> bool;
     [[nodiscard]] auto is_installed() const -> bool;
     auto install() -> void;
 };

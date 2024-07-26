@@ -1,9 +1,9 @@
+#include "ReleaseManager.hpp"
 #include <httplib.h>
 #include <algorithm>
 #include <tl/expected.hpp>
 #include "fmt/format.h"
 #include "release.hpp"
-#include "release_manager.hpp"
 #include "utils.hpp"
 
 static auto fetch_latest_release_name() -> tl::expected<std::string, std::string>
@@ -54,14 +54,8 @@ auto get_all_release() -> tl::expected<std::vector<Release>, std::string>
                 Release _release;
                 _release.name = release["name"];
 
-                // if it's the latest release
-                if (latest_release_name.has_value())
-                    _release.is_latest = release["name"] == latest_release_name.value();
-                else
-                {
-                    // TODO : if not tag latest release -> give the most recent release
-                }
-
+                //TODO : Get the released date of the release
+           
                 for (const auto& asset : release["assets"]) // for all download file of the current release
                 {
                     // Good release = check if a zip download file exists on the release (Only one per OS)
@@ -94,7 +88,7 @@ auto ReleaseManager::display_all_release() -> void
     for (auto const& release : this->all_release.value())
     {
         std::cout << release.name << " : " << release.download_url;
-        if (release.is_latest)
+        if (release.is_latest())
             std::cout << " (latest)";
         else
             std::cout << " (old version)";

@@ -2,9 +2,6 @@
 #include <iostream>
 #include "ReleaseManager.hpp"
 #include "download.hpp"
-#include "extractor.hpp"
-#include "release.hpp"
-#include "utils.hpp"
 
 auto main() -> int
 {
@@ -16,12 +13,20 @@ auto main() -> int
 #endif
 
         ReleaseManager release_manager;
-        release_manager.display_all_release();
 
         if (release_manager.no_release_installed()) // Aucune release d'installée
         {
-            std::cout << "Aucune release d'installée. \nInstallation automatique de la dernière version : " << release_manager.get_latest_release().get_name() << std::endl;
-            // get_latest_release().install();
+            Release latest_release = release_manager.get_latest_release();
+            release_manager.display_all_release();
+            std::cout << "Aucune release d'installée. \nInstallation automatique de la dernière version : " << latest_release.get_name() << std::endl;
+            int confirm = 0;
+            std::cout << "Lancer l'installation : (1) ";
+            std::cin >> confirm;
+            if (confirm)
+            {
+                release_manager.install_release(latest_release);
+                // release_manager.launch_release(latest_release);
+            }
         }
         else if (!release_manager.get_latest_release().is_installed()) // des versions installées mais pas la dernière
         {
@@ -30,25 +35,47 @@ auto main() -> int
         }
         else // La dernière version est au minimum installé. On laisse le choix à l'utilisateur
         {
-            std::cout << "Versions de Coollab disponibles :" << std::endl;
-            release_manager.display_all_release();
+            int choice = 0;
+            std::cout << "Voir les versions de Coollab : (1)" << std::endl;
+            std::cout << "Installer une version : (2)" << std::endl;
+            std::cout << "Lancer une version (3) :" << std::endl;
+            std::cout << "Choix : ";
+            std::cin >> choice;
+
+            if (choice == 1)
+                release_manager.display_all_release();
+            else if (choice == 2)
+            {
+                std::string version_to_install;
+                std::cout << "Choisissez le nom de la version à installer : ";
+                std::cin >> version_to_install;
+
+                for (const Release& release : release_manager.get_all_release())
+                {
+                    if (release.get_name() == version_to_install && !release.is_installed())
+                        release_manager.install_release(release);
+                    else if (release.get_name() == version_to_install)
+                        std::cout << release.get_name() << " est déjà installé !" << std::endl;
+                }
+            }
+            else if (choice == 3)
+            {
+                std::string version_to_launch;
+                std::cout << "Choisissez le nom de la version à lancer : ";
+                std::cin >> version_to_launch;
+
+                for (const Release& release : release_manager.get_all_release())
+                {
+                    if (release.get_name() == version_to_launch && release.is_installed())
+                        release_manager.install_release(release);
+                    else if (release.get_name() == version_to_launch)
+                        std::cout << release.get_name() << " n'est pas installé !" << std::endl;
+                }
+            }
         }
     }
     catch (const std::exception& e)
     {
         std::cerr << "Exception occurred: " << e.what() << std::endl;
     }
-
-    // std::string_view requested_version = "launcher-test-4";
-    // // Install last Coollab release
-    // if (!coollab_version_is_installed(requested_version))
-    // {
-    //     auto const release = get_release(requested_version);
-    //     auto const zip     = download_zip(*release);
-    //     extract_zip(*zip, requested_version);
-
-    //     std::cout << "✅ Coollab " << requested_version << " is installed! ";
-    // }
-    // else
-    //     std::cout << "❌ Coollab " << requested_version << " is already installed in : " << get_PATH() << std::endl;
 }

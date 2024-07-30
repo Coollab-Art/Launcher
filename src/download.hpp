@@ -1,8 +1,7 @@
 #pragma once
 #include <string>
-#include <string_view>
 #include <tl/expected.hpp>
-#include "nlohmann/json.hpp"
+#include "Release.hpp"
 
 auto install_macos_dependencies_if_necessary() -> void;
 
@@ -10,6 +9,5 @@ auto install_macos_dependencies_if_necessary() -> void;
 auto install_homebrew() -> void;
 auto install_ffmpeg() -> void;
 
-
 // download zip and return it
-auto download_zip(nlohmann::basic_json<> const& release) -> tl::expected<std::string, std::string>;
+auto download_zip(const Release& release) -> tl::expected<std::string, std::string>;

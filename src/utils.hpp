@@ -8,4 +8,4 @@
 // get the OS
 auto get_OS() -> std::string;
 auto get_PATH() -> std::filesystem::path;
-auto is_zip_download(const nlohmann::basic_json<>& asset) -> bool;
+auto is_zip_download(const std::string& download_url) -> bool;

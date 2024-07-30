@@ -1,8 +1,5 @@
 #include "utils.hpp"
 #include <cstddef>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
 #include "exe_path/exe_path.h"
 
 // which OS ?
@@ -26,7 +23,7 @@ auto get_PATH() -> std::filesystem::path
 }
 
 // check if the download url is targeting a zip file.
-auto is_zip_download(const nlohmann::basic_json<>& asset) -> bool
+auto is_zip_download(const std::string& download_url) -> bool
 {
-    return (std::string(asset["browser_download_url"]).find(get_OS() + ".zip") != std::string::npos);
+    return (download_url.find(get_OS() + ".zip") != std::string::npos);
 }

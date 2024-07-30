@@ -27,7 +27,7 @@ auto get_release(std::string_view const& version) -> tl::expected<nlohmann::json
     httplib::Client cli("https://api.github.com");
     cli.set_follow_location(true);
 
-    auto res = cli.Get(url.c_str());
+    auto res = cli.Get(url);
 
     if (!res || res->status != 200)
     {
@@ -51,16 +51,5 @@ auto get_release(std::string_view const& version) -> tl::expected<nlohmann::json
     catch (std::exception& e)
     {
         return tl::make_unexpected(fmt::format("Error: {}", e.what()));
-    }
-}
-
-auto get_coollab_download_url(nlohmann::basic_json<> const& release) -> std::string
-{
-    auto os_path = get_OS();
-    for (const auto& asset : release)
-    {
-        std::string url = asset["browser_download_url"];
-        if (url.find(os_path + ".zip") != std::string::npos)
-            return url;
     }
 }

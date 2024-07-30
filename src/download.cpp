@@ -1,18 +1,15 @@
 #include "download.hpp"
 #include <cstdlib>
 #include <iostream>
-#include <vector>
+#include "Release.hpp"
 #include "httplib.h"
-#include "release.hpp"
-#include "utils.hpp"
-
 
 // download file from url
-auto download_zip(nlohmann::json const& release) -> tl::expected<std::string, std::string>
+auto download_zip(const Release& release) -> tl::expected<std::string, std::string>
 {
     std::string     url = "https://github.com";
     httplib::Client cli(url);
-    auto const      path = get_coollab_download_url(release);
+    auto const&     path = release.get_download_url();
 
     cli.set_follow_location(true); // Allow the client to follow redirects
 
@@ -63,4 +60,3 @@ auto install_ffmpeg() -> void
     }
     std::cout << "FFmpeg successfully installed." << std::endl;
 }
-

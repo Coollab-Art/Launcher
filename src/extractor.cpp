@@ -72,4 +72,5 @@ auto extract_zip(std::string const& zip, std::string_view const& version) -> voi
         std::cout << "Created file: " << full_path << std::endl;
     }
     mz_zip_reader_end(&zip_archive);
+    std::cout << "✅ Coollab " << version << " is installed! ";
 }

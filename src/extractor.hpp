@@ -1,6 +1,5 @@
 #pragma once
 #include <string_view>
-#include <vector>
 #ifdef __APPLE__
 #include <sys/stat.h> // chmod
 #endif

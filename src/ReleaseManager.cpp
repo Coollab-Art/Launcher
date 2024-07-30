@@ -21,22 +21,17 @@ auto fetch_all_release() -> tl::expected<std::vector<Release>, std::string>
         auto                 jsonResponse = nlohmann::json::parse(res->body);
         std::vector<Release> all_release;
         for (const auto& release : jsonResponse)
-            if (!release["prerelease"]) // we keep only non pre-release version
-            {
-                Release _release;
-                _release.name = release["name"];
-
+            if (!release["prerelease"])                     // we keep only non pre-release version
                 for (const auto& asset : release["assets"]) // for all download file of the current release
                 {
                     // Good release? => zip download file exists on the release (Only one per OS)
                     if (is_zip_download(asset))
                     {
-                        _release.download_url = asset["browser_download_url"];
+                        Release _release(release["name"], asset["browser_download_url"]);
                         all_release.push_back(_release);
                         break;
                     }
                 }
-            }
         return all_release;
     }
     catch (nlohmann::json::parse_error const& e)
@@ -69,7 +64,7 @@ auto ReleaseManager::display_all_release() -> void
 {
     for (Release const& release : this->all_release.value())
     {
-        std::cout << release.name << " : " << release.download_url;
+        std::cout << release.get_name() << " : " << release.get_download_url();
         if (release == this->get_latest_release())
             std::cout << " (📍 latest)";
         if (release.is_installed())

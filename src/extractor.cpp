@@ -24,8 +24,8 @@ auto extract_zip(std::string const& zip, std::string_view const& version) -> voi
 
     assert(fs::exists(parent_folder));
 
-    int num_files = mz_zip_reader_get_num_files(&zip_archive);
-    for (int i = 0; i < num_files; ++i)
+    mz_uint num_files = mz_zip_reader_get_num_files(&zip_archive);
+    for (mz_uint i = 0; i < num_files; ++i)
     {
         mz_zip_archive_file_stat file_stat;
 

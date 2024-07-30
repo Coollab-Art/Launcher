@@ -1,23 +1,20 @@
 #pragma once
+#include <ctime>
 #include <nlohmann/json.hpp>
+#include <string>
 #include <string_view>
 #include <tl/expected.hpp>
-#include <vector>
-
-struct Release {
+class Release {
+public:
     std::string name;
     std::string download_url;
-    std::string release_date; //Change type : std::chrono::timepoint?
+    // need a tag to target the release ?
 
-    [[nodiscard]] auto is_latest() const -> bool;
     [[nodiscard]] auto is_installed() const -> bool;
-    auto install() -> void;
+    auto               operator==(const Release& other) const -> bool;
 };
 
 using json = nlohmann::json;
-auto get_all_release() -> tl::expected<std::vector<Release>, std::string>;
-auto get_release_ready_to_install() -> tl::expected<nlohmann::json, std::string>;
 auto get_release(std::string_view const& version) -> tl::expected<nlohmann::basic_json<>, std::string>;
 auto get_coollab_download_url(nlohmann::basic_json<> const& release) -> std::string;
 // check if Coollab version is already installed
-

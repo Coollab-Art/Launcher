@@ -2,61 +2,23 @@
 #include <filesystem>
 #include <string>
 #include <tl/expected.hpp>
-#include <vector>
 #include "fmt/core.h"
 #include "httplib.h"
 #include "utils.hpp"
 
 namespace fs = std::filesystem;
 
+auto Release::operator==(const Release& other) const -> bool
+{
+    return this->name == other.name;
+}
+
 auto Release::is_installed() const -> bool
 {
     return fs::exists(get_PATH() / this->name);
 }
 
-auto Release::is_latest() const -> bool
-{
-    //TODO : latest if this is the latest release released in date.
-    return false;
-}
-// auto get_all_release() -> tl::expected<std::vector<Release>, std::string>
-// {
-//     std::filesystem::path url = "https://api.github.com/repos/CoolLibs/Lab/releases";
-//     httplib::Client       cli("https://api.github.com");
-//     cli.set_follow_location(true);
-
-//     auto res = cli.Get(url.c_str());
-//     if (!res || res->status != 200)
-//         return tl::make_unexpected(fmt::format("Failed to fetch release info: {}", res ? res->status : -1));
-
-//     try
-//     {
-//         auto                 jsonResponse = nlohmann::json::parse(res->body);
-//         std::vector<Release> all_release;
-//         std::cout << "Releases available : " << std::endl;
-//         for (const auto& release : jsonResponse)
-//             if (!release["prerelease"])
-//             {
-//                 for (const auto& asset : release["assets"])
-//                 {
-//                     if (!(std::string(asset["browser_download_url"]).find(get_OS() + ".zip") != std::string::npos))
-//                         continue;
-//                     std::cout << release["name"] << " -> " << asset["name"] << "\n";
-//                     all_release.push_back({release["name"], asset["browser_download_url"]});
-//                 }
-//             }
-//         return all_release;
-//     }
-//     catch (nlohmann::json::parse_error const& e)
-//     {
-//         return tl::make_unexpected(fmt::format("JSON parse error: {}", e.what()));
-//     }
-//     catch (std::exception& e)
-//     {
-//         return tl::make_unexpected(fmt::format("Error: {}", e.what()));
-//     }
-// }
-
+// get a single release with tag_name
 auto get_release(std::string_view const& version) -> tl::expected<nlohmann::json, std::string>
 {
     std::string url = fmt::format("https://api.github.com/repos/CoolLibs/Lab/releases/tags/{}", version);

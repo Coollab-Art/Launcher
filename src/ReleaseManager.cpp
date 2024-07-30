@@ -6,7 +6,7 @@
 #include "release.hpp"
 #include "utils.hpp"
 
-auto get_all_release() -> tl::expected<std::vector<Release>, std::string>
+auto fetch_all_release() -> tl::expected<std::vector<Release>, std::string>
 {
     std::filesystem::path url = "https://api.github.com/repos/CoolLibs/Lab/releases";
     httplib::Client       cli("https://api.github.com");
@@ -50,10 +50,17 @@ auto get_all_release() -> tl::expected<std::vector<Release>, std::string>
 }
 
 ReleaseManager::ReleaseManager()
-    : all_release{get_all_release()}
+    : all_release{fetch_all_release()}
 {}
 
-auto ReleaseManager::get_latest_release() const -> Release
+auto ReleaseManager::get_all_release() -> const std::vector<Release>&
+{
+    if (this->all_release.has_value())
+        return this->all_release.value();
+    throw std::runtime_error("No release found.");
+}
+
+auto ReleaseManager::get_latest_release() -> const Release&
 {
     return this->all_release->front();
 }
@@ -73,7 +80,8 @@ auto ReleaseManager::display_all_release() -> void
     }
 }
 
-auto ReleaseManager::latest_release_is_installed() -> bool
+// return true -> if no release have been installed
+auto ReleaseManager::no_release_installed() -> bool
 {
-    return std::any_of(this->all_release.value().begin(), this->all_release.value().end(), [](const Release& release) { return false; });
+    return std::all_of(this->all_release.value().begin(), this->all_release.value().end(), [](const Release& release) { return !release.is_installed(); });
 }

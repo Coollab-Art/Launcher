@@ -30,15 +30,3 @@ auto is_zip_download(const nlohmann::basic_json<>& asset) -> bool
 {
     return (std::string(asset["browser_download_url"]).find(get_OS() + ".zip") != std::string::npos);
 }
-
-// parse date
-auto parse_date(const std::string& date_str) -> std::tm
-{
-    std::tm            tm = {};
-    std::istringstream ss(date_str);
-    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
-    if (ss.fail())
-        throw std::runtime_error("Parse failed");
-    return tm;
-}
-

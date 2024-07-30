@@ -9,11 +9,14 @@
 auto main() -> int
 {
     // install all necessary dependencies
-
     ReleaseManager release_manager;
     release_manager.display_all_release();
-    //Si aucune Release d'installer -> Installer la LATEST par défaut
 
+    if (release_manager.no_release_installed()) // rien d'installé
+        std::cout << "Rien d'installé -> Installer la dernière V" << std::endl;
+    else if (!release_manager.get_latest_release().is_installed()) // des V d'installé mais pas la dernière
+        std::cout << "Latest n'est pas installé." << std::endl;
+    // Si aucune Release d'installer -> Installer la LATEST par défaut
 
     // if (release_manager.all_release_installed.empty()) // no release install
     //     release_manager.install_release(true);         //     install latest release

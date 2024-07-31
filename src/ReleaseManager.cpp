@@ -91,6 +91,6 @@ auto ReleaseManager::install_release(const Release& release) -> void
 
 auto ReleaseManager::launch_release(const Release& release) -> void
 {
-    std::filesystem::path path = get_PATH() / release.get_name() / ("Coollab-" + get_OS()) / "Coollab";
+    std::filesystem::path path = get_PATH() / release.get_name() / "Coollab";
     std::system(path.string().c_str());
 }

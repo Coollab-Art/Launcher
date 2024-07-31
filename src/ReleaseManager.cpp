@@ -14,7 +14,7 @@ auto fetch_all_release() -> tl::expected<std::vector<Release>, std::string>
     httplib::Client       cli("https://api.github.com");
     cli.set_follow_location(true);
 
-    auto res = cli.Get(url.c_str());
+    auto res = cli.Get(url.string().c_str());
     if (!res || res->status != 200)
         return tl::make_unexpected(fmt::format("Failed to fetch release info: {}", res ? res->status : -1));
 
@@ -92,5 +92,5 @@ auto ReleaseManager::install_release(const Release& release) -> void
 auto ReleaseManager::launch_release(const Release& release) -> void
 {
     std::filesystem::path path = get_PATH() / release.get_name() / ("Coollab-" + get_OS()) / "Coollab";
-    std::system(path.c_str());
+    std::system(path.string().c_str());
 }

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(Coollab)
+project(Coollab-Launcher)
 add_executable(${PROJECT_NAME})
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
@@ -60,15 +60,14 @@ target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json miniz)
 
-add_subdirectory(Lab/Cool/lib/stringify/lib/fmt)
-target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+set(COOL_USE_OPENGL $<IF:$<PLATFORM_ID:Darwin>,410,430>) # Must be >= 330 for ImGui to work properly # We use 410 when building on Mac because it doesn't support higher versions of OpenGL
+set(COOL_USE_INSTALLER ON)
+add_subdirectory(Lab/Cool)
+target_link_libraries(${PROJECT_NAME} PRIVATE Cool::Core)
+cool_setup(${PROJECT_NAME})
+
 add_subdirectory(Lab/lib/cpp-httplib)
 target_link_libraries(${PROJECT_NAME} PRIVATE httplib)
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE Lab/Cool/lib/expected/include)
-
-# exe_path
-add_subdirectory(Lab/Cool/lib/exe_path)
-target_link_libraries(${PROJECT_NAME} PRIVATE exe_path::exe_path)
 
 # ---------------------
 # ---CPack---

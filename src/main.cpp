@@ -1,12 +1,15 @@
 #include <cstdlib>
 #include <iostream>
+#include "Cool/CommandLineArgs/CommandLineArgs.h"
+// #include "ProjectManager/path_to_project_to_open_on_startup.hpp"
 #include "ReleaseManager.hpp"
 #include "download.hpp"
 
 #define INTERACTIVE_LAUNCHER 0
 
-auto main() -> int
+auto main(int argc, char** argv) -> int
 {
+    Cool::command_line_args().init(argc, argv);
     try
     {
 #ifdef __APPLE__
@@ -85,8 +88,7 @@ auto main() -> int
             release_manager.install_release(release_to_launch);
         release_manager.launch_release(release_to_launch);
 
-        //Problème internet... (TODO)
-
+        // Problème internet... (TODO)
 
 #endif
     }

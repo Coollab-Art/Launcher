@@ -80,7 +80,7 @@ auto ReleaseManager::display_all_release() -> void
 // return true -> if no release have been installed
 auto ReleaseManager::no_release_installed() -> bool
 {
-    return std::all_of(this->all_release.value().begin(), this->all_release.value().end(), [](const Release& release) { return !release.is_installed(); });
+    return std::none_of(this->all_release.value().begin(), this->all_release.value().end(), [](const Release& release) { return release.is_installed(); });
 }
 
 auto ReleaseManager::install_release(const Release& release) -> void

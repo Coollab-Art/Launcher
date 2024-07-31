@@ -3,6 +3,8 @@
 #include "ReleaseManager.hpp"
 #include "download.hpp"
 
+#define INTERACTIVE_LAUNCHER 0
+
 auto main() -> int
 {
     try
@@ -14,6 +16,7 @@ auto main() -> int
 
         ReleaseManager release_manager;
 
+#if INTERACTIVE_LAUNCHER
         if (release_manager.no_release_installed()) // Aucune release d'installée
         {
             Release latest_release = release_manager.get_latest_release();
@@ -25,7 +28,7 @@ auto main() -> int
             if (confirm)
             {
                 release_manager.install_release(latest_release);
-                // release_manager.launch_release(latest_release);
+                release_manager.launch_release(latest_release);
             }
         }
         else if (!release_manager.get_latest_release().is_installed()) // des versions installées mais pas la dernière
@@ -73,6 +76,19 @@ auto main() -> int
                 }
             }
         }
+#else
+
+        Release release_to_launch = release_manager.get_latest_release();
+
+        // Si la latest n'est pas installée -> on l'installe
+        if (!release_to_launch.is_installed())
+            release_manager.install_release(release_to_launch);
+        release_manager.launch_release(release_to_launch);
+
+        //Problème internet... (TODO)
+
+
+#endif
     }
     catch (const std::exception& e)
     {

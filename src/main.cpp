@@ -2,6 +2,8 @@
 #include <iostream>
 #include "Cool/CommandLineArgs/CommandLineArgs.h"
 // #include "ProjectManager/path_to_project_to_open_on_startup.hpp"
+#include <fstream>
+#include <string>
 #include "ReleaseManager.hpp"
 #include "download.hpp"
 
@@ -9,7 +11,15 @@
 
 auto main(int argc, char** argv) -> int
 {
+    // TODO : faire une fonction!
     Cool::command_line_args().init(argc, argv);
+    std::ifstream infile(Cool::command_line_args().get()[0]);
+    std::string   version;
+    if (infile.is_open())
+        std::getline(infile, version);
+    std::cout << "La version est : " << version << std::endl;
+    infile.close();
+
     try
     {
 #ifdef __APPLE__
@@ -80,13 +90,22 @@ auto main(int argc, char** argv) -> int
             }
         }
 #else
+        Release const* release_to_launch = nullptr;
 
-        Release release_to_launch = release_manager.get_latest_release();
+        // L'utilisateur a déjà un projet sur une version différente de la latest
+        // Il a le choix de poursuivre son projet sur sa version, ou de télécharger la latest.
+        release_to_launch = release_manager.find_release(version);
+        if (release_to_launch == nullptr)
+        {
+            std::cerr << "La version " << version << " n'a pas pu être installée, installation de la dernière version (par défaut).";
+            release_to_launch = &release_manager.get_latest_release();
+        }
 
         // Si la latest n'est pas installée -> on l'installe
-        if (!release_to_launch.is_installed())
-            release_manager.install_release(release_to_launch);
-        release_manager.launch_release(release_to_launch);
+        if (!release_to_launch->is_installed())
+            release_manager.install_release(*release_to_launch);
+
+        release_manager.launch_release(*release_to_launch);
 
         // Problème internet... (TODO)
 

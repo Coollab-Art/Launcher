@@ -68,8 +68,6 @@ auto extract_zip(std::string const& zip, std::string_view const& version) -> voi
         if (chmod(full_path.c_str(), 0755) != 0)
             std::cerr << "Failed to set permissions on file: " << full_path << std::endl;
 #endif
-
-        std::cout << "Created file: " << full_path << std::endl;
     }
     mz_zip_reader_end(&zip_archive);
     std::cout << "✅ Coollab " << version << " is installed! ";

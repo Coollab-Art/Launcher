@@ -62,6 +62,13 @@ auto ReleaseManager::get_latest_release() const -> const Release&
     return this->all_release->front();
 }
 
+auto ReleaseManager::find_release(const std::string& release_version) const -> const Release*
+{
+    auto release_iterator = std::find_if(this->all_release->begin(), this->all_release->end(), [&](const Release& release) { return (release.get_name() == release_version); });
+    if (release_iterator != this->all_release->end())
+        return &*release_iterator;
+    return nullptr;
+}
 auto ReleaseManager::display_all_release() -> void
 {
     for (Release const& release : this->all_release.value())

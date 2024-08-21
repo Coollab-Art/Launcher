@@ -1,4 +1,4 @@
-#include "release.hpp"
+#include "Release.hpp"
 #include <filesystem>
 #include <string>
 #include <tl/expected.hpp>
@@ -7,7 +7,6 @@
 #include "utils.hpp"
 
 namespace fs = std::filesystem;
-
 
 auto Release::operator==(const Release& other) const -> bool
 {

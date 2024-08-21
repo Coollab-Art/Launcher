@@ -94,6 +94,11 @@ auto ReleaseManager::install_release(const Release& release) -> void
 {
     auto const zip = download_zip(release);
     extract_zip(*zip, release.get_name());
+    // make_file_executable();
+#if defined __linux__
+    std::filesystem::path path = get_PATH() / release.get_name() / "Coollab";
+    std::system(("chmod u+x " + path.string()).c_str());
+#endif
 }
 
 auto ReleaseManager::launch_release(const Release& release) -> void

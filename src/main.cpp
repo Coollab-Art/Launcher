@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <iostream>
-#include "Cool/CommandLineArgs/CommandLineArgs.h"
 // #include "ProjectManager/path_to_project_to_open_on_startup.hpp"
 #include <fstream>
 #include <string>
@@ -12,8 +11,7 @@
 auto main(int argc, char** argv) -> int
 {
     // TODO : faire une fonction!
-    Cool::command_line_args().init(argc, argv);
-    std::ifstream infile(Cool::command_line_args().get()[0]);
+    std::ifstream infile(argv[1]);
     std::string   version;
     if (infile.is_open())
         std::getline(infile, version);

@@ -65,11 +65,14 @@ target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE Lab/Cool/lib/expected/
 add_subdirectory(Lab/lib/cpp-httplib)
 target_link_libraries(${PROJECT_NAME} PRIVATE httplib)
 
-set(COOL_USE_OPENGL $<IF:$<PLATFORM_ID:Darwin>,410,430>) # Must be >= 330 for ImGui to work properly # We use 410 when building on Mac because it doesn't support higher versions of OpenGL
-set(COOL_USE_INSTALLER ON)
-add_subdirectory(Lab/Cool)
-target_link_libraries(${PROJECT_NAME} PRIVATE Cool::Core)
-cool_setup(${PROJECT_NAME})
+add_subdirectory(Lab/Cool/lib/stringify/lib/fmt)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE Lab/Cool/lib/expected/include)
+
+# exe_path
+add_subdirectory(Lab/Cool/lib/exe_path)
+target_link_libraries(${PROJECT_NAME} PRIVATE exe_path::exe_path)
 
 # ---------------------
 # ---CPack---

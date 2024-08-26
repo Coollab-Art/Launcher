@@ -11,12 +11,14 @@
 auto main(int argc, char** argv) -> int
 {
     // TODO : faire une fonction!
-    std::ifstream infile(argv[1]);
-    std::string   version;
-    if (infile.is_open())
-        std::getline(infile, version);
-    std::cout << "La version est : " << version << std::endl;
-    infile.close();
+    std::string version;
+    if (argc > 1)
+    {
+        std::ifstream infile(argv[1]);
+        if (infile.is_open())
+            std::getline(infile, version);
+        infile.close();
+    }
 
     try
     {

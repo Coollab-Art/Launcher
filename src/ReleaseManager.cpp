@@ -110,12 +110,12 @@ auto ReleaseManager::install_release(const Release& release) -> void
     // make_file_executable();
 #if defined __linux__
     std::filesystem::path path = release.executable_path();
-    std::system(("chmod u+x " + path.string()).c_str());
+    std::system(fmt::format("chmod u+x \"{}\"", path.string()).c_str());
 #endif
 }
 
 auto ReleaseManager::launch_release(const Release& release) -> void
 {
     std::filesystem::path path = release.executable_path();
-    std::system(path.string().c_str());
+    std::system(fmt::format("\"{}\"", path.string()).c_str());
 }

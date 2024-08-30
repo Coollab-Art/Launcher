@@ -8,14 +8,18 @@
 
 namespace fs = std::filesystem;
 
-auto Release::operator==(const Release& other) const -> bool
+auto Release::installation_path() const -> std::filesystem::path
 {
-    return this->name == other.name;
+    return get_PATH() / this->get_name();
+}
+auto Release::executable_path() const -> std::filesystem::path
+{
+    return installation_path() / "Coollab";
 }
 
 auto Release::is_installed() const -> bool
 {
-    return fs::exists(get_PATH() / this->name);
+    return fs::exists(installation_path());
 }
 
 // get a single release with tag_name

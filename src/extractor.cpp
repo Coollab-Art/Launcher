@@ -10,7 +10,7 @@
 
 namespace fs = std::filesystem;
 
-auto extract_zip(std::string const& zip, std::string_view const& version) -> void
+auto extract_zip(std::string const& zip, std::filesystem::path const& installation_path) -> void
 {
     mz_zip_archive zip_archive;
     memset(&zip_archive, 0, sizeof(zip_archive));
@@ -18,7 +18,7 @@ auto extract_zip(std::string const& zip, std::string_view const& version) -> voi
     if (!mz_zip_reader_init_mem(&zip_archive, zip.data(), zip.size(), 0))
         throw std::runtime_error{fmt::format("Failed to unzip: {}", mz_zip_get_error_string(mz_zip_get_last_error(&zip_archive)))};
 
-    std::filesystem::path parent_folder = get_PATH() / std::string(version);
+    std::filesystem::path parent_folder = installation_path;
     if (!fs::exists(parent_folder))
         fs::create_directories(parent_folder);
 
@@ -70,5 +70,5 @@ auto extract_zip(std::string const& zip, std::string_view const& version) -> voi
 #endif
     }
     mz_zip_reader_end(&zip_archive);
-    std::cout << "✅ Coollab " << version << " is installed! ";
+    // std::cout << "✅ Coollab " << version << " is installed! ";
 }

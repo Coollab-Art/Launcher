@@ -2,13 +2,15 @@
 #include <httplib.h>
 #include <algorithm>
 #include <cstdlib>
+#include <optional>
 #include <tl/expected.hpp>
+#include "Release.hpp"
 #include "download.hpp"
 #include "extractor.hpp"
 #include "fmt/format.h"
 #include "utils.hpp"
 
-auto fetch_all_release() -> tl::expected<std::vector<Release>, std::string>
+static auto fetch_all_release(std::vector<Release>& releases) -> std::optional<std::string>
 {
     std::filesystem::path url = "https://api.github.com/repos/CoolLibs/Lab/releases";
     httplib::Client       cli("https://api.github.com");
@@ -16,66 +18,77 @@ auto fetch_all_release() -> tl::expected<std::vector<Release>, std::string>
 
     auto res = cli.Get(url.string().c_str());
     if (!res || res->status != 200)
-        return tl::make_unexpected(fmt::format("Failed to fetch release info: {}", res ? res->status : -1));
+        return fmt::format("Failed to fetch release info: {}", res ? res->status : -1);
 
     try
     {
-        auto                 jsonResponse = nlohmann::json::parse(res->body);
-        std::vector<Release> all_release;
+        auto jsonResponse = nlohmann::json::parse(res->body);
         for (const auto& release : jsonResponse)
-            if (!release["prerelease"])                     // we keep only non pre-release version
+            if (!release["prerelease"])                     // we keep only non pre-release version // TODO actually, Experimental versions will be marked as prerelease, but we still want to have them
                 for (const auto& asset : release["assets"]) // for all download file of the current release
                 {
                     // Good release? => zip download file exists on the release (Only one per OS)
                     if (is_zip_download(asset["browser_download_url"]))
                     {
                         Release _release(release["name"], asset["browser_download_url"]);
-                        all_release.push_back(_release);
+                        releases.push_back(_release);
                         break;
                     }
                 }
-        return all_release;
+        return std::nullopt;
     }
     catch (nlohmann::json::parse_error const& e)
     {
-        return tl::make_unexpected(fmt::format("JSON parse error: {}", e.what()));
+        return fmt::format("JSON parse error: {}", e.what());
     }
     catch (std::exception& e)
     {
-        return tl::make_unexpected(fmt::format("Error: {}", e.what()));
+        return fmt::format("Error: {}", e.what());
     }
 }
 
+static auto get_all_locally_installed_releases(std::vector<Release>& releases) -> std::optional<std::string>
+{
+}
+
+static auto get_all_known_releases() -> std::vector<Release>
+{
+    auto res = std::vector<Release>{};
+    fetch_all_release(res);                  // TODO handle error
+    get_all_locally_installed_releases(res); // TODO handle error
+    std::sort(res.begin(), res.end());
+
+    return res;
+}
+
 ReleaseManager::ReleaseManager()
-    : all_release{fetch_all_release()}
+    : all_release{get_all_known_releases()}
 {}
 
 auto ReleaseManager::get_all_release() const -> const std::vector<Release>&
 {
-    if (this->all_release.has_value())
-        return this->all_release.value();
-    throw std::runtime_error("No release found.");
+    return this->all_release;
 }
 
 auto ReleaseManager::get_latest_release() const -> const Release&
 {
-    return this->all_release->front();
+    return this->all_release.back();
 }
 
 auto ReleaseManager::find_release(const std::string& release_version) const -> const Release*
 {
-    auto release_iterator = std::find_if(this->all_release->begin(), this->all_release->end(), [&](const Release& release) { return (release.get_name() == release_version); });
-    if (release_iterator != this->all_release->end())
+    auto release_iterator = std::find_if(this->all_release.begin(), this->all_release.end(), [&](const Release& release) { return (release.get_name() == release_version); });
+    if (release_iterator != this->all_release.end())
         return &*release_iterator;
     return nullptr;
 }
 auto ReleaseManager::display_all_release() -> void
 {
-    for (Release const& release : this->all_release.value())
+    for (Release const& release : this->all_release)
     {
         std::cout << release.get_name();
-        if (release == this->get_latest_release())
-            std::cout << " (📍 latest)";
+        // if (release == this->get_latest_release())
+        //     std::cout << " (📍 latest)";
         if (release.is_installed())
             std::cout << " -> ✅ installed";
         else
@@ -87,22 +100,22 @@ auto ReleaseManager::display_all_release() -> void
 // return true -> if no release have been installed
 auto ReleaseManager::no_release_installed() -> bool
 {
-    return std::none_of(this->all_release.value().begin(), this->all_release.value().end(), [](const Release& release) { return release.is_installed(); });
+    return std::none_of(this->all_release.begin(), this->all_release.end(), [](const Release& release) { return release.is_installed(); });
 }
 
 auto ReleaseManager::install_release(const Release& release) -> void
 {
     auto const zip = download_zip(release);
-    extract_zip(*zip, release.get_name());
+    extract_zip(*zip, release.installation_path());
     // make_file_executable();
 #if defined __linux__
-    std::filesystem::path path = get_PATH() / release.get_name() / "Coollab";
+    std::filesystem::path path = release.executable_path();
     std::system(("chmod u+x " + path.string()).c_str());
 #endif
 }
 
 auto ReleaseManager::launch_release(const Release& release) -> void
 {
-    std::filesystem::path path = get_PATH() / release.get_name() / "Coollab";
+    std::filesystem::path path = release.executable_path();
     std::system(path.string().c_str());
 }

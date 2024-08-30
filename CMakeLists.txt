@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 project(Coollab-Launcher)
 add_executable(${PROJECT_NAME})
 
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+add_library(Coollab-Launcher-Properties INTERFACE) # This is needed by both the launcher and its tests
+target_link_libraries(${PROJECT_NAME} PRIVATE Coollab-Launcher-Properties)
+
+target_compile_features(Coollab-Launcher-Properties INTERFACE cxx_std_20)
 set(OPENSSL_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
 
 # Set the folder where the executable is created
@@ -11,9 +14,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 # Set warning level
 if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+    target_compile_options(Coollab-Launcher-Properties INTERFACE /W4)
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -pedantic-errors -Wconversion -Wsign-conversion -Wimplicit-fallthrough)
+    target_compile_options(Coollab-Launcher-Properties INTERFACE -Wall -Wextra -Wpedantic -pedantic-errors -Wconversion -Wsign-conversion -Wimplicit-fallthrough)
 endif()
 
 # Maybe enable warnings as errors
@@ -21,9 +24,9 @@ set(WARNINGS_AS_ERRORS_FOR_COOLLAB_LAUNCHER OFF CACHE BOOL "ON iff you want to t
 
 if(WARNINGS_AS_ERRORS_FOR_COOLLAB_LAUNCHER)
     if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE /WX)
+        target_compile_options(Coollab-Launcher-Properties PRIVATE /WX)
     else()
-        target_compile_options(${PROJECT_NAME} PRIVATE -Werror)
+        target_compile_options(Coollab-Launcher-Properties PRIVATE -Werror)
     endif()
 endif()
 
@@ -53,26 +56,26 @@ FetchContent_MakeAvailable(json)
 
 FetchContent_MakeAvailable(miniz)
 
-# # Grab all the source files
+# Grab all the source files
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json miniz)
+target_include_directories(Coollab-Launcher-Properties INTERFACE ${PROJECT_SOURCE_DIR}/src)
+target_link_libraries(Coollab-Launcher-Properties INTERFACE nlohmann_json::nlohmann_json miniz)
 
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE Lab/Cool/lib/expected/include)
+target_include_directories(Coollab-Launcher-Properties SYSTEM INTERFACE Lab/Cool/lib/expected/include)
 
 add_subdirectory(Lab/lib/cpp-httplib)
-target_link_libraries(${PROJECT_NAME} PRIVATE httplib)
+target_link_libraries(Coollab-Launcher-Properties INTERFACE httplib)
 
 add_subdirectory(Lab/Cool/lib/stringify/lib/fmt)
-target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+target_link_libraries(Coollab-Launcher-Properties INTERFACE fmt::fmt)
 
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE Lab/Cool/lib/expected/include)
+target_include_directories(Coollab-Launcher-Properties SYSTEM INTERFACE Lab/Cool/lib/expected/include)
 
 # exe_path
 add_subdirectory(Lab/Cool/lib/exe_path)
-target_link_libraries(${PROJECT_NAME} PRIVATE exe_path::exe_path)
+target_link_libraries(Coollab-Launcher-Properties INTERFACE exe_path::exe_path)
 
 # ---------------------
 # ---CPack---
@@ -143,3 +146,14 @@ set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/Lab/app-resources/icon.icns")
 
 #
 include(CPack)
+
+
+# ---------------------
+# ---Setup the tests---
+# ---------------------
+add_subdirectory(Lab/Cool/lib/doctest)
+list(REMOVE_ITEM SOURCES ${CMAKE_SOURCE_DIR}/src/main.cpp)
+add_executable(Tests-Coollab-Launcher tests/tests.cpp ${SOURCES})
+target_compile_definitions(Tests-Coollab-Launcher PRIVATE COOLLAB_LAUNCHER_TESTS)
+target_link_libraries(Tests-Coollab-Launcher PRIVATE Coollab-Launcher-Properties)
+target_link_libraries(Tests-Coollab-Launcher PRIVATE doctest::doctest)

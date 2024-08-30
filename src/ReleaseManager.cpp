@@ -49,6 +49,27 @@ static auto fetch_all_release(std::vector<Release>& releases) -> std::optional<s
 
 static auto get_all_locally_installed_releases(std::vector<Release>& releases) -> std::optional<std::string>
 {
+    try
+    {
+        for (auto const& entry : std::filesystem::directory_iterator{get_PATH()})
+        {
+            auto const name = entry.path().stem().string();
+            for (auto const& release : releases)
+            {
+                if (release.get_name() == name)
+                    continue;
+            }
+            releases.emplace_back(name, ""); // TODO make download URL optional
+        }
+    }
+    catch (std::filesystem::filesystem_error const& e)
+    {
+        return fmt::format("Filesystem error: {}", e.what());
+    }
+    catch (const std::exception& e)
+    {
+        return fmt::format("Error: {}", e.what());
+    }
     return std::nullopt;
 }
 

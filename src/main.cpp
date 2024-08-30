@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include "ReleaseManager.hpp"
+#include "boxer/boxer.h"
 #include "download.hpp"
 
 auto main(int argc, char** argv) -> int
@@ -35,7 +36,12 @@ auto main(int argc, char** argv) -> int
         if (release_to_launch == nullptr)
         {
             std::cerr << "La version " << version << " n'a pas pu être installée, installation de la dernière version (par défaut).";
-            release_to_launch = &release_manager.get_latest_release();
+            release_to_launch = release_manager.get_latest_release();
+            if (release_to_launch == nullptr)
+            {
+                boxer::show("Please connect to the Internet so that we can install the latest version of Coollab.\nYou don't have any version installed yet.", "You are offline");
+                return 0;
+            }
         }
 
         // Si la latest n'est pas installée -> on l'installe

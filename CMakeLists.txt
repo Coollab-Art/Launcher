@@ -76,6 +76,9 @@ target_include_directories(Coollab-Launcher-Properties SYSTEM INTERFACE Lab/Cool
 # exe_path
 add_subdirectory(Lab/Cool/lib/exe_path)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE exe_path::exe_path)
+# boxer
+add_subdirectory(Lab/Cool/lib/Boxer)
+target_link_libraries(Coollab-Launcher-Properties INTERFACE Boxer)
 
 # ---------------------
 # ---CPack---

@@ -49,6 +49,7 @@ static auto fetch_all_release(std::vector<Release>& releases) -> std::optional<s
 
 static auto get_all_locally_installed_releases(std::vector<Release>& releases) -> std::optional<std::string>
 {
+    return std::nullopt;
 }
 
 static auto get_all_known_releases() -> std::vector<Release>
@@ -70,9 +71,11 @@ auto ReleaseManager::get_all_release() const -> const std::vector<Release>&
     return this->all_release;
 }
 
-auto ReleaseManager::get_latest_release() const -> const Release&
+auto ReleaseManager::get_latest_release() const -> const Release*
 {
-    return this->all_release.back();
+    if (all_release.empty())
+        return nullptr;
+    return &this->all_release.back();
 }
 
 auto ReleaseManager::find_release(const std::string& release_version) const -> const Release*

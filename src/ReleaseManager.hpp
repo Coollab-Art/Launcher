@@ -8,7 +8,7 @@ public:
     ReleaseManager();
 
     [[nodiscard]] auto get_all_release() const -> const std::vector<Release>&;
-    [[nodiscard]] auto get_latest_release() const -> const Release&;
+    [[nodiscard]] auto get_latest_release() const -> const Release*;
     [[nodiscard]] auto find_release(const std::string& release_version) const -> const Release*;
 
     auto display_all_release() -> void;

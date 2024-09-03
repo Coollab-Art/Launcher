@@ -24,9 +24,9 @@ set(WARNINGS_AS_ERRORS_FOR_COOLLAB_LAUNCHER OFF CACHE BOOL "ON iff you want to t
 
 if(WARNINGS_AS_ERRORS_FOR_COOLLAB_LAUNCHER)
     if(MSVC)
-        target_compile_options(Coollab-Launcher-Properties PRIVATE /WX)
+        target_compile_options(Coollab-Launcher-Properties INTERFACE /WX)
     else()
-        target_compile_options(Coollab-Launcher-Properties PRIVATE -Werror)
+        target_compile_options(Coollab-Launcher-Properties INTERFACE -Werror)
     endif()
 endif()
 

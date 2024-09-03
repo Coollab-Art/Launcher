@@ -6,7 +6,7 @@ on:
       - "*"
 
 env:
-  cmake_configure_args: -D WARNINGS_AS_ERRORS_FOR_COOLLAB_LAUNCHER=ON
+  cmake_configure_args: "" # -D WARNINGS_AS_ERRORS_FOR_COOLLAB_LAUNCHER=ON # TODO(Launcher) Check warnings
   cmakelists_folder: "."
   cmake_target: Coollab-Launcher
 

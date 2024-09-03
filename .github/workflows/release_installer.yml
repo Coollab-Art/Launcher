@@ -37,7 +37,7 @@ jobs:
               os: macos-latest,
               cmake_configure_args: -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -G Ninja -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib,
               cpack_generator: Bundle,
-              installer_name: Coollab-Launcher-Mac.dmg,
+              installer_name: Coollab-Launcher-MacOS.dmg,
             }
 
     steps:
@@ -63,7 +63,7 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y libgtk-3-dev
-          
+
       - name: Install MacOS dependencies
         if: runner.os == 'MacOS'
         run: |

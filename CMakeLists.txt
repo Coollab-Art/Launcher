@@ -60,6 +60,8 @@ FetchContent_MakeAvailable(miniz)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
 
+add_subdirectory(Lab/Cool)
+
 target_include_directories(Coollab-Launcher-Properties INTERFACE ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE nlohmann_json::nlohmann_json miniz)
 
@@ -68,17 +70,18 @@ target_include_directories(Coollab-Launcher-Properties SYSTEM INTERFACE Lab/Cool
 add_subdirectory(Lab/lib/cpp-httplib)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE httplib)
 
-add_subdirectory(Lab/Cool/lib/stringify/lib/fmt)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE fmt::fmt)
 
 target_include_directories(Coollab-Launcher-Properties SYSTEM INTERFACE Lab/Cool/lib/expected/include)
 
 # exe_path
-add_subdirectory(Lab/Cool/lib/exe_path)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE exe_path::exe_path)
+
 # boxer
-add_subdirectory(Lab/Cool/lib/Boxer)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE Boxer)
+
+# Set app icon
+Cool__set_app_icon(${PROJECT_NAME} "res/logo.png" "${CMAKE_SOURCE_DIR}/Lab/app-resources/icon.rc")
 
 # ---------------------
 # ---CPack---
@@ -153,7 +156,6 @@ include(CPack)
 # ---------------------
 # ---Setup the tests---
 # ---------------------
-add_subdirectory(Lab/Cool/lib/doctest)
 list(REMOVE_ITEM SOURCES ${CMAKE_SOURCE_DIR}/src/main.cpp)
 add_executable(Tests-Coollab-Launcher tests/tests.cpp ${SOURCES})
 target_compile_definitions(Tests-Coollab-Launcher PRIVATE COOLLAB_LAUNCHER_TESTS)

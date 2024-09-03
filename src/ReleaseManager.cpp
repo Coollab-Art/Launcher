@@ -24,17 +24,17 @@ static auto fetch_all_release(std::vector<Release>& releases) -> std::optional<s
     {
         auto jsonResponse = nlohmann::json::parse(res->body);
         for (const auto& release : jsonResponse)
-            if (!release["prerelease"])                     // we keep only non pre-release version // TODO actually, Experimental versions will be marked as prerelease, but we still want to have them
-                for (const auto& asset : release["assets"]) // for all download file of the current release
+            // if (!release["prerelease"])                     // we keep only non pre-release version // TODO actually, Experimental versions will be marked as prerelease, but we still want to have them
+            for (const auto& asset : release["assets"]) // for all download file of the current release
+            {
+                // Good release? => zip download file exists on the release (Only one per OS)
+                if (is_zip_download(asset["browser_download_url"]))
                 {
-                    // Good release? => zip download file exists on the release (Only one per OS)
-                    if (is_zip_download(asset["browser_download_url"]))
-                    {
-                        Release _release(release["name"], asset["browser_download_url"]);
-                        releases.push_back(_release);
-                        break;
-                    }
+                    Release _release(release["name"], asset["browser_download_url"]);
+                    releases.push_back(_release);
+                    break;
                 }
+            }
         return std::nullopt;
     }
     catch (nlohmann::json::parse_error const& e)
@@ -54,12 +54,12 @@ static auto get_all_locally_installed_releases(std::vector<Release>& releases) -
         for (auto const& entry : std::filesystem::directory_iterator{get_PATH()})
         {
             auto const name = entry.path().stem().string();
-            for (auto const& release : releases)
+            if (std::none_of(releases.begin(), releases.end(), [&](Release const& release) {
+                    return release.get_name() == name;
+                }))
             {
-                if (release.get_name() == name)
-                    continue;
+                releases.emplace_back(name, ""); // TODO make download URL optional
             }
-            releases.emplace_back(name, ""); // TODO make download URL optional
         }
     }
     catch (std::filesystem::filesystem_error const& e)
@@ -77,7 +77,7 @@ static auto get_all_known_releases() -> std::vector<Release>
 {
     auto res = std::vector<Release>{};
     fetch_all_release(res);                  // TODO handle error
-    get_all_locally_installed_releases(res); // TODO handle error
+    get_all_locally_installed_releases(res); // Must be done after fetching remote releases, because this function will not add a version if it has already been added by the previous function // TODO handle error
     std::sort(res.begin(), res.end());
 
     return res;

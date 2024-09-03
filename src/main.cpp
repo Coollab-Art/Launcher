@@ -27,6 +27,7 @@ auto main(int argc, char** argv) -> int
 #endif
 
         ReleaseManager release_manager;
+        release_manager.display_all_release();
 
         Release const* release_to_launch = nullptr;
 
@@ -35,7 +36,7 @@ auto main(int argc, char** argv) -> int
         release_to_launch = release_manager.find_release(version);
         if (release_to_launch == nullptr)
         {
-            std::cerr << "La version " << version << " n'a pas pu être installée, installation de la dernière version (par défaut).";
+            // std::cerr << "La version " << version << " n'a pas pu être installée, installation de la dernière version (par défaut).";
             release_to_launch = release_manager.get_latest_release();
             if (release_to_launch == nullptr)
             {
@@ -49,8 +50,6 @@ auto main(int argc, char** argv) -> int
             release_manager.install_release(*release_to_launch);
 
         release_manager.launch_release(*release_to_launch);
-
-        // Problème internet... (TODO)
     }
     catch (const std::exception& e)
     {

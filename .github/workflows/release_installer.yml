@@ -79,6 +79,29 @@ jobs:
           cmakeBuildType: Release
           buildDirectory: ${{github.workspace}}/build
 
+      - name: Import signing certificate
+        if: runner.os == 'MacOS'
+        env:
+          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          MACOS_CERT_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_CERT_KEYCHAIN_PASSWORD }}
+        run: |
+          echo "$MACOS_CERT_P12" | base64 --decode > macos_cert.p12
+          security create-keychain -p "$MACOS_CERT_KEYCHAIN_PASSWORD" build.keychain
+          security import macos_cert.p12 -k build.keychain -P "$MACOS_CERT_PASSWORD" -T /usr/bin/codesign
+          security list-keychains -s build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          security unlock-keychain -p "$MACOS_CERT_KEYCHAIN_PASSWORD" build.keychain
+          security find-identity -v -p codesigning build.keychain
+
+      - name: Sign the application
+        if: runner.os == 'MacOS'
+        env:
+          MACOS_CERT_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_CERT_KEYCHAIN_PASSWORD }}
+        run: |
+          security unlock-keychain -p "$MACOS_CERT_KEYCHAIN_PASSWORD" build.keychain
+          codesign --deep --force --verify --verbose --sign "Jules Fouchy" ${{github.workspace}}/bin/Release/Coollab-Launcher
+
       - name: Create Installer
         run: |
           cd ${{github.workspace}}/build

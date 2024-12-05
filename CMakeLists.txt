@@ -6,7 +6,6 @@ add_library(Coollab-Launcher-Properties INTERFACE) # This is needed by both the 
 target_link_libraries(${PROJECT_NAME} PRIVATE Coollab-Launcher-Properties)
 
 target_compile_features(Coollab-Launcher-Properties INTERFACE cxx_std_20)
-set(OPENSSL_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
 
 # Set the folder where the executable is created
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -35,6 +34,7 @@ include(FetchContent)
 # Make sure we link the static version
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static library" FORCE)
 set(BULD_STATIC_LIBS ON CACHE BOOL "" FORCE)
+set(OPENSSL_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
 
 # JSON
 FetchContent_Declare(
@@ -42,29 +42,27 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/nlohmann/json.git
     GIT_TAG v3.11.3
 )
+FetchContent_MakeAvailable(json)
+target_link_libraries(Coollab-Launcher-Properties INTERFACE nlohmann_json::nlohmann_json)
 
 # MINIZ
-# Configurer FetchContent pour miniz
 FetchContent_Declare(
     miniz
     GIT_REPOSITORY https://github.com/richgel999/miniz.git
     GIT_TAG master
 )
-
-# Get and build JSON
-FetchContent_MakeAvailable(json)
-
 FetchContent_MakeAvailable(miniz)
+target_link_libraries(Coollab-Launcher-Properties INTERFACE miniz)
 
 # Grab all the source files
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
 
 target_include_directories(Coollab-Launcher-Properties INTERFACE ${PROJECT_SOURCE_DIR}/src)
-target_link_libraries(Coollab-Launcher-Properties INTERFACE nlohmann_json::nlohmann_json miniz)
 
 target_include_directories(Coollab-Launcher-Properties SYSTEM INTERFACE Lab/Cool/lib/expected/include)
 
+set(HTTPLIB_REQUIRE_OPENSSL ON CACHE BOOL "" FORCE)
 add_subdirectory(Lab/lib/cpp-httplib)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE httplib)
 

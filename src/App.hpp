@@ -1,20 +1,22 @@
 #pragma once
 #include "Cool/AppManager/IApp.h"
 #include "Cool/View/ViewsManager.h"
+#include "Cool/Window/Window.h"
 #include "Cool/Window/WindowManager.h"
+#include "ReleaseManager.hpp"
 
 class App : public Cool::IApp {
 public:
-    explicit App(Cool::WindowManager& windows, Cool::ViewsManager& views) {}
+    App(Cool::WindowManager& windows, Cool::ViewsManager& /* views */);
 
     void update() override {}
-
-    void imgui_windows() override
-    {
-        ImGui::Begin("Hello");
-        ImGui::End();
-    }
+    void imgui_windows() override;
     void imgui_menus() override {}
+
+private:
+    ReleaseManager _release_manager;
+    Release const* _release_to_use_for_new_project{};
+    Cool::Window&  _window; // NOLINT(*avoid-const-or-ref-data-members)
 
 private:
     friend class ser20::access;

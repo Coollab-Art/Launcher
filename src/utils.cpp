@@ -1,6 +1,5 @@
 #include "utils.hpp"
-#include <cstddef>
-#include "exe_path/exe_path.h"
+#include "Cool/Path/Path.h"
 
 // which OS ?
 auto get_OS() -> std::string
@@ -19,7 +18,7 @@ auto get_OS() -> std::string
 // get the correct path for the installation
 auto get_PATH() -> std::filesystem::path
 {
-    return exe_path::user_data() / "Coollab-Launcher";
+    return Cool::Path::user_data();
 }
 
 // check if the download url is targeting a zip file.

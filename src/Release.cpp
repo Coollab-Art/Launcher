@@ -2,7 +2,9 @@
 #include <filesystem>
 #include <string>
 #include <tl/expected.hpp>
+#include "Cool/spawn_process.hpp"
 #include "fmt/core.h"
+#include "handle_error.hpp"
 #include "httplib.h"
 #include "utils.hpp"
 
@@ -67,4 +69,10 @@ auto get_release(std::string_view const& version) -> tl::expected<nlohmann::json
     {
         return tl::make_unexpected(fmt::format("{}", e.what()));
     }
+}
+
+void Release::launch() const
+{
+    std::cout << "Launching Coollab " << get_name() << '\n';
+    handle_error(Cool::spawn_process(executable_path()));
 }

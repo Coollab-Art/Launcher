@@ -15,8 +15,7 @@ public:
     auto no_release_installed() -> bool;
 
     void install_release(const Release& release);
-    void launch_release(const Release& release);
 
 private:
-    std::vector<Release> all_release; // Sorted, from oldest to latest release
+    std::vector<Release> all_release; // Sorted, from latest to oldest release
 };

@@ -69,14 +69,15 @@ add_subdirectory(Lab/lib/cpp-httplib)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE httplib)
 
 # Include Cool
-set(COOL_USE_OPENGL $<IF:$<PLATFORM_ID:Darwin>,410,430>) # Must be >= 330 for ImGui to work properly # We use 410 when building on Mac because it doesn't support higher versions of OpenGL
-set(COOL_USE_INSTALLER OFF)
-set(COOL_APP_NAME "Coollab")
+set(COOL_USE_OPENGL 410)
+set(COOL_USE_INSTALLER ON)
+set(COOL_APP_NAME "Coollab Launcher")
 add_subdirectory(Lab/Cool)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE Cool::Core)
 cool_setup(${PROJECT_NAME})
 Cool__set_app_icon(${PROJECT_NAME} "Lab/res/logo.png" "${CMAKE_SOURCE_DIR}/Lab/app-resources/icon.rc")
 Cool__target_copy_file(${PROJECT_NAME} "Lab/res/logo.png")
+install(FILES "Lab/res/logo.png" DESTINATION "Lab/res")
 
 # ---------------------
 # ---CPack---

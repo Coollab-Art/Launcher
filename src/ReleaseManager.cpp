@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <optional>
 #include <tl/expected.hpp>
-#include "Cool/spawn_process.hpp"
 #include "Release.hpp"
 #include "download.hpp"
 #include "extractor.hpp"
@@ -84,8 +83,10 @@ static auto get_all_known_releases() -> std::vector<Release>
 {
     auto res = std::vector<Release>{};
     handle_error(get_all_locally_installed_releases(res)); // Must be done after fetching remote releases, because this function will not add a version if it has already been added by the previous function
-    handle_error(fetch_all_release(res));
-    std::sort(res.begin(), res.end());
+    // handle_error(fetch_all_release(res));
+    std::sort(res.begin(), res.end(), [](Release const& a, Release const& b) {
+        return a.version() > b.version();
+    });
 
     return res;
 }
@@ -103,7 +104,7 @@ auto ReleaseManager::get_latest_release() const -> const Release*
 {
     if (all_release.empty())
         return nullptr;
-    return &this->all_release.back();
+    return &this->all_release.front();
 }
 
 auto ReleaseManager::find_release(const std::string& release_version) const -> const Release*
@@ -144,10 +145,4 @@ auto ReleaseManager::install_release(const Release& release) -> void
     std::filesystem::path path = release.executable_path();
     std::system(fmt::format("chmod u+x \"{}\"", path.string()).c_str());
 #endif
-}
-
-void ReleaseManager::launch_release(const Release& release)
-{
-    std::cout << "Launching Coollab " << release.get_name() << '\n';
-    handle_error(Cool::spawn_process(release.executable_path()));
 }

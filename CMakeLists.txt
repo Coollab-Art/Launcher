@@ -64,29 +64,19 @@ target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
 
 target_include_directories(Coollab-Launcher-Properties INTERFACE ${PROJECT_SOURCE_DIR}/src)
 
-target_include_directories(Coollab-Launcher-Properties SYSTEM INTERFACE Lab/Cool/lib/expected/include)
-
 set(HTTPLIB_REQUIRE_OPENSSL ON CACHE BOOL "" FORCE)
 add_subdirectory(Lab/lib/cpp-httplib)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE httplib)
 
-add_subdirectory(Lab/Cool/lib/stringify/lib/fmt)
-target_link_libraries(Coollab-Launcher-Properties INTERFACE fmt::fmt)
-
-target_include_directories(Coollab-Launcher-Properties SYSTEM INTERFACE Lab/Cool/lib/expected/include)
-
-# exe_path
-add_subdirectory(Lab/Cool/lib/exe_path)
-target_link_libraries(Coollab-Launcher-Properties INTERFACE exe_path::exe_path)
-
-# boxer
-add_subdirectory(Lab/Cool/lib/Boxer)
-target_link_libraries(Coollab-Launcher-Properties INTERFACE Boxer)
-
-# Set app icon
-if(WIN32)
-    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/Lab/app-resources/icon.rc")
-endif()
+# Include Cool
+set(COOL_USE_OPENGL $<IF:$<PLATFORM_ID:Darwin>,410,430>) # Must be >= 330 for ImGui to work properly # We use 410 when building on Mac because it doesn't support higher versions of OpenGL
+set(COOL_USE_INSTALLER OFF)
+set(COOL_APP_NAME "Coollab")
+add_subdirectory(Lab/Cool)
+target_link_libraries(Coollab-Launcher-Properties INTERFACE Cool::Core)
+cool_setup(${PROJECT_NAME})
+Cool__set_app_icon(${PROJECT_NAME} "Lab/res/logo.png" "${CMAKE_SOURCE_DIR}/Lab/app-resources/icon.rc")
+Cool__target_copy_file(${PROJECT_NAME} "Lab/res/logo.png")
 
 # ---------------------
 # ---CPack---
@@ -161,7 +151,6 @@ include(CPack)
 # ---------------------
 # ---Setup the tests---
 # ---------------------
-add_subdirectory(Lab/Cool/lib/doctest)
 list(REMOVE_ITEM SOURCES ${CMAKE_SOURCE_DIR}/src/main.cpp)
 add_executable(Tests-Coollab-Launcher tests/tests.cpp ${SOURCES})
 target_compile_definitions(Tests-Coollab-Launcher PRIVATE COOLLAB_LAUNCHER_TESTS)

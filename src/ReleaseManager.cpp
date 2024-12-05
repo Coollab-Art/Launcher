@@ -1,7 +1,6 @@
 #include "ReleaseManager.hpp"
 #include <httplib.h>
 #include <algorithm>
-#include <cstdlib>
 #include <optional>
 #include <tl/expected.hpp>
 #include "Cool/spawn_process.hpp"
@@ -12,11 +11,21 @@
 #include "handle_error.hpp"
 #include "utils.hpp"
 
+using namespace std::literals;
+
 static auto fetch_all_release(std::vector<Release>& releases) -> std::optional<std::string>
 {
     std::filesystem::path url = "https://api.github.com/repos/CoolLibs/Lab/releases";
     httplib::Client       cli("https://api.github.com");
     cli.set_follow_location(true);
+    if (!releases.empty())
+    {
+        // If we have at least one version installed, there is no need to wait too long to check if new versions are available
+        // This prevents Coollab from beeing slow to launch when you have a bad internet connection
+        cli.set_read_timeout(500ms);
+        cli.set_write_timeout(500ms);
+        cli.set_connection_timeout(500ms);
+    }
 
     auto res = cli.Get(url.string());
     if (!res || res->status != 200)
@@ -74,8 +83,8 @@ static auto get_all_locally_installed_releases(std::vector<Release>& releases) -
 static auto get_all_known_releases() -> std::vector<Release>
 {
     auto res = std::vector<Release>{};
-    fetch_all_release(res);                  // TODO handle error
-    get_all_locally_installed_releases(res); // Must be done after fetching remote releases, because this function will not add a version if it has already been added by the previous function // TODO handle error
+    handle_error(get_all_locally_installed_releases(res)); // Must be done after fetching remote releases, because this function will not add a version if it has already been added by the previous function
+    handle_error(fetch_all_release(res));
     std::sort(res.begin(), res.end());
 
     return res;

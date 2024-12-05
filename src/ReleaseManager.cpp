@@ -4,10 +4,12 @@
 #include <cstdlib>
 #include <optional>
 #include <tl/expected.hpp>
+#include "Cool/spawn_process.hpp"
 #include "Release.hpp"
 #include "download.hpp"
 #include "extractor.hpp"
 #include "fmt/format.h"
+#include "handle_error.hpp"
 #include "utils.hpp"
 
 static auto fetch_all_release(std::vector<Release>& releases) -> std::optional<std::string>
@@ -39,11 +41,11 @@ static auto fetch_all_release(std::vector<Release>& releases) -> std::optional<s
     }
     catch (nlohmann::json::parse_error const& e)
     {
-        return fmt::format("JSON parse error: {}", e.what());
+        return fmt::format("JSON parsing error: {}", e.what());
     }
     catch (std::exception& e)
     {
-        return fmt::format("Error: {}", e.what());
+        return fmt::format("{}", e.what());
     }
 }
 
@@ -62,13 +64,9 @@ static auto get_all_locally_installed_releases(std::vector<Release>& releases) -
             }
         }
     }
-    catch (std::filesystem::filesystem_error const& e)
+    catch (std::exception const& e)
     {
-        return fmt::format("Filesystem error: {}", e.what());
-    }
-    catch (const std::exception& e)
-    {
-        return fmt::format("Error: {}", e.what());
+        return fmt::format("{}", e.what());
     }
     return std::nullopt;
 }
@@ -139,8 +137,8 @@ auto ReleaseManager::install_release(const Release& release) -> void
 #endif
 }
 
-auto ReleaseManager::launch_release(const Release& release) -> void
+void ReleaseManager::launch_release(const Release& release)
 {
-    std::filesystem::path path = release.executable_path();
-    std::system(fmt::format("\"{}\"", path.string()).c_str());
+    std::cout << "Launching Coollab " << release.get_name() << '\n';
+    handle_error(Cool::spawn_process(release.executable_path()));
 }

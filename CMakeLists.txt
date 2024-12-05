@@ -19,7 +19,7 @@ else()
 endif()
 
 # Maybe enable warnings as errors
-set(WARNINGS_AS_ERRORS_FOR_COOLLAB_LAUNCHER OFF CACHE BOOL "ON iff you want to treat warnings as errors") # Might be overriden in the CMake cache
+set(WARNINGS_AS_ERRORS_FOR_COOLLAB_LAUNCHER OFF CACHE BOOL "ON iff you want to treat warnings as errors") # Might be overridden in the CMake cache
 
 if(WARNINGS_AS_ERRORS_FOR_COOLLAB_LAUNCHER)
     if(MSVC)
@@ -32,9 +32,13 @@ endif()
 include(FetchContent)
 
 # Make sure we link the static version
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static library" FORCE)
-set(BULD_STATIC_LIBS ON CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
 set(OPENSSL_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
+
+# spawn_process
+add_subdirectory(lib/spawn_process)
+target_link_libraries(Coollab-Launcher-Properties INTERFACE Cool::spawn_process)
 
 # JSON
 FetchContent_Declare(

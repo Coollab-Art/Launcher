@@ -12,9 +12,21 @@ auto Release::installation_path() const -> std::filesystem::path
 {
     return get_PATH() / this->get_name();
 }
+
+static auto exe_name() -> std::filesystem::path
+{
+#if defined(_WIN32)
+    return "Coollab.exe";
+#elif defined(__linux__) || defined(__APPLE__)
+    return "Coollab";
+#else
+#error "Unsupported platform"
+#endif
+}
+
 auto Release::executable_path() const -> std::filesystem::path
 {
-    return installation_path() / "Coollab";
+    return installation_path() / exe_name();
 }
 
 auto Release::is_installed() const -> bool
@@ -49,10 +61,10 @@ auto get_release(std::string_view const& version) -> tl::expected<nlohmann::json
     }
     catch (nlohmann::json::parse_error const& e)
     {
-        return tl::make_unexpected(fmt::format("JSON parse error: {}", e.what()));
+        return tl::make_unexpected(fmt::format("JSON parsing error: {}", e.what()));
     }
     catch (std::exception& e)
     {
-        return tl::make_unexpected(fmt::format("Error: {}", e.what()));
+        return tl::make_unexpected(fmt::format("{}", e.what()));
     }
 }

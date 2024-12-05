@@ -24,14 +24,10 @@ auto install_macos_dependencies_if_necessary() -> void
     // Check if Homebrew is already installed
     if (std::system("command -v brew >/dev/null 2>&1"))
         install_homebrew();
-    else
-        std::cout << "Homebrew is already installed." << std::endl;
 
     // Check if FFmpeg is already installed
     if (std::system("command -v ffmpeg >/dev/null 2>&1"))
         install_ffmpeg();
-    else
-        std::cout << "FFmpeg is already installed." << std::endl;
 }
 
 auto install_homebrew() -> void

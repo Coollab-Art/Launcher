@@ -5,7 +5,6 @@
 #include <string>
 #include "ReleaseManager.hpp"
 #include "boxer/boxer.h"
-#include "download.hpp"
 
 auto main(int argc, char** argv) -> int
 {
@@ -27,7 +26,7 @@ auto main(int argc, char** argv) -> int
 #endif
 
         ReleaseManager release_manager;
-        release_manager.display_all_release();
+        // release_manager.display_all_release();
 
         Release const* release_to_launch = nullptr;
 

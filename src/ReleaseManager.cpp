@@ -16,9 +16,9 @@ static auto fetch_all_release(std::vector<Release>& releases) -> std::optional<s
     httplib::Client       cli("https://api.github.com");
     cli.set_follow_location(true);
 
-    auto res = cli.Get(url.string().c_str());
+    auto res = cli.Get(url.string());
     if (!res || res->status != 200)
-        return fmt::format("Failed to fetch release info: {}", res ? res->status : -1);
+        return fmt::format("Failed to fetch release info: {}", httplib::to_string(res.error()));
 
     try
     {
@@ -129,6 +129,7 @@ auto ReleaseManager::no_release_installed() -> bool
 
 auto ReleaseManager::install_release(const Release& release) -> void
 {
+    std::cout << "Installing Coollab " << release.get_name() << "...\n";
     auto const zip = download_zip(release);
     extract_zip(*zip, release.installation_path());
     // make_file_executable();

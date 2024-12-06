@@ -5,10 +5,12 @@
 #include <optional>
 #include <tl/expected.hpp>
 #include "Cool/ImGui/ImGuiExtras.h"
+#include "Path.hpp"
 #include "Release.hpp"
 #include "download.hpp"
 #include "fmt/format.h"
 #include "handle_error.hpp"
+#include "nlohmann/json.hpp"
 #include "utils.hpp"
 
 using namespace std::literals;
@@ -62,7 +64,7 @@ static auto get_all_locally_installed_releases(std::vector<Release>& releases) -
 {
     try
     {
-        for (auto const& entry : std::filesystem::directory_iterator{installation_folder()})
+        for (auto const& entry : std::filesystem::directory_iterator{Path::installed_versions_folder()})
         {
             auto const name = entry.path().stem().string();
             if (std::none_of(releases.begin(), releases.end(), [&](Release const& release) {

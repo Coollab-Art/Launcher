@@ -26,9 +26,9 @@ private:
     template<class Archive>
     void serialize(Archive& archive)
     {
-        archive(
-            ser20::make_nvp("Project Manager", _project_manager)
-        );
+        // archive(
+        //     ser20::make_nvp("Project Manager", _project_manager)
+        // );
     }
 };
 

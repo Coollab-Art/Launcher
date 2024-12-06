@@ -1,5 +1,4 @@
 #include "utils.hpp"
-#include "Cool/Path/Path.h"
 
 // which OS ?
 auto get_OS() -> std::string
@@ -13,11 +12,6 @@ auto get_OS() -> std::string
 #else
     static_assert(false);
 #endif
-}
-
-auto installation_folder() -> std::filesystem::path
-{
-    return Cool::Path::user_data() / "Installed Versions";
 }
 
 // check if the download url is targeting a zip file.

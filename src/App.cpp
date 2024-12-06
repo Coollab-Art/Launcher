@@ -12,7 +12,7 @@ void App::imgui_windows()
     _release_manager.imgui();
     ImGui::End();
     ImGui::Begin("Projects");
-    if (ImGui::Button("New Project")) // TODO(Launcher) Nice big blue button
+    if (ImGui::Button("New Project")) // TODO(Launcher) Nice big blue button // TODO(Launcher) Should always be on top, even when we scroll through the projects
     {
         _release_to_use_for_new_project->launch(); // TODO(Launcher) Handle when no version
         _window.close();
@@ -28,5 +28,5 @@ void App::imgui_windows()
     );
     _project_manager.imgui();
     ImGui::End();
-    ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
 }

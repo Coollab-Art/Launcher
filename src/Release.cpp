@@ -4,18 +4,19 @@
 #include <tl/expected.hpp>
 #include "Cool/File/File.h"
 #include "Cool/spawn_process.hpp"
+#include "Path.hpp"
 #include "download.hpp"
 #include "extract_zip.hpp"
 #include "fmt/core.h"
 #include "handle_error.hpp"
 #include "httplib.h"
-#include "utils.hpp"
+#include "nlohmann/json.hpp"
 
 namespace fs = std::filesystem;
 
 auto Release::installation_path() const -> std::filesystem::path
 {
-    return installation_folder() / this->get_name();
+    return Path::installed_versions_folder() / get_name();
 }
 
 static auto exe_name() -> std::filesystem::path
@@ -40,7 +41,7 @@ auto Release::is_installed() const -> bool
 }
 
 // get a single release with tag_name
-auto get_release(std::string_view const& version) -> tl::expected<nlohmann::json, std::string>
+static auto get_release(std::string_view const& version) -> tl::expected<nlohmann::json, std::string>
 {
     std::string url = fmt::format("https://api.github.com/repos/CoolLibs/Lab/releases/tags/{}", version);
 

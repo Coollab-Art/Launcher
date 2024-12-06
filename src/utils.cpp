@@ -15,10 +15,9 @@ auto get_OS() -> std::string
 #endif
 }
 
-// get the correct path for the installation
-auto get_PATH() -> std::filesystem::path
+auto installation_folder() -> std::filesystem::path
 {
-    return Cool::Path::user_data();
+    return Cool::Path::user_data() / "Installed Versions";
 }
 
 // check if the download url is targeting a zip file.

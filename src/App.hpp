@@ -3,6 +3,7 @@
 #include "Cool/View/ViewsManager.h"
 #include "Cool/Window/Window.h"
 #include "Cool/Window/WindowManager.h"
+#include "ProjectManager.hpp"
 #include "ReleaseManager.hpp"
 
 class App : public Cool::IApp {
@@ -14,15 +15,20 @@ public:
     void imgui_menus() override {}
 
 private:
-    ReleaseManager _release_manager;
+    ReleaseManager _release_manager{};
+    ProjectManager _project_manager{};
     Release const* _release_to_use_for_new_project{};
     Cool::Window&  _window; // NOLINT(*avoid-const-or-ref-data-members)
 
 private:
+    // Serialization
     friend class ser20::access;
     template<class Archive>
-    void serialize(Archive& /* archive */)
+    void serialize(Archive& archive)
     {
+        archive(
+            ser20::make_nvp("Project Manager", _project_manager)
+        );
     }
 };
 

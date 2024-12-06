@@ -14,7 +14,7 @@ public:
     void display_all_release();
     auto no_release_installed() -> bool;
 
-    void install_release(const Release& release);
+    void imgui();
 
 private:
     std::vector<Release> all_release; // Sorted, from latest to oldest release

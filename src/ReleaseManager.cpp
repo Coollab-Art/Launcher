@@ -1,11 +1,12 @@
 #include "ReleaseManager.hpp"
 #include <httplib.h>
+#include <imgui.h>
 #include <algorithm>
 #include <optional>
 #include <tl/expected.hpp>
+#include "Cool/ImGui/ImGuiExtras.h"
 #include "Release.hpp"
 #include "download.hpp"
-#include "extractor.hpp"
 #include "fmt/format.h"
 #include "handle_error.hpp"
 #include "utils.hpp"
@@ -61,7 +62,7 @@ static auto get_all_locally_installed_releases(std::vector<Release>& releases) -
 {
     try
     {
-        for (auto const& entry : std::filesystem::directory_iterator{get_PATH()})
+        for (auto const& entry : std::filesystem::directory_iterator{installation_folder()})
         {
             auto const name = entry.path().stem().string();
             if (std::none_of(releases.begin(), releases.end(), [&](Release const& release) {
@@ -82,8 +83,8 @@ static auto get_all_locally_installed_releases(std::vector<Release>& releases) -
 static auto get_all_known_releases() -> std::vector<Release>
 {
     auto res = std::vector<Release>{};
+    handle_error(fetch_all_release(res));
     handle_error(get_all_locally_installed_releases(res)); // Must be done after fetching remote releases, because this function will not add a version if it has already been added by the previous function
-    // handle_error(fetch_all_release(res));
     std::sort(res.begin(), res.end(), [](Release const& a, Release const& b) {
         return a.version() > b.version();
     });
@@ -135,14 +136,21 @@ auto ReleaseManager::no_release_installed() -> bool
     return std::none_of(this->all_release.begin(), this->all_release.end(), [](const Release& release) { return release.is_installed(); });
 }
 
-auto ReleaseManager::install_release(const Release& release) -> void
+void ReleaseManager::imgui()
 {
-    std::cout << "Installing Coollab " << release.get_name() << "...\n";
-    auto const zip = download_zip(release);
-    extract_zip(*zip, release.installation_path());
-    // make_file_executable();
-#if defined __linux__
-    std::filesystem::path path = release.executable_path();
-    std::system(fmt::format("chmod u+x \"{}\"", path.string()).c_str());
-#endif
+    for (auto const& release : all_release)
+    {
+        ImGui::PushID(&release);
+        ImGui::SeparatorText(release.get_name().c_str());
+        Cool::ImGuiExtras::disabled_if(release.is_installed(), "Version is already installed", [&]() {
+            if (ImGui::Button("Install"))
+                release.install();
+        });
+        ImGui::SameLine();
+        Cool::ImGuiExtras::disabled_if(!release.is_installed(), "Version is not installed", [&]() {
+            if (ImGui::Button("Uninstall"))
+                release.uninstall();
+        });
+        ImGui::PopID();
+    }
 }

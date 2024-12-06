@@ -1,4 +1,4 @@
-#include "Version.hpp"
+#include "CoollabVersion.hpp"
 #include <cassert>
 #include <compare>
 
@@ -7,10 +7,10 @@ static auto is_number(char c) -> bool
     return '0' <= c && c <= '9';
 }
 
-Version::Version(std::string name)
+CoollabVersion::CoollabVersion(std::string name)
     : _name{std::move(name)}
-    , _is_experimental(_name.find("Experimental(") != std::string::npos)
-    , _is_beta(_name.starts_with("Beta "))
+    , _is_experimental{_name.find("Experimental(") != std::string::npos}
+    , _is_beta{_name.starts_with("Beta ")}
 {
     auto       acc                           = std::string{};
     auto       nb_dots                       = 0;
@@ -52,7 +52,7 @@ Version::Version(std::string name)
     }
 }
 
-auto operator<=>(Version const& a, Version const& b) -> std::strong_ordering
+auto operator<=>(CoollabVersion const& a, CoollabVersion const& b) -> std::strong_ordering
 {
     if (a._is_beta && !b._is_beta)
         return std::strong_ordering::less;
@@ -86,11 +86,11 @@ auto operator<=>(Version const& a, Version const& b) -> std::strong_ordering
 
 #if defined(COOLLAB_LAUNCHER_TESTS)
 #include "doctest/doctest.h"
-TEST_CASE("Parsing version from string")
+TEST_CASE("Parsing Coollab Version from string")
 {
     SUBCASE("")
     {
-        auto const version = Version{"Beta 18"};
+        auto const version = CoollabVersion{"Beta 18"};
         CHECK(version.is_beta() == true);
         CHECK(version.is_experimental() == false);
         CHECK(version.major() == 18);
@@ -99,7 +99,7 @@ TEST_CASE("Parsing version from string")
     }
     SUBCASE("")
     {
-        auto const version = Version{"Beta 21.1"};
+        auto const version = CoollabVersion{"Beta 21.1"};
         CHECK(version.is_beta() == true);
         CHECK(version.is_experimental() == false);
         CHECK(version.major() == 21);
@@ -108,7 +108,7 @@ TEST_CASE("Parsing version from string")
     }
     SUBCASE("")
     {
-        auto const version = Version{"Beta 5.71.3"};
+        auto const version = CoollabVersion{"Beta 5.71.3"};
         CHECK(version.is_beta() == true);
         CHECK(version.is_experimental() == false);
         CHECK(version.major() == 5);
@@ -117,7 +117,7 @@ TEST_CASE("Parsing version from string")
     }
     SUBCASE("")
     {
-        auto const version = Version{"18"};
+        auto const version = CoollabVersion{"18"};
         CHECK(version.is_beta() == false);
         CHECK(version.is_experimental() == false);
         CHECK(version.major() == 18);
@@ -126,7 +126,7 @@ TEST_CASE("Parsing version from string")
     }
     SUBCASE("")
     {
-        auto const version = Version{"21.1"};
+        auto const version = CoollabVersion{"21.1"};
         CHECK(version.is_beta() == false);
         CHECK(version.is_experimental() == false);
         CHECK(version.major() == 21);
@@ -135,7 +135,7 @@ TEST_CASE("Parsing version from string")
     }
     SUBCASE("")
     {
-        auto const version = Version{"5.71.3"};
+        auto const version = CoollabVersion{"5.71.3"};
         CHECK(version.is_beta() == false);
         CHECK(version.is_experimental() == false);
         CHECK(version.major() == 5);
@@ -144,7 +144,7 @@ TEST_CASE("Parsing version from string")
     }
     SUBCASE("")
     {
-        auto const version = Version{"5.71.3 Experimental(LED)"};
+        auto const version = CoollabVersion{"5.71.3 Experimental(LED)"};
         CHECK(version.is_beta() == false);
         CHECK(version.is_experimental() == true);
         CHECK(version.major() == 5);

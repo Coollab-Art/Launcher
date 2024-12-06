@@ -1,28 +1,27 @@
-#include "extractor.hpp"
+#include "extract_zip.hpp"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include "Cool/File/File.h"
 #include "fmt/core.h"
 #include "miniz.h"
 #include "utils.hpp"
+#ifdef __APPLE__
+#include <sys/stat.h> // chmod
+#endif
 
-namespace fs = std::filesystem;
-
-auto extract_zip(std::string const& zip, std::filesystem::path const& installation_path) -> void
+void extract_zip(std::string const& zip, std::filesystem::path const& installation_path)
 {
+    if (!Cool::File::create_folders_if_they_dont_exist(installation_path))
+        return;
+
     mz_zip_archive zip_archive;
     memset(&zip_archive, 0, sizeof(zip_archive));
 
     if (!mz_zip_reader_init_mem(&zip_archive, zip.data(), zip.size(), 0))
         throw std::runtime_error{fmt::format("Failed to unzip: {}", mz_zip_get_error_string(mz_zip_get_last_error(&zip_archive)))};
-
-    std::filesystem::path parent_folder = installation_path;
-    if (!fs::exists(parent_folder))
-        fs::create_directories(parent_folder);
-
-    assert(fs::exists(parent_folder));
 
     mz_uint num_files = mz_zip_reader_get_num_files(&zip_archive);
     for (mz_uint i = 0; i < num_files; ++i)
@@ -44,9 +43,10 @@ auto extract_zip(std::string const& zip, std::filesystem::path const& installati
             continue;
         }
 
-        std::filesystem::path full_path = parent_folder / name;
+        std::filesystem::path full_path = installation_path / name;
 
-        fs::create_directories(fs::path(full_path).parent_path());
+        if (!Cool::File::create_folders_for_file_if_they_dont_exist(full_path))
+            continue;
 
         std::vector<char> file_data(file_stat.m_uncomp_size);
         if (!mz_zip_reader_extract_to_mem(&zip_archive, i, file_data.data(), file_stat.m_uncomp_size, 0))
@@ -65,10 +65,10 @@ auto extract_zip(std::string const& zip, std::filesystem::path const& installati
         ofs.close();
 
 #ifdef __APPLE__
+        // TODO(Launcher) This probably needs to be done only on the exe, and can be done in the same make_executable() function as the Linux one
         if (chmod(full_path.c_str(), 0755) != 0)
             std::cerr << "Failed to set permissions on file: " << full_path << std::endl;
 #endif
     }
-    mz_zip_reader_end(&zip_archive);
-    // std::cout << "✅ Coollab " << version << " is installed! ";
+    mz_zip_reader_end(&zip_archive); // TODO(Launcher) RAII
 }

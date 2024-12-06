@@ -8,11 +8,14 @@ App::App(Cool::WindowManager& windows, Cool::ViewsManager& /* views */)
 
 void App::imgui_windows()
 {
-    ImGui::Begin("Main");
-    if (ImGui::Button("New Project"))
+    ImGui::Begin("Versions");
+    _release_manager.imgui();
+    ImGui::End();
+    ImGui::Begin("Projects");
+    if (ImGui::Button("New Project")) // TODO(Launcher) Nice big blue button
     {
-        _release_to_use_for_new_project->launch();
-        glfwSetWindowShouldClose(_window.glfw(), true);
+        _release_to_use_for_new_project->launch(); // TODO(Launcher) Handle when no version
+        _window.close();
     }
     ImGui::SameLine();
     Cool::ImGuiExtras::dropdown<Release>(
@@ -23,6 +26,7 @@ void App::imgui_windows()
         [&](Release const& release) { return release.get_name().c_str(); },
         [&](Release const& release) { _release_to_use_for_new_project = &release; }
     );
+    _project_manager.imgui();
     ImGui::End();
     ImGui::ShowDemoWindow();
 }

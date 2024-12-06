@@ -2,9 +2,9 @@
 #include <compare>
 #include <string>
 
-class Version {
+class CoollabVersion {
 public:
-    explicit Version(std::string name);
+    explicit CoollabVersion(std::string name);
 
     auto name() const -> std::string const& { return _name; }
     auto is_beta() const -> bool { return _is_beta; }
@@ -13,7 +13,7 @@ public:
     auto minor() const -> int { return _minor; };
     auto patch() const -> int { return _patch; };
 
-    friend auto operator<=>(Version const&, Version const&) -> std::strong_ordering;
+    friend auto operator<=>(CoollabVersion const&, CoollabVersion const&) -> std::strong_ordering;
 
 private:
     std::string _name{};

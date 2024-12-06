@@ -2,7 +2,10 @@
 #include <filesystem>
 #include <string>
 #include <tl/expected.hpp>
+#include "Cool/File/File.h"
 #include "Cool/spawn_process.hpp"
+#include "download.hpp"
+#include "extract_zip.hpp"
 #include "fmt/core.h"
 #include "handle_error.hpp"
 #include "httplib.h"
@@ -12,7 +15,7 @@ namespace fs = std::filesystem;
 
 auto Release::installation_path() const -> std::filesystem::path
 {
-    return get_PATH() / this->get_name();
+    return installation_folder() / this->get_name();
 }
 
 static auto exe_name() -> std::filesystem::path
@@ -75,4 +78,21 @@ void Release::launch() const
 {
     std::cout << "Launching Coollab " << get_name() << '\n';
     handle_error(Cool::spawn_process(executable_path()));
+}
+
+void Release::install() const
+{
+    std::cout << "Installing Coollab " << get_name() << "...\n";
+    auto const zip = download_zip(*this);
+    extract_zip(*zip, installation_path());
+    // make_file_executable(); // TODO(Launcher)
+#if defined __linux__
+    std::filesystem::path path = release.executable_path();
+    std::system(fmt::format("chmod u+x \"{}\"", path.string()).c_str());
+#endif
+}
+
+void Release::uninstall() const
+{
+    Cool::File::remove_folder(installation_path());
 }

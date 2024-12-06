@@ -7,5 +7,6 @@
 
 // get the OS
 auto get_OS() -> std::string;
-auto get_PATH() -> std::filesystem::path;
+/// Folder where all the Coollab releases will be installed
+auto installation_folder() -> std::filesystem::path;
 auto is_zip_download(const std::string& download_url) -> bool;

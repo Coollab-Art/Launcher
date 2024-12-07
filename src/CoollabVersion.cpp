@@ -15,16 +15,25 @@ CoollabVersion::CoollabVersion(std::string name)
     auto       acc                           = std::string{};
     auto       nb_dots                       = 0;
     auto const register_current_version_part = [&]() {
-        int const nb = std::stoi(acc);
-        acc          = "";
-        if (nb_dots == 0)
-            _major = nb;
-        else if (nb_dots == 1)
-            _minor = nb;
-        else
+        try
         {
-            assert(nb_dots == 2);
-            _patch = nb;
+            int const nb = std::stoi(acc);
+            acc          = "";
+            if (nb_dots == 0)
+                _major = nb;
+            else if (nb_dots == 1)
+                _minor = nb;
+            else
+            {
+                assert(nb_dots == 2);
+                _patch = nb;
+            }
+        }
+        catch (...)
+        {
+            // TODO(Launcher) Handle errors better
+            _is_valid = false;
+            return;
         }
     };
 
@@ -82,6 +91,11 @@ auto operator<=>(CoollabVersion const& a, CoollabVersion const& b) -> std::stron
         return std::strong_ordering::equal;
 
     return a._name <=> b._name; // Experimental versions can have the same semantic version, and just differ by their name (eg. "1.2.0 Experimental(LED)" and "1.2.0 Experimental(WebGPU)")
+}
+
+auto operator==(CoollabVersion const& a, CoollabVersion const& b) -> bool
+{
+    return a._name == b._name;
 }
 
 #if defined(COOLLAB_LAUNCHER_TESTS)

@@ -77,8 +77,20 @@ static auto get_release(std::string_view const& version) -> tl::expected<nlohman
 
 void Release::launch() const
 {
-    std::cout << "Launching Coollab " << get_name() << '\n';
     handle_error(Cool::spawn_process(executable_path()));
+}
+
+void Release::launch(std::filesystem::path const& project_file_path) const
+{
+    handle_error(Cool::spawn_process(executable_path(), {project_file_path.string()}));
+}
+
+void Release::install_if_necessary() const
+{
+    if (is_installed())
+        return;
+
+    install();
 }
 
 void Release::install() const

@@ -4,16 +4,15 @@
 #include <algorithm>
 #include <optional>
 #include <tl/expected.hpp>
+#include "Cool/File/File.h"
 #include "Cool/ImGui/ImGuiExtras.h"
+#include "CoollabVersion.hpp"
 #include "Path.hpp"
 #include "Release.hpp"
-#include "download.hpp"
 #include "fmt/format.h"
 #include "handle_error.hpp"
 #include "nlohmann/json.hpp"
 #include "utils.hpp"
-
-using namespace std::literals;
 
 static auto fetch_all_release(std::vector<Release>& releases) -> std::optional<std::string>
 {
@@ -43,7 +42,10 @@ static auto fetch_all_release(std::vector<Release>& releases) -> std::optional<s
                 // Good release? => zip download file exists on the release (Only one per OS)
                 if (is_zip_download(asset["browser_download_url"]))
                 {
-                    Release _release(release["name"], asset["browser_download_url"]);
+                    auto const version = CoollabVersion{release["name"]};
+                    if (!version.is_valid())
+                        continue;
+                    Release _release(version, asset["browser_download_url"]);
                     releases.push_back(_release);
                     break;
                 }
@@ -66,12 +68,17 @@ static auto get_all_locally_installed_releases(std::vector<Release>& releases) -
     {
         for (auto const& entry : std::filesystem::directory_iterator{Path::installed_versions_folder()})
         {
-            auto const name = entry.path().stem().string();
+            if (!entry.is_directory())
+            {
+                assert(false);
+                continue;
+            }
+            auto const name = entry.path().filename().string(); // Use filename() and not stem(), because stem() would stop at the first dot (e.g. "folder/19.0.3" would become "19" instead of "19.0.3")
             if (std::none_of(releases.begin(), releases.end(), [&](Release const& release) {
                     return release.get_name() == name;
                 }))
             {
-                releases.emplace_back(name, ""); // TODO make download URL optional
+                releases.emplace_back(CoollabVersion{name}, ""); // TODO make download URL optional
             }
         }
     }
@@ -95,52 +102,40 @@ static auto get_all_known_releases() -> std::vector<Release>
 }
 
 ReleaseManager::ReleaseManager()
-    : all_release{get_all_known_releases()}
+    : _releases{get_all_known_releases()}
 {}
 
 auto ReleaseManager::get_all_release() const -> const std::vector<Release>&
 {
-    return this->all_release;
+    return _releases;
 }
 
-auto ReleaseManager::get_latest_release() const -> const Release*
+auto ReleaseManager::latest() const -> Release const*
 {
-    if (all_release.empty())
+    if (_releases.empty())
         return nullptr;
-    return &this->all_release.front();
+    return &_releases.front();
 }
 
-auto ReleaseManager::find_release(const std::string& release_version) const -> const Release*
+auto ReleaseManager::find(CoollabVersion const& version) const -> Release const*
 {
-    auto release_iterator = std::find_if(this->all_release.begin(), this->all_release.end(), [&](const Release& release) { return (release.get_name() == release_version); });
-    if (release_iterator != this->all_release.end())
-        return &*release_iterator;
-    return nullptr;
-}
-auto ReleaseManager::display_all_release() -> void
-{
-    for (Release const& release : this->all_release)
-    {
-        std::cout << release.get_name();
-        // if (release == this->get_latest_release())
-        //     std::cout << " (📍 latest)";
-        if (release.is_installed())
-            std::cout << " -> ✅ installed";
-        else
-            std::cout << " -> ❌ not installed";
-        std::cout << std::endl;
-    }
+    auto const it = std::find_if(_releases.begin(), _releases.end(), [&](Release const& release) {
+        return release.version() == version;
+    });
+    if (it == _releases.end())
+        return nullptr;
+    return &*it; // TODO(Launcher) If we hand out references to our releases, we should store them in a list, not a vector, to make sure iterators don't invalidate
 }
 
 // return true -> if no release have been installed
 auto ReleaseManager::no_release_installed() -> bool
 {
-    return std::none_of(this->all_release.begin(), this->all_release.end(), [](const Release& release) { return release.is_installed(); });
+    return std::none_of(_releases.begin(), _releases.end(), [](const Release& release) { return release.is_installed(); });
 }
 
 void ReleaseManager::imgui()
 {
-    for (auto const& release : all_release)
+    for (auto const& release : _releases)
     {
         ImGui::PushID(&release);
         ImGui::SeparatorText(release.get_name().c_str());

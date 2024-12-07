@@ -3,8 +3,8 @@
 
 class Release {
 public:
-    Release(std::string name, std::string download_url)
-        : _version(std::move(name)), download_url(std::move(download_url)) {}
+    Release(CoollabVersion version, std::string download_url)
+        : _version(std::move(version)), download_url(std::move(download_url)) {}
 
     [[nodiscard]] auto get_name() const -> const std::string& { return this->_version.name(); };
     [[nodiscard]] auto get_download_url() const -> const std::string& { return this->download_url; };
@@ -14,7 +14,9 @@ public:
     [[nodiscard]] auto is_installed() const -> bool;
 
     void launch() const;
+    void launch(std::filesystem::path const& project_file_path) const;
     void install() const;
+    void install_if_necessary() const;
     void uninstall() const;
 
 private:

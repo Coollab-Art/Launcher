@@ -10,9 +10,12 @@ class App : public Cool::IApp {
 public:
     App(Cool::WindowManager& windows, Cool::ViewsManager& /* views */);
 
-    void update() override {}
     void imgui_windows() override;
-    void imgui_menus() override {}
+    auto wants_to_show_menu_bar() const -> bool override { return false; }
+
+private:
+    void launch(Project const& project);
+    void launch(std::filesystem::path const& project_file_path);
 
 private:
     ReleaseManager _release_manager{};
@@ -24,7 +27,7 @@ private:
     // Serialization
     friend class ser20::access;
     template<class Archive>
-    void serialize(Archive& archive)
+    void serialize(Archive& /* archive */)
     {
         // archive(
         //     ser20::make_nvp("Project Manager", _project_manager)

@@ -48,7 +48,7 @@ ProjectManager::ProjectManager()
     });
 }
 
-void ProjectManager::imgui()
+void ProjectManager::imgui(std::function<void(Project const&)> const& launch_project)
 {
     for (auto const& project : _projects)
     {
@@ -60,7 +60,7 @@ void ProjectManager::imgui()
                 Cool::Texture const* thumbnail = Cool::TextureLibrary_Image::instance().get(project.thumbnail_path());
                 if (thumbnail)
                 {
-                    Cool::ImGuiExtras::image_framed(thumbnail->imgui_texture_id(), {100.f, 100.f}); // TODO(Launcher) render alpha checkerboard background bellow it
+                    Cool::ImGuiExtras::image_framed(thumbnail->imgui_texture_id(), {100.f, 100.f}, {.frame_thickness = 4.f}); // TODO(Launcher) render alpha checkerboard background bellow it
                     ImGui::SameLine();
                 }
                 ImGui::BeginGroup();
@@ -71,7 +71,7 @@ void ProjectManager::imgui()
                 ImGui::EndGroup();
             }))
         {
-            //     launch(project.file_path());
+            launch_project(project);
         }
         ImGui::PopID();
     }

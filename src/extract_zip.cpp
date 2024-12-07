@@ -12,7 +12,7 @@
 #include <sys/stat.h> // chmod
 #endif
 
-void extract_zip(std::string const& zip, std::filesystem::path const& installation_path)
+void extract_zip(std::string const& zip, std::filesystem::path const& installation_path, std::atomic<float>& progression)
 {
     if (!Cool::File::create_folders_if_they_dont_exist(installation_path))
         return;
@@ -26,6 +26,7 @@ void extract_zip(std::string const& zip, std::filesystem::path const& installati
     mz_uint num_files = mz_zip_reader_get_num_files(&zip_archive);
     for (mz_uint i = 0; i < num_files; ++i)
     {
+        progression.store(i / (float)num_files);
         mz_zip_archive_file_stat file_stat;
 
         if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))

@@ -5,7 +5,7 @@
 #include "httplib.h"
 
 // download file from url
-auto download_zip(const Release& release) -> tl::expected<std::string, std::string>
+auto download_zip(const Release& release, std::atomic<float>& progression) -> tl::expected<std::string, std::string>
 {
     std::string     url = "https://github.com";
     httplib::Client cli(url);
@@ -13,7 +13,11 @@ auto download_zip(const Release& release) -> tl::expected<std::string, std::stri
 
     cli.set_follow_location(true); // Allow the client to follow redirects
 
-    auto res = cli.Get(path);
+    // TODO(Launcher) Cancel download if app closes
+    auto res = cli.Get(path, [&](uint64_t current, uint64_t total) {
+        progression.store(current / (float)total);
+        return true;
+    });
     if (res && res->status == 200)
         return res->body;
     return tl::unexpected("Failed to download the file. Status code: " + std::to_string(res->status));

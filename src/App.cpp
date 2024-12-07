@@ -5,8 +5,8 @@
 #include "ImGuiNotify/ImGuiNotify.hpp"
 
 App::App(Cool::WindowManager& windows, Cool::ViewsManager& /* views */)
-    : _window{windows.main_window()}
-    , _release_to_use_for_new_project{_release_manager.latest()}
+    : _release_to_use_for_new_project{_release_manager.latest()}
+    , _window{windows.main_window()}
 {}
 
 void App::imgui_windows()
@@ -25,6 +25,7 @@ void App::imgui_windows()
             _window.close();
         }
         ImGui::SameLine();
+        // TODO(Launcher) dropdown options "latest", "latest installed"
         Cool::ImGuiExtras::dropdown<Release>(
             "Version",
             _release_to_use_for_new_project ? _release_to_use_for_new_project->get_name().c_str() : "",

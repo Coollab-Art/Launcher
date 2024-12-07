@@ -16,6 +16,7 @@
 
 static auto fetch_all_release(std::vector<Release>& releases) -> std::optional<std::string>
 {
+    // TODO(Launcher) do this in a task
     std::filesystem::path url = "https://api.github.com/repos/CoolLibs/Lab/releases";
     httplib::Client       cli("https://api.github.com");
     cli.set_follow_location(true);

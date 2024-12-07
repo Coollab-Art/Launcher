@@ -1,9 +1,12 @@
 #include "Release.hpp"
+#include <imgui.h>
 #include <filesystem>
 #include <string>
 #include <tl/expected.hpp>
 #include "Cool/File/File.h"
+#include "Cool/Task/TaskManager.hpp"
 #include "Cool/spawn_process.hpp"
+#include "ImGuiNotify/ImGuiNotify.hpp"
 #include "Path.hpp"
 #include "download.hpp"
 #include "extract_zip.hpp"
@@ -93,16 +96,46 @@ void Release::install_if_necessary() const
     install();
 }
 
+class Task_InstallRelease : public Cool::Task {
+public:
+    explicit Task_InstallRelease(Release const& release)
+        : _release{release}
+    {}
+
+    void do_work() override
+    {
+        auto download_progression   = std::make_shared<std::atomic<float>>(0.f); // Needs to be a shared_ptr because the Notification will need to keep it alive after this task is done
+        auto extraction_progression = std::make_shared<std::atomic<float>>(0.f); // Needs to be an atomic because it will be used on several threads (by the Task and by the Notification)
+
+        auto const notification_id = ImGuiNotify::send({
+            .type                 = ImGuiNotify::Type::Info,
+            .title                = fmt::format("Installing {}", _release.get_name()),
+            .custom_imgui_content = [download_progression, extraction_progression]() { // The lambda needs to capture everything by copy
+                ImGui::TextUnformatted("Downloading");
+                ImGui::ProgressBar(download_progression->load());
+                ImGui::TextUnformatted("Extracting");
+                ImGui::ProgressBar(extraction_progression->load());
+            },
+            .duration = std::nullopt,
+        });
+
+        auto const zip = download_zip(_release, *download_progression);
+        extract_zip(*zip, _release.installation_path(), *extraction_progression);
+        // make_file_executable(); // TODO(Launcher)
+#if defined __linux__
+        std::filesystem::path path = _release.executable_path();
+        std::system(fmt::format("chmod u+x \"{}\"", path.string()).c_str());
+#endif
+        ImGuiNotify::close(notification_id, 1s);
+    }
+
+private:
+    Release _release;
+};
+
 void Release::install() const
 {
-    std::cout << "Installing Coollab " << get_name() << "...\n";
-    auto const zip = download_zip(*this);
-    extract_zip(*zip, installation_path());
-    // make_file_executable(); // TODO(Launcher)
-#if defined __linux__
-    std::filesystem::path path = release.executable_path();
-    std::system(fmt::format("chmod u+x \"{}\"", path.string()).c_str());
-#endif
+    Cool::task_manager().submit(std::make_shared<Task_InstallRelease>(*this));
 }
 
 void Release::uninstall() const

@@ -14,6 +14,7 @@ auto download_zip(const Release& release, std::atomic<float>& progression) -> tl
     cli.set_follow_location(true); // Allow the client to follow redirects
 
     // TODO(Launcher) Cancel download if app closes
+    // TODO(Launcher) Also, add a cancel button to cancel installation
     auto res = cli.Get(path, [&](uint64_t current, uint64_t total) {
         progression.store(current / (float)total);
         return true;

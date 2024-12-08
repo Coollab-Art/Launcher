@@ -1,12 +1,14 @@
 #include "ProjectManager.hpp"
 #include <imgui.h>
 #include <filesystem>
+#include <vector>
 #include "Cool/File/File.h"
 #include "Cool/ImGui/Fonts.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/TextureSource/TextureLibrary_Image.h"
 #include "Path.hpp"
 #include "Project.hpp"
+#include "open/open.hpp"
 
 ProjectManager::ProjectManager()
 {
@@ -50,8 +52,10 @@ ProjectManager::ProjectManager()
 
 void ProjectManager::imgui(std::function<void(Project const&)> const& launch_project)
 {
-    for (auto const& project : _projects)
+    auto project_to_remove = _projects.end();
+    for (auto it = _projects.begin(); it != _projects.end(); ++it)
     {
+        auto const& project = *it;
         ImGui::PushID(&project);
         ImGui::PushFont(Cool::Font::bold());
         ImGui::SeparatorText(project.name().c_str());
@@ -73,8 +77,36 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
         {
             launch_project(project);
         }
+        if (ImGui::BeginPopupContextItem())
+        {
+            if (ImGui::Selectable("Delete project"))
+            {
+                // TODO(Launcher) move to trash
+                // and move to our own "trash", so that we can CTRL+Z the deletion
+                Cool::File::remove_folder(project.info_folder_path());
+                Cool::File::remove_file(project.file_path());
+                project_to_remove = it;
+            }
+            if (ImGui::Selectable("Reveal in File Explorer"))
+            {
+                Cool::open_focused_in_explorer(project.file_path());
+            }
+            if (ImGui::Selectable("Copy file path"))
+            {
+                ImGui::SetClipboardText(project.file_path().string().c_str());
+            }
+#if DEBUG
+            if (ImGui::Selectable("DEBUG: Open info folder"))
+            {
+                Cool::open_folder_in_explorer(project.info_folder_path());
+            }
+#endif
+            ImGui::EndPopup();
+        }
         ImGui::PopID();
     }
+    if (project_to_remove != _projects.end())
+        _projects.erase(project_to_remove);
 }
 
 void ProjectManager::launch(std::filesystem::path const& project_path)

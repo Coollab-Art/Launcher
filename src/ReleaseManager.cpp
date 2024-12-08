@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <optional>
 #include <tl/expected.hpp>
-#include "Cool/File/File.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "CoollabVersion.hpp"
 #include "Path.hpp"
@@ -14,9 +13,11 @@
 #include "nlohmann/json.hpp"
 #include "utils.hpp"
 
+// TODO(Launcher) block install/uninstall buttons while release is installing
+
 static auto fetch_all_release(std::vector<Release>& releases) -> std::optional<std::string>
 {
-    // TODO(Launcher) do this in a task
+    // TODO(Launcher) do this in a task, and make the task loop
     std::filesystem::path url = "https://api.github.com/repos/CoolLibs/Lab/releases";
     httplib::Client       cli("https://api.github.com");
     cli.set_follow_location(true);

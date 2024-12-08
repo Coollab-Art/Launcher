@@ -4,6 +4,7 @@
 #include <reg/ser20.hpp>
 #include <reg/src/AnyId.hpp>
 #include <reg/src/utils.hpp>
+#include "Cool/File/File.h"
 #include "Cool/Utils/Cached.h"
 #include "CoollabVersion.hpp"
 #include "Path.hpp"
@@ -18,15 +19,15 @@ public:
         init();
     }
 
-    auto file_path() const -> std::filesystem::path const& { return _file_path; }
+    auto file_path() const -> std::filesystem::path { return Cool::File::weakly_canonical(_file_path); }
     auto name() const -> std::string;
     auto id() const -> reg::AnyId const& { return _uuid; }
     auto version() const -> CoollabVersion const&;
     auto thumbnail_path() const -> std::filesystem::path { return info_folder_path() / "thumbnail.png"; }
     auto time_of_last_change() const -> std::filesystem::file_time_type const&;
+    auto info_folder_path() const -> std::filesystem::path { return Path::projects_info_folder() / reg::to_string(id()); }
 
 private:
-    auto info_folder_path() const -> std::filesystem::path { return Path::projects_info_folder() / reg::to_string(id()); }
     void init();
 
 private:

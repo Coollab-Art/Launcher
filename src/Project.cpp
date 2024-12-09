@@ -19,7 +19,10 @@ auto Project::version() const -> CoollabVersion const&
     return _coollab_version.get_value([&]() {
         auto file = std::ifstream{file_path()};
         if (!file.is_open())
+        {
+            // TODO(Launcher) Handler error:   std::cerr << "Error: " << strerror(errno) << std::endl;
             return CoollabVersion{"1.0.0"}; // TODO(Launcher) better default version
+        }
         auto version = ""s;
         std::getline(file, version);
         return CoollabVersion{version};

@@ -4,6 +4,7 @@
 #include <string>
 #include <tl/expected.hpp>
 #include "Cool/File/File.h"
+#include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/Task/TaskManager.hpp"
 #include "Cool/spawn_process.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
@@ -110,17 +111,32 @@ public:
         auto const notification_id = ImGuiNotify::send({
             .type                 = ImGuiNotify::Type::Info,
             .title                = fmt::format("Installing {}", _release.get_name()),
-            .custom_imgui_content = [download_progression, extraction_progression]() { // The lambda needs to capture everything by copy
-                ImGui::TextUnformatted("Downloading");
-                ImGui::ProgressBar(download_progression->load());
-                ImGui::TextUnformatted("Extracting");
-                ImGui::ProgressBar(extraction_progression->load());
+            .custom_imgui_content = [download_progression, extraction_progression, cancel = _cancel]() { // The lambda needs to capture everything by copy
+                Cool::ImGuiExtras::disabled_if(cancel->load(), "Cancelled", [&]() {
+                    ImGui::TextUnformatted("Downloading");
+                    ImGui::ProgressBar(download_progression->load());
+                    ImGui::TextUnformatted("Extracting");
+                    ImGui::ProgressBar(extraction_progression->load());
+                    if (ImGui::Button("Cancel"))
+                        cancel->store(true);
+                });
             },
             .duration = std::nullopt,
         });
 
-        auto const zip = download_zip(_release, *download_progression);
+        auto const zip = download_zip(_release, *download_progression, *_cancel);
+        if (_cancel->load())
+        {
+            ImGuiNotify::close(notification_id, 1s);
+            return;
+        }
+        // TODO(Launcher) handle error zip failed to download
         extract_zip(*zip, _release.installation_path(), *extraction_progression);
+        if (_cancel->load())
+        {
+            ImGuiNotify::close(notification_id, 1s);
+            return;
+        }
         // make_file_executable(); // TODO(Launcher)
 #if defined __linux__
         std::filesystem::path path = _release.executable_path();
@@ -129,8 +145,19 @@ public:
         ImGuiNotify::close(notification_id, 1s);
     }
 
+    void cancel() override
+    {
+        _cancel->store(true);
+    }
+
+    auto needs_user_confirmation_to_cancel_when_closing_app() const -> bool override
+    {
+        return true;
+    }
+
 private:
-    Release _release;
+    Release                            _release;
+    std::shared_ptr<std::atomic<bool>> _cancel = std::make_shared<std::atomic<bool>>(false);
 };
 
 void Release::install() const

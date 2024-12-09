@@ -5,7 +5,7 @@
 #include "httplib.h"
 
 // download file from url
-auto download_zip(const Release& release, std::atomic<float>& progression) -> tl::expected<std::string, std::string>
+auto download_zip(const Release& release, std::atomic<float>& progression, std::atomic<bool> const& cancel) -> tl::expected<std::string, std::string>
 {
     std::string     url = "https://github.com";
     httplib::Client cli(url);
@@ -17,11 +17,11 @@ auto download_zip(const Release& release, std::atomic<float>& progression) -> tl
     // TODO(Launcher) Also, add a cancel button to cancel installation
     auto res = cli.Get(path, [&](uint64_t current, uint64_t total) {
         progression.store(current / (float)total);
-        return true;
+        return !cancel.load();
     });
     if (res && res->status == 200)
         return res->body;
-    return tl::unexpected("Failed to download the file. Status code: " + std::to_string(res->status));
+    return tl::unexpected("Failed to download the file. Status code: " + (res ? std::to_string(res->status) : "Unknown"));
 }
 
 auto install_macos_dependencies_if_necessary() -> void

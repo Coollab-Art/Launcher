@@ -31,6 +31,8 @@ endif()
 
 include(FetchContent)
 
+# TODO(Launcher) don't copy ffmpeg DLLs, they are not needed for the launcher
+
 # Make sure we link the static version
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
@@ -61,9 +63,14 @@ target_link_libraries(Coollab-Launcher-Properties INTERFACE miniz)
 # Grab all the source files
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
-
 target_include_directories(Coollab-Launcher-Properties INTERFACE ${PROJECT_SOURCE_DIR}/src)
 
+# Embed the manifest file into the executable. This manifest tells windows that our app supports long paths
+if(WIN32)
+    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Coollab-Launcher.manifest")
+endif()
+
+# cpp-httplib
 set(HTTPLIB_REQUIRE_OPENSSL ON CACHE BOOL "" FORCE)
 add_subdirectory(Lab/lib/cpp-httplib)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE httplib)

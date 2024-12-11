@@ -1,13 +1,23 @@
 #include "App.hpp"
 #include "Cool/ImGui/ImGuiExtras_dropdown.hpp"
 #include "Cool/ImGui/markdown.h"
+#include "Cool/Task/TaskManager.hpp"
 #include "CoollabVersion.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
+#include "Task_CheckForLongPathsEnabled.hpp"
 
 App::App(Cool::WindowManager& windows, Cool::ViewsManager& /* views */)
     : _release_to_use_for_new_project{_release_manager.latest()}
     , _window{windows.main_window()}
-{}
+{
+#if defined(_WIN32)
+    if (_project_manager.has_some_projects()) // Don't show it the first time users open the launcher after installing it, because we don't want to scare them with something that might look like a virus
+    {
+        Cool::task_manager().run_small_task_in(500ms, // Small delay to make sure users see it pop up and it draws their attention
+                                               std::make_shared<Task_CheckForLongPathsEnabled>());
+    }
+#endif
+}
 
 void App::imgui_windows()
 {

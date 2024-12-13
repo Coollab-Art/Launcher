@@ -83,6 +83,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
             {
                 // TODO(Launcher) move to trash
                 // and move to our own "trash", so that we can CTRL+Z the deletion
+                // TODO(Launcher) boxer confirmation windows
                 Cool::File::remove_folder(project.info_folder_path());
                 Cool::File::remove_file(project.file_path());
                 project_to_remove = it;

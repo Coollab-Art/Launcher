@@ -105,36 +105,34 @@ public:
 
     void do_work() override
     {
-        auto download_progression   = std::make_shared<std::atomic<float>>(0.f); // Needs to be a shared_ptr because the Notification will need to keep it alive after this task is done
-        auto extraction_progression = std::make_shared<std::atomic<float>>(0.f); // Needs to be an atomic because it will be used on several threads (by the Task and by the Notification)
-
         auto const notification_id = ImGuiNotify::send({
             .type                 = ImGuiNotify::Type::Info,
             .title                = fmt::format("Installing {}", _release.get_name()),
-            .custom_imgui_content = [download_progression, extraction_progression, cancel = _cancel]() { // The lambda needs to capture everything by copy
-                Cool::ImGuiExtras::disabled_if(cancel->load(), "Cancelled", [&]() {
+            .custom_imgui_content = [data = _data]() {
+                Cool::ImGuiExtras::disabled_if(data->cancel.load(), "", [&]() {
                     ImGui::TextUnformatted("Downloading");
-                    ImGui::ProgressBar(download_progression->load());
+                    ImGui::ProgressBar(data->download_progress.load());
                     ImGui::TextUnformatted("Extracting");
-                    ImGui::ProgressBar(extraction_progression->load());
+                    ImGui::ProgressBar(data->extraction_progress.load());
                     if (ImGui::Button("Cancel"))
-                        cancel->store(true);
+                        data->cancel.store(true);
                 });
             },
             .duration = std::nullopt,
         });
 
-        auto const zip = download_zip(_release, *download_progression, *_cancel);
-        if (_cancel->load())
+        auto const zip = download_zip(_release, _data->download_progress, _data->cancel);
+        if (_data->cancel.load())
         {
-            ImGuiNotify::close(notification_id, 1s);
+            ImGuiNotify::close_immediately(notification_id);
             return;
         }
         // TODO(Launcher) handle error zip failed to download
-        extract_zip(*zip, _release.installation_path(), *extraction_progression);
-        if (_cancel->load())
+        // TODO(Launcher) handle cancel zip extraction
+        extract_zip(*zip, _release.installation_path(), _data->extraction_progress);
+        if (_data->cancel.load())
         {
-            ImGuiNotify::close(notification_id, 1s);
+            ImGuiNotify::close_immediately(notification_id);
             return;
         }
         // make_file_executable(); // TODO(Launcher)
@@ -142,12 +140,13 @@ public:
         std::filesystem::path path = _release.executable_path();
         std::system(fmt::format("chmod u+x \"{}\"", path.string()).c_str());
 #endif
-        ImGuiNotify::close(notification_id, 1s);
+        // TODO(Launcher) change notification to a Success confirmation?
+        ImGuiNotify::close_after_small_delay(notification_id);
     }
 
     void cancel() override
     {
-        _cancel->store(true);
+        _data->cancel.store(true);
     }
 
     auto needs_user_confirmation_to_cancel_when_closing_app() const -> bool override
@@ -156,8 +155,13 @@ public:
     }
 
 private:
-    Release                            _release;
-    std::shared_ptr<std::atomic<bool>> _cancel = std::make_shared<std::atomic<bool>>(false);
+    Release _release;
+    struct DataSharedWithNotification {
+        std::atomic<bool>  cancel{false};
+        std::atomic<float> download_progress{0.f};
+        std::atomic<float> extraction_progress{0.f};
+    };
+    std::shared_ptr<DataSharedWithNotification> _data{std::make_shared<DataSharedWithNotification>()};
 };
 
 void Release::install() const

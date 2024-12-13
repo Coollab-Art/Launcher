@@ -7,7 +7,7 @@ void Task_CheckForLongPathsEnabled::do_work()
     if (Cool::has_long_paths_enabled())
     {
         if (_notification_id.has_value())
-            ImGuiNotify::close(*_notification_id, 1s);
+            ImGuiNotify::close_after_small_delay(*_notification_id);
         return;
     }
 

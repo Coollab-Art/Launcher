@@ -3,8 +3,8 @@
 #include "Cool/View/ViewsManager.h"
 #include "Cool/Window/Window.h"
 #include "Cool/Window/WindowManager.h"
-#include "ProjectManager.hpp"
-#include "ReleaseManager.hpp"
+#include "Project/ProjectManager.hpp"
+#include "Version/VersionManager.hpp"
 
 class App : public Cool::IApp {
 public:
@@ -18,9 +18,9 @@ private:
     void launch(std::filesystem::path const& project_file_path);
 
 private:
-    ReleaseManager _release_manager{};
+    VersionManager _version_manager{};
     ProjectManager _project_manager{};
-    Release const* _release_to_use_for_new_project{};
+    Version const* _version_to_use_for_new_project{};
     Cool::Window&  _window; // NOLINT(*avoid-const-or-ref-data-members)
 
 private:
@@ -40,7 +40,7 @@ private:
 // // #include "ProjectManager/path_to_project_to_open_on_startup.hpp"
 // #include <fstream>
 // #include <string>
-// #include "ReleaseManager.hpp"
+// #include "VersionManager.hpp"
 // #include "boxer/boxer.h"
 
 // auto main(int argc, char** argv) -> int
@@ -62,19 +62,19 @@ private:
 //         install_macos_dependencies_if_necessary();
 // #endif
 
-//         ReleaseManager release_manager;
-//         // release_manager.display_all_release();
+//         VersionManager version_manager;
+//         // version_manager.display_all_version();
 
-//         Release const* release_to_launch = nullptr;
+//         Version const* version_to_launch = nullptr;
 
 //         // L'utilisateur a déjà un projet sur une version différente de la latest
 //         // Il a le choix de poursuivre son projet sur sa version, ou de télécharger la latest.
-//         release_to_launch = release_manager.find_release(version);
-//         if (release_to_launch == nullptr)
+//         version_to_launch = version_manager.find_version(version);
+//         if (version_to_launch == nullptr)
 //         {
 //             // std::cerr << "La version " << version << " n'a pas pu être installée, installation de la dernière version (par défaut).";
-//             release_to_launch = release_manager.get_latest_release();
-//             if (release_to_launch == nullptr)
+//             version_to_launch = version_manager.get_latest_version();
+//             if (version_to_launch == nullptr)
 //             {
 //                 boxer::show("Please connect to the Internet so that we can install the latest version of Coollab.\nYou don't have any version installed yet.", "You are offline");
 //                 return 0;
@@ -82,10 +82,10 @@ private:
 //         }
 
 //         // Si la latest n'est pas installée -> on l'installe
-//         if (!release_to_launch->is_installed())
-//             release_manager.install_release(*release_to_launch);
+//         if (!version_to_launch->is_installed())
+//             version_manager.install_version(*version_to_launch);
 
-//         release_manager.launch_release(*release_to_launch);
+//         version_manager.launch_version(*version_to_launch);
 //     }
 //     catch (const std::exception& e)
 //     {

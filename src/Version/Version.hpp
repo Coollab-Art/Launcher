@@ -1,14 +1,14 @@
 #pragma once
-#include "CoollabVersion.hpp"
+#include "VersionName.hpp"
 
-class Release {
+class Version {
 public:
-    Release(CoollabVersion version, std::string download_url)
+    Version(VersionName version, std::string download_url)
         : _version(std::move(version)), download_url(std::move(download_url)) {}
 
     [[nodiscard]] auto get_name() const -> const std::string& { return this->_version.name(); };
     [[nodiscard]] auto get_download_url() const -> const std::string& { return this->download_url; };
-    [[nodiscard]] auto version() const -> CoollabVersion const& { return _version; };
+    [[nodiscard]] auto version() const -> VersionName const& { return _version; };
     [[nodiscard]] auto installation_path() const -> std::filesystem::path;
     [[nodiscard]] auto executable_path() const -> std::filesystem::path;
     [[nodiscard]] auto is_installed() const -> bool;
@@ -20,6 +20,6 @@ public:
     void uninstall() const;
 
 private:
-    CoollabVersion _version;
-    std::string    download_url;
+    VersionName _version;
+    std::string download_url;
 };

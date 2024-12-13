@@ -1,15 +1,15 @@
 #include "download.hpp"
 #include <cstdlib>
 #include <iostream>
-#include "Release.hpp"
+#include "Version.hpp"
 #include "httplib.h"
 
 // download file from url
-auto download_zip(const Release& release, std::atomic<float>& progression, std::atomic<bool> const& cancel) -> tl::expected<std::string, std::string>
+auto download_zip(const Version& version, std::atomic<float>& progression, std::atomic<bool> const& cancel) -> tl::expected<std::string, std::string>
 {
     std::string     url = "https://github.com";
     httplib::Client cli(url);
-    auto const&     path = release.get_download_url();
+    auto const&     path = version.get_download_url();
 
     cli.set_follow_location(true); // Allow the client to follow redirects
 

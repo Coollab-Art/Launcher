@@ -1,4 +1,4 @@
-#include "Release.hpp"
+#include "Version.hpp"
 #include <imgui.h>
 #include <filesystem>
 #include <string>
@@ -18,7 +18,7 @@
 
 namespace fs = std::filesystem;
 
-auto Release::installation_path() const -> std::filesystem::path
+auto Version::installation_path() const -> std::filesystem::path
 {
     return Path::installed_versions_folder() / get_name();
 }
@@ -34,20 +34,20 @@ static auto exe_name() -> std::filesystem::path
 #endif
 }
 
-auto Release::executable_path() const -> std::filesystem::path
+auto Version::executable_path() const -> std::filesystem::path
 {
     return installation_path() / exe_name();
 }
 
-auto Release::is_installed() const -> bool
+auto Version::is_installed() const -> bool
 {
     return fs::exists(installation_path());
 }
 
-// get a single release with tag_name
-static auto get_release(std::string_view const& version) -> tl::expected<nlohmann::json, std::string>
+// get a single version with tag_name
+static auto get_version(std::string_view const& version) -> tl::expected<nlohmann::json, std::string>
 {
-    std::string url = fmt::format("https://api.github.com/repos/CoolLibs/Lab/releases/tags/{}", version);
+    std::string url = fmt::format("https://api.github.com/repos/CoolLibs/Lab/versions/tags/{}", version);
 
     httplib::Client cli("https://api.github.com");
     cli.set_follow_location(true);
@@ -56,7 +56,7 @@ static auto get_release(std::string_view const& version) -> tl::expected<nlohman
 
     if (!res || res->status != 200)
     {
-        return tl::make_unexpected(fmt::format("Failed to fetch release info: {}", res ? res->status : -1));
+        return tl::make_unexpected(fmt::format("Failed to fetch version info: {}", res ? res->status : -1));
     }
 
     try
@@ -64,7 +64,7 @@ static auto get_release(std::string_view const& version) -> tl::expected<nlohman
         auto jsonResponse = nlohmann::json::parse(res->body);
         if (!jsonResponse.contains("assets") || jsonResponse["assets"].empty())
         {
-            return tl::make_unexpected("No assets found in the release.");
+            return tl::make_unexpected("No assets found in the version.");
         }
         nlohmann::json const& assets = jsonResponse["assets"];
         return assets;
@@ -79,17 +79,17 @@ static auto get_release(std::string_view const& version) -> tl::expected<nlohman
     }
 }
 
-void Release::launch() const
+void Version::launch() const
 {
     handle_error(Cool::spawn_process(executable_path()));
 }
 
-void Release::launch(std::filesystem::path const& project_file_path) const
+void Version::launch(std::filesystem::path const& project_file_path) const
 {
     handle_error(Cool::spawn_process(executable_path(), {project_file_path.string()}));
 }
 
-void Release::install_if_necessary() const
+void Version::install_if_necessary() const
 {
     if (is_installed())
         return;
@@ -97,17 +97,17 @@ void Release::install_if_necessary() const
     install();
 }
 
-class Task_InstallRelease : public Cool::Task {
+class Task_InstallVersion : public Cool::Task {
 public:
-    explicit Task_InstallRelease(Release const& release)
-        : _release{release}
+    explicit Task_InstallVersion(Version const& version)
+        : _version{version}
     {}
 
     void do_work() override
     {
         auto const notification_id = ImGuiNotify::send({
             .type                 = ImGuiNotify::Type::Info,
-            .title                = fmt::format("Installing {}", _release.get_name()),
+            .title                = fmt::format("Installing {}", _version.get_name()),
             .custom_imgui_content = [data = _data]() {
                 Cool::ImGuiExtras::disabled_if(data->cancel.load(), "", [&]() {
                     ImGui::TextUnformatted("Downloading");
@@ -121,7 +121,7 @@ public:
             .duration = std::nullopt,
         });
 
-        auto const zip = download_zip(_release, _data->download_progress, _data->cancel);
+        auto const zip = download_zip(_version, _data->download_progress, _data->cancel);
         if (_data->cancel.load())
         {
             ImGuiNotify::close_immediately(notification_id);
@@ -129,7 +129,7 @@ public:
         }
         // TODO(Launcher) handle error zip failed to download
         // TODO(Launcher) handle cancel zip extraction
-        extract_zip(*zip, _release.installation_path(), _data->extraction_progress);
+        extract_zip(*zip, _version.installation_path(), _data->extraction_progress);
         if (_data->cancel.load())
         {
             ImGuiNotify::close_immediately(notification_id);
@@ -137,7 +137,7 @@ public:
         }
         // make_file_executable(); // TODO(Launcher)
 #if defined __linux__
-        std::filesystem::path path = _release.executable_path();
+        std::filesystem::path path = _version.executable_path();
         std::system(fmt::format("chmod u+x \"{}\"", path.string()).c_str());
 #endif
         // TODO(Launcher) change notification to a Success confirmation?
@@ -155,7 +155,7 @@ public:
     }
 
 private:
-    Release _release;
+    Version _version;
     struct DataSharedWithNotification {
         std::atomic<bool>  cancel{false};
         std::atomic<float> download_progress{0.f};
@@ -164,12 +164,12 @@ private:
     std::shared_ptr<DataSharedWithNotification> _data{std::make_shared<DataSharedWithNotification>()};
 };
 
-void Release::install() const
+void Version::install() const
 {
-    Cool::task_manager().submit(std::make_shared<Task_InstallRelease>(*this));
+    Cool::task_manager().submit(std::make_shared<Task_InstallVersion>(*this));
 }
 
-void Release::uninstall() const
+void Version::uninstall() const
 {
     Cool::File::remove_folder(installation_path());
 }

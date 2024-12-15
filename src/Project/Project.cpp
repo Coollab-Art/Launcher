@@ -14,9 +14,9 @@ auto Project::name() const -> std::string
     return Cool::File::file_name_without_extension(_file_path).string();
 }
 
-auto Project::version() const -> VersionName const&
+auto Project::version_name() const -> VersionName const&
 {
-    return _coollab_version.get_value([&]() {
+    return _version_name.get_value([&]() {
         auto file = std::ifstream{file_path()};
         if (!file.is_open())
         {

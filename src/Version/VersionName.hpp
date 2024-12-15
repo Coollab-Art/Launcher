@@ -6,7 +6,8 @@ class VersionName {
 public:
     explicit VersionName(std::string name);
 
-    auto name() const -> std::string const& { return _name; }
+    auto as_string() const -> std::string const& { return _name; }
+
     auto major() const -> int { return _major; };
     auto minor() const -> int { return _minor; };
     auto patch() const -> int { return _patch; };

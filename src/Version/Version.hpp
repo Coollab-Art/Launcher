@@ -1,25 +1,17 @@
 #pragma once
 #include "VersionName.hpp"
 
-class Version {
-public:
-    Version(VersionName version, std::string download_url)
-        : _version(std::move(version)), download_url(std::move(download_url)) {}
+enum class InstallationStatus {
+    NotInstalled,
+    Installing,
+    Installed,
+};
 
-    [[nodiscard]] auto get_name() const -> const std::string& { return this->_version.name(); };
-    [[nodiscard]] auto get_download_url() const -> const std::string& { return this->download_url; };
-    [[nodiscard]] auto version() const -> VersionName const& { return _version; };
-    [[nodiscard]] auto installation_path() const -> std::filesystem::path;
-    [[nodiscard]] auto executable_path() const -> std::filesystem::path;
-    [[nodiscard]] auto is_installed() const -> bool;
+struct Version {
+    VersionName                name;
+    InstallationStatus         installation_status{};
+    std::optional<std::string> download_url{};
 
-    void launch() const;
-    void launch(std::filesystem::path const& project_file_path) const;
-    void install() const;
-    void install_if_necessary() const;
-    void uninstall() const;
-
-private:
-    VersionName _version;
-    std::string download_url;
+    friend auto operator<=>(Version const& a, Version const& b) { return b.name <=> a.name; } // Compare b to a and not the other way around because when sorting or vector of Version, we want the latest to be at the front
+    friend auto operator==(Version const& a, Version const& b) -> bool { return a.name == b.name; }
 };

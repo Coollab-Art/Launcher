@@ -1,28 +1,10 @@
 #include "download.hpp"
 #include <cstdlib>
 #include <iostream>
+#include <tl/expected.hpp>
 #include "Version.hpp"
-#include "httplib.h"
 
 // download file from url
-auto download_zip(const Version& version, std::atomic<float>& progression, std::atomic<bool> const& cancel) -> tl::expected<std::string, std::string>
-{
-    std::string     url = "https://github.com";
-    httplib::Client cli(url);
-    auto const&     path = version.get_download_url();
-
-    cli.set_follow_location(true); // Allow the client to follow redirects
-
-    // TODO(Launcher) Cancel download if app closes
-    // TODO(Launcher) Also, add a cancel button to cancel installation
-    auto res = cli.Get(path, [&](uint64_t current, uint64_t total) {
-        progression.store(current / (float)total);
-        return !cancel.load();
-    });
-    if (res && res->status == 200)
-        return res->body;
-    return tl::unexpected("Failed to download the file. Status code: " + (res ? std::to_string(res->status) : "Unknown"));
-}
 
 auto install_macos_dependencies_if_necessary() -> void
 {

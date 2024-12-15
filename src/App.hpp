@@ -4,7 +4,7 @@
 #include "Cool/Window/Window.h"
 #include "Cool/Window/WindowManager.h"
 #include "Project/ProjectManager.hpp"
-#include "Version/VersionManager.hpp"
+#include "Version/VersionRef.hpp"
 
 class App : public Cool::IApp {
 public:
@@ -18,9 +18,8 @@ private:
     void launch(std::filesystem::path const& project_file_path);
 
 private:
-    VersionManager _version_manager{};
     ProjectManager _project_manager{};
-    Version const* _version_to_use_for_new_project{};
+    VersionRef     _version_to_use_for_new_project{LatestVersion{}};
     Cool::Window&  _window; // NOLINT(*avoid-const-or-ref-data-members)
 
 private:

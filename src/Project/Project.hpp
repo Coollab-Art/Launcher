@@ -22,7 +22,7 @@ public:
     auto file_path() const -> std::filesystem::path { return Cool::File::weakly_canonical(_file_path); }
     auto name() const -> std::string;
     auto id() const -> reg::AnyId const& { return _uuid; }
-    auto version() const -> VersionName const&;
+    auto version_name() const -> VersionName const&;
     auto thumbnail_path() const -> std::filesystem::path { return info_folder_path() / "thumbnail.png"; }
     auto time_of_last_change() const -> std::filesystem::file_time_type const&;
     auto info_folder_path() const -> std::filesystem::path { return Path::projects_info_folder() / reg::to_string(id()); }
@@ -33,6 +33,6 @@ private:
 private:
     std::filesystem::path                                 _file_path{};
     reg::AnyId                                            _uuid{};
-    mutable Cool::Cached<VersionName>                     _coollab_version{};
+    mutable Cool::Cached<VersionName>                     _version_name{};
     mutable Cool::Cached<std::filesystem::file_time_type> _time_of_last_change{};
 };

@@ -70,7 +70,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                 ImGui::BeginGroup();
                 ImGui::TextUnformatted(project.file_path().string().c_str());
                 ImGui::PushFont(Cool::Font::italic());
-                ImGui::TextUnformatted(project.version().name().c_str());
+                ImGui::TextUnformatted(project.version_name().as_string().c_str());
                 ImGui::PopFont();
                 ImGui::EndGroup();
             }))

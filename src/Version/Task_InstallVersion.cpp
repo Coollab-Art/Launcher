@@ -104,10 +104,7 @@ Task_InstallVersion::Task_InstallVersion(VersionName name, std::string download_
         .title                = fmt::format("Installing {}", _name.as_string()),
         .custom_imgui_content = [data = _data]() {
             Cool::ImGuiExtras::disabled_if(data->cancel.load(), "", [&]() {
-                ImGui::TextUnformatted("Downloading");
-                ImGui::ProgressBar(data->download_progress.load());
-                ImGui::TextUnformatted("Extracting");
-                ImGui::ProgressBar(data->extraction_progress.load());
+                ImGui::ProgressBar(data->download_progress.load() * 0.95f + 0.05f * data->extraction_progress.load());
                 if (ImGui::Button("Cancel"))
                     data->cancel.store(true);
             });
@@ -120,15 +117,21 @@ Task_InstallVersion::~Task_InstallVersion()
 {
     if (_data->cancel.load())
     {
-        ImGuiNotify::close_immediately(_notification_id);
-        // TODO(Launcher) remove installed files if any
         version_manager().set_installation_status(_name, InstallationStatus::NotInstalled);
+        Cool::File::remove_folder(installation_path(_name)); // Cleanup any files that we might have started to extract from the zip
+        ImGuiNotify::close_immediately(_notification_id);
     }
     else
     {
-        // TODO(Launcher) change notification to a Success confirmation?
-        ImGuiNotify::close_after_small_delay(_notification_id);
         version_manager().set_installation_status(_name, InstallationStatus::Installed);
+        ImGuiNotify::change(
+            _notification_id,
+            {
+                .type    = ImGuiNotify::Type::Success,
+                .title   = fmt::format("Installed {}", _name.as_string()),
+                .content = "Success",
+            }
+        );
     }
 }
 

@@ -159,9 +159,18 @@ void VersionManager::install_ifn_and_launch(VersionRef const& version_ref, std::
         }
         else
         {
-            _project_to_launch_after_version_installed[version->name] = project_file_path;
             if (version->installation_status == InstallationStatus::NotInstalled)
                 install(*version);
+            _project_to_launch_after_version_installed[version->name] = // Must be done after calling install() so that the Launch notification will be above the Install one
+                {
+                    project_file_path,
+                    ImGuiNotify::send({
+                        .type     = ImGuiNotify::Type::Info,
+                        .title    = "Launch",
+                        .content  = fmt::format("Waiting for {} to install before we can launch the project", version->name.as_string()),
+                        .duration = std::nullopt,
+                    })
+                };
         }
     }
 }
@@ -246,15 +255,22 @@ void VersionManager::set_installation_status(VersionName const& name, Installati
     {
         auto       lock = std::unique_lock{_project_to_launch_after_version_installed_mutex};
         auto const it   = _project_to_launch_after_version_installed.find(name);
-        if (it == _project_to_launch_after_version_installed.end())
-            return;
-        launch(name, it->second);
+        if (it != _project_to_launch_after_version_installed.end())
+        {
+            ImGuiNotify::close_immediately(it->second.notification_id);
+            launch(name, it->second.path);
+        }
     }
     else if (installation_status == InstallationStatus::NotInstalled)
     {
         // Installation has been canceled, so also cancel the project that was supposed to launch afterwards
-        auto lock = std::unique_lock{_project_to_launch_after_version_installed_mutex};
-        _project_to_launch_after_version_installed.erase(name);
+        auto       lock = std::unique_lock{_project_to_launch_after_version_installed_mutex};
+        auto const it   = _project_to_launch_after_version_installed.find(name);
+        if (it != _project_to_launch_after_version_installed.end())
+        {
+            ImGuiNotify::close_immediately(it->second.notification_id);
+            _project_to_launch_after_version_installed.erase(it);
+        }
     }
 }
 
@@ -283,12 +299,12 @@ void VersionManager::imgui_manage_versions()
     {
         ImGui::PushID(&version);
         ImGui::SeparatorText(version.name.as_string().c_str());
-        Cool::ImGuiExtras::disabled_if(version.installation_status != InstallationStatus::NotInstalled, "Version is already installed", [&]() {
+        Cool::ImGuiExtras::disabled_if(version.installation_status != InstallationStatus::NotInstalled, version.installation_status == InstallationStatus::Installing ? "Installing" : "Already installed", [&]() {
             if (ImGui::Button("Install"))
                 install(version);
         });
         ImGui::SameLine();
-        Cool::ImGuiExtras::disabled_if(version.installation_status != InstallationStatus::Installed, "Version is not installed", [&]() {
+        Cool::ImGuiExtras::disabled_if(version.installation_status != InstallationStatus::Installed, version.installation_status == InstallationStatus::Installing ? "Installing" : "Not installed yet", [&]() {
             if (ImGui::Button("Uninstall"))
                 uninstall(version);
         });

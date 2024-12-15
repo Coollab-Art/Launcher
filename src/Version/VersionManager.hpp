@@ -1,4 +1,5 @@
 #pragma once
+#include <ImGuiNotify/ImGuiNotify.hpp>
 #include <filesystem>
 #include <map>
 #include <shared_mutex>
@@ -39,8 +40,12 @@ private:
     std::vector<Version>      _versions{}; // Sorted, from latest to oldest version
     mutable std::shared_mutex _mutex{};
 
-    std::map<VersionName, std::optional<std::filesystem::path>> _project_to_launch_after_version_installed{};
-    mutable std::mutex                                          _project_to_launch_after_version_installed_mutex{};
+    struct ProjectToLaunch {
+        std::optional<std::filesystem::path> path{};
+        ImGuiNotify::NotificationId          notification_id{};
+    };
+    std::map<VersionName, ProjectToLaunch> _project_to_launch_after_version_installed{};
+    mutable std::mutex                     _project_to_launch_after_version_installed_mutex{};
 };
 
 inline auto version_manager() -> VersionManager&

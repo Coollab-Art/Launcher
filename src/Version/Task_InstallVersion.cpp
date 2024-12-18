@@ -1,6 +1,10 @@
 #include "Task_InstallVersion.hpp"
+#include <Cool/get_system_error.hpp>
+#include <ios>
+#include "Cool/DebugOptions/DebugOptions.h"
 #include "Cool/File/File.h"
 #include "Cool/ImGui/ImGuiExtras.h"
+#include "Cool/Log/ToUser.h"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "Version.hpp"
 #include "VersionManager.hpp"
@@ -8,91 +12,130 @@
 #include "installation_path.hpp"
 #include "miniz.h"
 #include "tl/expected.hpp"
-#if defined(__APPLE__)
-#include <sys/stat.h> // chmod
-#endif
 
-static auto download_zip(std::string const& download_url, std::atomic<float>& progression, std::atomic<bool> const& cancel) -> tl::expected<std::string, std::string>
+static auto download_zip(std::string const& download_url, std::atomic<float>& progression, std::atomic<bool> const& cancel)
+    -> tl::expected<std::string, std::string>
 {
     auto cli = httplib::Client{"https://github.com"};
-    cli.set_follow_location(true); // Allow the client to follow redirects
+    // Allow the client to follow redirects
+    cli.set_follow_location(true);
+    // Don't cancel if we have a bad internet connection. This is done in a Task so this is non-blocking anyways
+    cli.set_connection_timeout(99999h);
+    cli.set_read_timeout(99999h);
+    cli.set_write_timeout(99999h);
 
     auto res = cli.Get(download_url, [&](uint64_t current, uint64_t total) {
         progression.store(static_cast<float>(current) / static_cast<float>(total));
         return !cancel.load();
     });
 
-    if (res && res->status == 200)
-        return res->body;
-    return tl::unexpected("Failed to download the file. Status code: " + (res ? std::to_string(res->status) : "Unknown"));
+    if (cancel.load())
+        return "";
+    if (!res)
+    {
+        if (Cool::DebugOptions::log_debug_warnings())
+            Cool::Log::ToUser::warning("Download version", httplib::to_string(res.error()));
+        return tl::make_unexpected("Failed to connect to the Internet");
+    }
+    if (res->status != 200)
+    {
+        if (Cool::DebugOptions::log_debug_warnings())
+            Cool::Log::ToUser::warning("Download version", fmt::format("Status code {}", std::to_string(res->status)));
+        return tl::make_unexpected("Oops, our online versions provider is unavailable, please check back later"); // TODO(Launcher) Nicer error message, like "Lost connection to the Internet", or " (send a message to our support on Discord)"?
+    }
+
+    return res->body;
 }
 
-static void extract_zip(std::string const& zip, std::filesystem::path const& installation_path, std::atomic<float>& progression)
+static auto extract_zip(std::string const& zip, std::filesystem::path const& installation_path, std::atomic<float>& progression, std::atomic<bool> const& cancel)
+    -> tl::expected<void, std::string>
 {
-    if (!Cool::File::create_folders_if_they_dont_exist(installation_path))
-        return;
+    auto const file_error = [&]() {
+        return tl::make_unexpected(fmt::format("Make sure you have the permission to write files in the folder \"{}\"", installation_path.parent_path()));
+    };
+    auto const system_error = [&]() {
+        return tl::make_unexpected(Cool::get_system_error());
+    };
 
-    mz_zip_archive zip_archive;
+    if (!Cool::File::create_folders_if_they_dont_exist(installation_path))
+        return file_error();
+
+    auto zip_archive = mz_zip_archive{};
     memset(&zip_archive, 0, sizeof(zip_archive));
 
+    auto const zip_error = [&]() {
+        if (Cool::DebugOptions::log_debug_warnings())
+            Cool::Log::ToUser::warning("Unzip version", mz_zip_get_error_string(mz_zip_get_last_error(&zip_archive)));
+        return tl::make_unexpected("An unexpected error has occurred, please try again");
+    };
+
     if (!mz_zip_reader_init_mem(&zip_archive, zip.data(), zip.size(), 0))
-        throw std::runtime_error{fmt::format("Failed to unzip: {}", mz_zip_get_error_string(mz_zip_get_last_error(&zip_archive)))};
+        return zip_error();
+    auto scope_guard = sg::make_scope_guard([&] { mz_zip_reader_end(&zip_archive); });
 
-    mz_uint num_files = mz_zip_reader_get_num_files(&zip_archive);
-    for (mz_uint i = 0; i < num_files; ++i)
+    auto const files_count = mz_zip_reader_get_num_files(&zip_archive);
+    for (mz_uint i = 0; i < files_count; ++i)
     {
-        progression.store(static_cast<float>(i) / static_cast<float>(num_files));
-        mz_zip_archive_file_stat file_stat;
+        if (cancel.load())
+            break;
+        progression.store(static_cast<float>(i) / static_cast<float>(files_count));
 
+        auto file_stat = mz_zip_archive_file_stat{};
         if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
-        {
-            std::cerr << "Failed to get file info for index " << i << std::endl;
-            continue;
-        }
+            return zip_error();
 
         if (file_stat.m_is_directory)
             continue;
 
-        const char* name = file_stat.m_filename;
-        if (name && std::string(name).find("_MACOSX") != std::string::npos)
-        {
-            continue;
-        }
-
-        std::filesystem::path full_path = installation_path / name;
-
+        auto const full_path = installation_path / file_stat.m_filename;
         if (!Cool::File::create_folders_for_file_if_they_dont_exist(full_path))
-            continue;
+            return file_error();
 
-        std::vector<char> file_data(file_stat.m_uncomp_size);
+        auto file_data = std::vector<char>(file_stat.m_uncomp_size);
         if (!mz_zip_reader_extract_to_mem(&zip_archive, i, file_data.data(), file_stat.m_uncomp_size, 0))
-        {
-            std::cerr << "Failed to read file data: " << name << std::endl;
-            continue;
-        }
+            return zip_error();
 
-        std::ofstream ofs(full_path, std::ios::binary);
+        auto ofs = std::ofstream{full_path, std::ios::binary};
         if (!ofs)
-        {
-            std::cerr << "Failed to open file for writing: " << full_path << std::endl;
-            continue;
-        }
-        ofs.write(file_data.data(), file_data.size());
-        ofs.close();
+            return system_error();
+        ofs.write(file_data.data(), static_cast<std::streamsize>(file_data.size()));
+        if (ofs.fail())
+            return system_error();
     }
-    mz_zip_reader_end(&zip_archive); // TODO(Launcher) RAII
+
+    return {};
 }
 
-static void make_file_executable(std::filesystem::path const& path)
+static auto make_file_executable(std::filesystem::path const& path) -> tl::expected<void, std::string>
 {
-#if defined(__linux__)
-    std::system(fmt::format("chmod u+x \"{}\"", path.string()).c_str());
-#elif defined(__APPLE__)
-    if (chmod(path.string().c_str(), 0755) != 0)
-        std::cerr << "Failed to set permissions on file: " << full_path << std::endl; // TODO(Launcher) show error to the user, and then uninstall the version. And do the same for the linux implementation?
+#if defined(__linux__) || defined(__APPLE__)
+    std::string const command = fmt::format("chmod u+x \"{}\" 2>&1", path); // "2>&1" redirects stderr to stdout
+    // Open a pipe to capture the output of the command
+    FILE* const pipe = popen(command.c_str(), "r");
+    if (!pipe)
+    {
+        if (Cool::DebugOptions::log_debug_warnings())
+            Cool::Log::ToUser::warning("Make file executable", "Failed to open command pipe");
+        return tl::make_unexpected(fmt::format("Make sure you have the permission to edit the file \"{}\"", path));
+    }
+
+    auto error_message = ""s;
+    {
+        char buffer[128];
+        while (fgets(buffer, sizeof(buffer), pipe) != nullptr)
+            error_message += buffer;
+    }
+
+    if (pclose(pipe) != 0)
+    {
+        if (Cool::DebugOptions::log_debug_warnings())
+            Cool::Log::ToUser::warning("Make file executable", error_message);
+        return tl::make_unexpected(fmt::format("Make sure you have the permission to edit the file \"{}\"", path));
+    }
 #else
     std::ignore = path;
 #endif
+    return {};
 }
 
 Task_InstallVersion::Task_InstallVersion(VersionName name, std::string download_url)
@@ -104,35 +147,53 @@ Task_InstallVersion::Task_InstallVersion(VersionName name, std::string download_
         .title                = fmt::format("Installing {}", _name.as_string()),
         .custom_imgui_content = [data = _data]() {
             Cool::ImGuiExtras::disabled_if(data->cancel.load(), "", [&]() {
-                ImGui::ProgressBar(data->download_progress.load() * 0.95f + 0.05f * data->extraction_progress.load());
+                ImGui::ProgressBar(data->download_progress.load() * 0.9f + 0.1f * data->extraction_progress.load());
                 if (ImGui::Button("Cancel"))
                     data->cancel.store(true);
             });
         },
-        .duration = std::nullopt,
+        .duration    = std::nullopt,
+        .is_closable = false,
     });
 }
 
-Task_InstallVersion::~Task_InstallVersion()
+void Task_InstallVersion::on_success()
 {
-    if (_data->cancel.load())
-    {
-        version_manager().set_installation_status(_name, InstallationStatus::NotInstalled);
-        Cool::File::remove_folder(installation_path(_name)); // Cleanup any files that we might have started to extract from the zip
-        ImGuiNotify::close_immediately(_notification_id);
-    }
-    else
-    {
-        version_manager().set_installation_status(_name, InstallationStatus::Installed);
-        ImGuiNotify::change(
-            _notification_id,
-            {
-                .type    = ImGuiNotify::Type::Success,
-                .title   = fmt::format("Installed {}", _name.as_string()),
-                .content = "Success",
-            }
-        );
-    }
+    version_manager().set_installation_status(_name, InstallationStatus::Installed);
+    ImGuiNotify::change(
+        _notification_id,
+        {
+            .type    = ImGuiNotify::Type::Success,
+            .title   = fmt::format("Installed {}", _name.as_string()),
+            .content = "Success",
+        }
+    );
+}
+
+void Task_InstallVersion::on_version_not_installed()
+{
+    version_manager().set_installation_status(_name, InstallationStatus::NotInstalled);
+    Cool::File::remove_folder(installation_path(_name)); // Cleanup any files that we might have started to extract from the zip
+}
+
+void Task_InstallVersion::on_cancel()
+{
+    on_version_not_installed();
+    ImGuiNotify::close_immediately(_notification_id);
+}
+
+void Task_InstallVersion::on_error(std::string const& error_message)
+{
+    on_version_not_installed();
+    ImGuiNotify::change(
+        _notification_id,
+        {
+            .type     = ImGuiNotify::Type::Error,
+            .title    = fmt::format("Installation failed ({})", _name.as_string()),
+            .content  = error_message,
+            .duration = std::nullopt,
+        }
+    );
 }
 
 void Task_InstallVersion::do_work()
@@ -141,11 +202,36 @@ void Task_InstallVersion::do_work()
 
     auto const zip = download_zip(_download_url, _data->download_progress, _data->cancel);
     if (_data->cancel.load())
+    {
+        on_cancel();
         return;
-    // TODO(Launcher) handle error zip failed to download
-    // TODO(Launcher) handle cancel zip extraction
-    extract_zip(*zip, installation_path(_name), _data->extraction_progress);
-    if (_data->cancel.load())
+    }
+    if (!zip.has_value())
+    {
+        on_error(zip.error());
         return;
-    make_file_executable(executable_path(_name));
+    }
+    {
+        auto const success = extract_zip(*zip, installation_path(_name), _data->extraction_progress, _data->cancel);
+        if (_data->cancel.load())
+        {
+            on_cancel();
+            return;
+        }
+        if (!success.has_value())
+        {
+            on_error(success.error());
+            return;
+        }
+    }
+    {
+        auto const success = make_file_executable(executable_path(_name));
+        if (!success.has_value())
+        {
+            on_error(success.error());
+            return;
+        }
+    }
+
+    on_success();
 }

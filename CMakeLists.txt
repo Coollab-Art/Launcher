@@ -55,7 +55,7 @@ target_link_libraries(Coollab-Launcher-Properties INTERFACE nlohmann_json::nlohm
 FetchContent_Declare(
     miniz
     GIT_REPOSITORY https://github.com/richgel999/miniz.git
-    GIT_TAG master
+    GIT_TAG 3.0.2
 )
 FetchContent_MakeAvailable(miniz)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE miniz)

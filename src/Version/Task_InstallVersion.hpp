@@ -6,15 +6,16 @@
 class Task_InstallVersion : public Cool::Task {
 public:
     Task_InstallVersion(VersionName name, std::string download_url);
-    ~Task_InstallVersion() override;
-    Task_InstallVersion(Task_InstallVersion const&)                = delete;
-    Task_InstallVersion& operator=(Task_InstallVersion const&)     = delete;
-    Task_InstallVersion(Task_InstallVersion&&) noexcept            = delete;
-    Task_InstallVersion& operator=(Task_InstallVersion&&) noexcept = delete;
 
     void do_work() override;
     void cancel() override { _data->cancel.store(true); }
     auto needs_user_confirmation_to_cancel_when_closing_app() const -> bool override { return true; }
+
+private:
+    void on_success();
+    void on_cancel();
+    void on_error(std::string const& error_message);
+    void on_version_not_installed();
 
 private:
     VersionName                 _name;

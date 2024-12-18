@@ -1,17 +1,23 @@
 #pragma once
 #include "Cool/AppManager/IApp.h"
+#include "Cool/DebugOptions/DebugOptions.h"
+#include "Cool/DebugOptions/DebugOptionsManager.h"
 #include "Cool/View/ViewsManager.h"
 #include "Cool/Window/Window.h"
 #include "Cool/Window/WindowManager.h"
 #include "Project/ProjectManager.hpp"
 #include "Version/VersionRef.hpp"
 
+using DebugOptionsManager = Cool::DebugOptionsManager<Cool::DebugOptions>;
+
 class App : public Cool::IApp {
 public:
     App(Cool::WindowManager& windows, Cool::ViewsManager& /* views */);
 
+    void update() override;
     void imgui_windows() override;
-    auto wants_to_show_menu_bar() const -> bool override { return false; }
+    void imgui_menus() override;
+    auto wants_to_show_menu_bar() const -> bool override { return _wants_to_show_menu_bar; }
 
 private:
     void launch(Project const& project);
@@ -21,6 +27,9 @@ private:
     ProjectManager _project_manager{};
     VersionRef     _version_to_use_for_new_project{LatestVersion{}};
     Cool::Window&  _window; // NOLINT(*avoid-const-or-ref-data-members)
+    bool           _wants_to_show_menu_bar{false};
+
+    DebugOptionsManager::AutoSerializer _auto_serializer_for_debug_options{};
 
 private:
     // Serialization

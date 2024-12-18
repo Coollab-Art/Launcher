@@ -1,5 +1,7 @@
 #include "App.hpp"
+#include "Cool/DebugOptions/debug_options_windows.h"
 #include "Cool/ImGui/markdown.h"
+#include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "Task_CheckForLongPathsEnabled.hpp"
@@ -19,8 +21,19 @@ App::App(Cool::WindowManager& windows, Cool::ViewsManager& /* views */)
 #endif
 }
 
+void App::update()
+{
+    if (inputs_are_allowed() && !ImGui::GetIO().WantTextInput)
+    {
+        if (ImGui::GetIO().KeyCtrl && ImGui::GetIO().KeyShift && ImGui::GetIO().KeyAlt && ImGui::IsKeyReleased(ImGuiKey_D))
+            _wants_to_show_menu_bar = !_wants_to_show_menu_bar;
+    }
+}
+
 void App::imgui_windows()
 {
+    Cool::Log::ToUser::console().imgui_window();
+    Cool::debug_options_windows(nullptr);
     { // Versions
         ImGui::Begin("Versions");
         version_manager().imgui_manage_versions();
@@ -43,6 +56,21 @@ void App::imgui_windows()
     }
 
     // ImGui::ShowDemoWindow();
+}
+
+void App::imgui_menus()
+{
+    ImGui::SetCursorPosX( // HACK while waiting for ImGui to support right-to-left layout. See issue https://github.com/ocornut/imgui/issues/5875
+        ImGui::GetWindowSize().x
+        - ImGui::CalcTextSize("Debug").x
+        - 3.f * ImGui::GetStyle().ItemSpacing.x
+        - ImGui::GetStyle().WindowPadding.x
+    );
+    if (ImGui::BeginMenu("Debug"))
+    {
+        DebugOptionsManager::imgui_ui_for_all_options();
+        ImGui::EndMenu();
+    }
 }
 
 void App::launch(Project const& project)

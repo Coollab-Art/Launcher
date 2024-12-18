@@ -61,6 +61,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
         ImGui::SeparatorText(project.name().c_str());
         ImGui::PopFont();
         if (Cool::ImGuiExtras::big_selectable([&]() {
+                // TODO(Launcher) only load image if it will actually be shown, and tell the texture library to only keep it for a few seconds
                 Cool::Texture const* thumbnail = Cool::TextureLibrary_Image::instance().get(project.thumbnail_path());
                 if (thumbnail)
                 {

@@ -24,6 +24,7 @@
 #include "nlohmann/json.hpp"
 #include "utils.hpp"
 
+// TODO(Launcher) if no internet, try to redo this task until we connect to the internet and it succeeds
 class Task_FindVersionsAvailableOnline : public Cool::Task {
 public:
     void do_work() override

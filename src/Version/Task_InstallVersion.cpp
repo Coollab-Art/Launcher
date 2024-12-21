@@ -1,6 +1,5 @@
 #include "Task_InstallVersion.hpp"
 #include <Cool/get_system_error.hpp>
-#include <ios>
 #include "Cool/DebugOptions/DebugOptions.h"
 #include "Cool/File/File.h"
 #include "Cool/ImGui/ImGuiExtras.h"
@@ -35,13 +34,13 @@ static auto download_zip(std::string const& download_url, std::atomic<float>& pr
     {
         if (Cool::DebugOptions::log_debug_warnings())
             Cool::Log::ToUser::warning("Download version", httplib::to_string(res.error()));
-        return tl::make_unexpected("Failed to connect to the Internet");
+        return tl::make_unexpected("No Internet connection");
     }
     if (res->status != 200)
     {
         if (Cool::DebugOptions::log_debug_warnings())
             Cool::Log::ToUser::warning("Download version", fmt::format("Status code {}", std::to_string(res->status)));
-        return tl::make_unexpected("Oops, our online versions provider is unavailable, please check back later"); // TODO(Launcher) Nicer error message, like "Lost connection to the Internet", or " (send a message to our support on Discord)"?
+        return tl::make_unexpected("Oops, our online versions provider is unavailable, please check back later");
     }
 
     return res->body;

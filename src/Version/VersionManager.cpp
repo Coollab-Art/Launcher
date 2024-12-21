@@ -1,5 +1,4 @@
 #include "VersionManager.hpp"
-#include <httplib.h>
 #include <imgui.h>
 #include <ImGuiNotify/ImGuiNotify.hpp>
 #include <algorithm>
@@ -13,6 +12,7 @@
 #include "Cool/ImGui/ImGuiExtras_dropdown.hpp"
 #include "Cool/Task/TaskManager.hpp"
 #include "Path.hpp"
+#include "Task_FindVersionsAvailableOnline.hpp"
 #include "Task_InstallVersion.hpp"
 #include "Version.hpp"
 #include "VersionName.hpp"
@@ -21,66 +21,6 @@
 #include "handle_error.hpp"
 #include "installation_path.hpp"
 #include "launch.hpp"
-#include "nlohmann/json.hpp"
-#include "utils.hpp"
-
-// TODO(Launcher) if no internet, try to redo this task until we connect to the internet and it succeeds
-class Task_FindVersionsAvailableOnline : public Cool::Task {
-public:
-    void do_work() override
-    {
-        auto cli = httplib::Client{"https://api.github.com"};
-        cli.set_follow_location(true);
-        auto const res = cli.Get("https://api.github.com/repos/CoolLibs/Lab/releases", [&](uint64_t, uint64_t) {
-            return !_cancel.load();
-        });
-        if (!res || res->status != 200)
-        {
-            ImGuiNotify::send({
-                .type    = ImGuiNotify::Type::Warning,
-                .title   = "Failed to check for new versions online",
-                .content = fmt::format("Failed to fetch version info: {}", httplib::to_string(res.error())),
-            });
-            return;
-        }
-
-        try // TODO(Launcher) Put a try on each iteration of the loop, so that an exception doesn't prevent other versions from loading
-        {
-            auto const json_response = nlohmann::json::parse(res->body);
-            for (auto const& version : json_response)
-            {
-                if (_cancel.load())
-                    return;
-                // if (!version["prerelease"])                     // we keep only non pre-release version // TODO actually, Experimental versions will be marked as preversion, but we still want to have them
-                for (const auto& asset : version["assets"]) // for all download file of the current version
-                {
-                    if (!is_zip_download(asset["browser_download_url"])) // Good version? => zip download file exists on the version (Only one per OS)
-                        continue;
-
-                    auto const version_name = VersionName{version["name"]};
-                    if (!version_name.is_valid())
-                        continue;
-                    version_manager().set_download_url(version_name, asset["browser_download_url"]);
-                    break;
-                }
-            }
-        }
-        catch (nlohmann::json::parse_error const& e)
-        {
-            // return fmt::format("JSON parsing error: {}", e.what());
-        }
-        catch (std::exception& e)
-        {
-            // return fmt::format("{}", e.what());
-        }
-    }
-
-    void cancel() override { _cancel.store(true); }
-    auto needs_user_confirmation_to_cancel_when_closing_app() const -> bool override { return false; }
-
-private:
-    std::atomic<bool> _cancel{false};
-};
 
 static auto get_all_locally_installed_versions(std::vector<Version>& versions) -> std::optional<std::string>
 {
@@ -124,6 +64,7 @@ static auto get_all_known_versions() -> std::vector<Version>
 VersionManager::VersionManager()
     : _versions{get_all_known_versions()}
 {
+    // TODO(Launcher) make sure to not send a request if we know which project to launch, and we already have that version, to save on the number of requests allowed by Github
     Cool::task_manager().submit(std::make_shared<Task_FindVersionsAvailableOnline>());
 }
 
@@ -185,7 +126,7 @@ void VersionManager::install(Version const& version)
     }
 
     // if (!version.download_url)
-    //     return tl::make_unexpected("Version not found"); // TODO(Launcher) wait for get_all_versions request to finish
+    //     return tl::make_unexpected("Version not found"); // TODO(Launcher) wait for get_all_versions request to finish. If no internet, tell people to connect to internet
     Cool::task_manager().submit(std::make_shared<Task_InstallVersion>(version.name, *version.download_url));
 }
 

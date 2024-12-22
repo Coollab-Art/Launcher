@@ -12,6 +12,7 @@ public:
     void do_work() override;
     void cancel() override {}
     auto needs_user_confirmation_to_cancel_when_closing_app() const -> bool override { return false; }
+    auto name() const -> std::string override { return "Checking if Long Paths are enabled in the Windows settings"; }
 
 private:
     std::optional<ImGuiNotify::NotificationId> _notification_id{};

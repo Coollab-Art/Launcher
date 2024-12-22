@@ -1,4 +1,4 @@
-#include "Task_FindVersionsAvailableOnline.hpp"
+#include "Task_FetchListOfVersions.hpp"
 #include "Cool/DebugOptions/DebugOptions.h"
 #include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
@@ -24,7 +24,7 @@ auto is_zip_download(std::string const& download_url) -> bool
     return download_url.find(get_OS() + ".zip") != std::string::npos;
 }
 
-void Task_FindVersionsAvailableOnline::do_work()
+void Task_FetchListOfVersions::do_work()
 {
     auto cli = httplib::Client{"https://api.github.com"};
     cli.set_follow_location(true);
@@ -76,7 +76,7 @@ void Task_FindVersionsAvailableOnline::do_work()
         ImGuiNotify::close_immediately(*_warning_notification_id);
 }
 
-void Task_FindVersionsAvailableOnline::handle_error(httplib::Result const& res)
+void Task_FetchListOfVersions::handle_error(httplib::Result const& res)
 {
     if (Cool::DebugOptions::log_debug_warnings())
     {
@@ -123,5 +123,5 @@ void Task_FindVersionsAvailableOnline::handle_error(httplib::Result const& res)
         ImGuiNotify::change(*_warning_notification_id, notification);
 
     if (!res || message) // Only retry if we failed because we don't have an Internet connection, or because we hit the max number of requests to Github. There is no point in retrying if the service is unavailable, it's probably not gonna get fixed soon, and if we make too many requests to their API, Github will block us
-        Cool::task_manager().submit_in(message ? duration_until_reset : 1s, std::make_shared<Task_FindVersionsAvailableOnline>(_warning_notification_id));
+        Cool::task_manager().submit_in(message ? duration_until_reset : 1s, std::make_shared<Task_FetchListOfVersions>(_warning_notification_id));
 }

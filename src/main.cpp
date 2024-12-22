@@ -39,7 +39,6 @@ auto main(int argc, char** argv) -> int
         argc, argv,
         {
             .windows_configs   = {{
-                  .title                  = "Coollab Launcher",
                   .maximize_on_startup_if = false,
             }},
             .imgui_ini_version = 0,

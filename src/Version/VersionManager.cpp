@@ -12,8 +12,8 @@
 #include "Cool/ImGui/ImGuiExtras_dropdown.hpp"
 #include "Cool/Task/TaskManager.hpp"
 #include "Path.hpp"
-#include "Task_FindVersionsAvailableOnline.hpp"
-#include "Task_InstallVersion.hpp"
+#include "Task_FetchListOfVersions.hpp"
+#include "Task_WaitForDownloadUrlToInstallVersion.hpp"
 #include "Version.hpp"
 #include "VersionName.hpp"
 #include "VersionRef.hpp"
@@ -65,7 +65,7 @@ VersionManager::VersionManager()
     : _versions{get_all_known_versions()}
 {
     // TODO(Launcher) make sure to not send a request if we know which project to launch, and we already have that version, to save on the number of requests allowed by Github
-    Cool::task_manager().submit(std::make_shared<Task_FindVersionsAvailableOnline>());
+    Cool::task_manager().submit(std::make_shared<Task_FetchListOfVersions>());
 }
 
 void VersionManager::install_ifn_and_launch(VersionRef const& version_ref, std::optional<std::filesystem::path> const& project_file_path)
@@ -94,7 +94,7 @@ void VersionManager::install_ifn_and_launch(VersionRef const& version_ref, std::
     }
 
     {
-        auto lock = std::unique_lock{_project_to_launch_after_version_installed_mutex};
+        auto lock2 = std::unique_lock{_project_to_launch_after_version_installed_mutex};
         if (version->installation_status == InstallationStatus::Installed)
         {
             launch(version->name, project_file_path);
@@ -124,10 +124,7 @@ void VersionManager::install(Version const& version)
         assert(false);
         return;
     }
-
-    // if (!version.download_url)
-    //     return tl::make_unexpected("Version not found"); // TODO(Launcher) wait for get_all_versions request to finish. If no internet, tell people to connect to internet
-    Cool::task_manager().submit(std::make_shared<Task_InstallVersion>(version.name, *version.download_url));
+    Cool::task_manager().run_small_task_in(0s, std::make_shared<Task_WaitForDownloadUrlToInstallVersion>(version.name));
 }
 
 void VersionManager::uninstall(Version& version)
@@ -307,12 +304,11 @@ void VersionManager::imgui_versions_dropdown(VersionRef& ref)
                         return _label.c_str();
                     },
                     [](VersionName const& name) {
-                        return name.as_string().c_str(); // TODO indicate if this is installed or not, with a small icon
+                        return name.as_string().c_str(); // TODO(Launcher) indicate if this is installed or not, with a small icon
                     }
                 },
                 _value
             );
-            return _label.c_str();
         }
 
         void apply_value()

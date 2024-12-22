@@ -25,12 +25,13 @@ private:
     void install(Version const&);
     void uninstall(Version&);
 
-public: // TODO
+public: // TODO(Launcher)
     auto latest_version_no_locking() -> Version*;
     auto latest_installed_version_no_locking() -> Version*;
 
 private:
-    friend class Task_FindVersionsAvailableOnline;
+    friend class Task_FetchListOfVersions;
+    friend class Task_WaitForDownloadUrlToInstallVersion;
     friend class Task_InstallVersion;
 
     void set_download_url(VersionName const&, std::string download_url);

@@ -137,33 +137,37 @@ static auto make_file_executable(std::filesystem::path const& path) -> tl::expec
     return {};
 }
 
-Task_InstallVersion::Task_InstallVersion(VersionName name, std::string download_url)
-    : _name{std::move(name)}
+Task_InstallVersion::Task_InstallVersion(VersionName version_name, std::string download_url, ImGuiNotify::NotificationId notification_id)
+    : _version_name{std::move(version_name)}
     , _download_url{std::move(download_url)}
+    , _notification_id{notification_id}
 {
-    _notification_id = ImGuiNotify::send({
-        .type                 = ImGuiNotify::Type::Info,
-        .title                = fmt::format("Installing {}", _name.as_string()),
-        .custom_imgui_content = [data = _data]() {
-            Cool::ImGuiExtras::disabled_if(data->cancel.load(), "", [&]() {
-                ImGui::ProgressBar(data->download_progress.load() * 0.9f + 0.1f * data->extraction_progress.load());
-                if (ImGui::Button("Cancel"))
-                    data->cancel.store(true);
-            });
-        },
-        .duration    = std::nullopt,
-        .is_closable = false,
-    });
+    ImGuiNotify::change(
+        _notification_id,
+        {
+            .type                 = ImGuiNotify::Type::Info,
+            .title                = name(),
+            .custom_imgui_content = [data = _data]() {
+                Cool::ImGuiExtras::disabled_if(data->cancel.load(), "", [&]() {
+                    ImGui::ProgressBar(data->download_progress.load() * 0.9f + 0.1f * data->extraction_progress.load());
+                    if (ImGui::Button("Cancel"))
+                        data->cancel.store(true);
+                });
+            },
+            .duration    = std::nullopt,
+            .is_closable = false,
+        }
+    );
 }
 
 void Task_InstallVersion::on_success()
 {
-    version_manager().set_installation_status(_name, InstallationStatus::Installed);
+    version_manager().set_installation_status(_version_name, InstallationStatus::Installed);
     ImGuiNotify::change(
         _notification_id,
         {
             .type    = ImGuiNotify::Type::Success,
-            .title   = fmt::format("Installed {}", _name.as_string()),
+            .title   = fmt::format("Installed {}", _version_name.as_string()),
             .content = "Success",
         }
     );
@@ -171,8 +175,8 @@ void Task_InstallVersion::on_success()
 
 void Task_InstallVersion::on_version_not_installed()
 {
-    version_manager().set_installation_status(_name, InstallationStatus::NotInstalled);
-    Cool::File::remove_folder(installation_path(_name)); // Cleanup any files that we might have started to extract from the zip
+    version_manager().set_installation_status(_version_name, InstallationStatus::NotInstalled);
+    Cool::File::remove_folder(installation_path(_version_name)); // Cleanup any files that we might have started to extract from the zip
 }
 
 void Task_InstallVersion::on_cancel()
@@ -188,7 +192,7 @@ void Task_InstallVersion::on_error(std::string const& error_message)
         _notification_id,
         {
             .type     = ImGuiNotify::Type::Error,
-            .title    = fmt::format("Installation failed ({})", _name.as_string()),
+            .title    = fmt::format("Installation failed ({})", _version_name.as_string()),
             .content  = error_message,
             .duration = std::nullopt,
         }
@@ -197,7 +201,7 @@ void Task_InstallVersion::on_error(std::string const& error_message)
 
 void Task_InstallVersion::do_work()
 {
-    version_manager().set_installation_status(_name, InstallationStatus::Installing); // TODO(Launcher) should be done in constructor
+    version_manager().set_installation_status(_version_name, InstallationStatus::Installing); // TODO(Launcher) should be done in constructor
 
     auto const zip = download_zip(_download_url, _data->download_progress, _data->cancel);
     if (_data->cancel.load())
@@ -211,7 +215,7 @@ void Task_InstallVersion::do_work()
         return;
     }
     {
-        auto const success = extract_zip(*zip, installation_path(_name), _data->extraction_progress, _data->cancel);
+        auto const success = extract_zip(*zip, installation_path(_version_name), _data->extraction_progress, _data->cancel);
         if (_data->cancel.load())
         {
             on_cancel();
@@ -224,7 +228,7 @@ void Task_InstallVersion::do_work()
         }
     }
     {
-        auto const success = make_file_executable(executable_path(_name));
+        auto const success = make_file_executable(executable_path(_version_name));
         if (!success.has_value())
         {
             on_error(success.error());

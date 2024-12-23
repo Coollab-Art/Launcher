@@ -5,23 +5,17 @@
 #include "VersionManager.hpp"
 #include "nlohmann/json.hpp"
 
-static auto get_OS() -> std::string
+static auto zip_name_for_current_os() -> std::string
 {
 #ifdef __APPLE__
-    return "MacOS";
+    return "MacOS.zip";
 #elif _WIN32
-    return "Windows";
+    return "Windows.zip";
 #elif __linux__
-    return "Linux";
+    return "Linux.zip";
 #else
     static_assert(false);
 #endif
-}
-
-// check if the download url is targeting a zip file.
-auto is_zip_download(std::string const& download_url) -> bool
-{
-    return download_url.find(get_OS() + ".zip") != std::string::npos;
 }
 
 void Task_FetchListOfVersions::do_work()
@@ -43,35 +37,42 @@ void Task_FetchListOfVersions::do_work()
         return;
     }
 
-    try // TODO(Launcher) Put a try on each iteration of the loop, so that an exception doesn't prevent other versions from loading
+    try
     {
         auto const json_response = nlohmann::json::parse(res->body);
         for (auto const& version : json_response)
         {
             if (_cancel.load())
                 return;
-            // if (!version["prerelease"])                     // we keep only non pre-release version // TODO actually, Experimental versions will be marked as preversion, but we still want to have them
-            for (const auto& asset : version["assets"]) // for all download file of the current version
-            {
-                if (!is_zip_download(asset["browser_download_url"])) // Good version? => zip download file exists on the version (Only one per OS)
-                    continue;
 
-                auto const version_name = VersionName{version["name"]};
+            try
+            {
+                auto const version_name = VersionName{version.at("name")};
                 if (!version_name.is_valid())
                     continue;
-                version_manager().set_download_url(version_name, asset["browser_download_url"]);
-                break;
+
+                for (auto const& asset : version.at("assets"))
+                {
+                    auto const download_url = std::string{asset.at("browser_download_url")};
+                    if (download_url.find(zip_name_for_current_os()) == std::string::npos)
+                        continue;
+                    version_manager().set_download_url(version_name, download_url);
+                    break;
+                }
+            }
+            catch (std::exception const& e)
+            {
+                if (Cool::DebugOptions::log_debug_warnings())
+                    Cool::Log::ToUser::error("Fetch list of versions", e.what());
             }
         }
     }
-    catch (nlohmann::json::parse_error const& e)
+    catch (std::exception const& e)
     {
-        // return fmt::format("JSON parsing error: {}", e.what());
+        if (Cool::DebugOptions::log_debug_warnings())
+            Cool::Log::ToUser::error("Fetch list of versions", e.what());
     }
-    catch (std::exception& e)
-    {
-        // return fmt::format("{}", e.what());
-    }
+
     if (_warning_notification_id.has_value())
         ImGuiNotify::close_immediately(*_warning_notification_id);
 }

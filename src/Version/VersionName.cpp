@@ -1,6 +1,7 @@
+#include "VersionName.hpp"
 #include <cassert>
 #include <compare>
-#include "VersionName.hpp"
+
 
 static auto is_number(char c) -> bool
 {
@@ -31,7 +32,6 @@ VersionName::VersionName(std::string name)
         }
         catch (...)
         {
-            // TODO(Launcher) Handle errors better
             _is_valid = false;
             return;
         }

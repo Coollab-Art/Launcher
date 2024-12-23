@@ -17,6 +17,9 @@ public:
     void imgui_manage_versions();
     void imgui_versions_dropdown(VersionRef&);
 
+    auto latest_version_no_locking() -> Version*;
+    auto latest_installed_version_no_locking() -> Version*;
+
 private:
     auto find_no_locking(VersionName const& name) -> Version*;
     void with_version_found(VersionName const& name, std::function<void(Version&)> const& callback);
@@ -24,10 +27,6 @@ private:
 
     void install(Version const&);
     void uninstall(Version&);
-
-public: // TODO(Launcher)
-    auto latest_version_no_locking() -> Version*;
-    auto latest_installed_version_no_locking() -> Version*;
 
 private:
     friend class Task_FetchListOfVersions;

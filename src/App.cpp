@@ -15,8 +15,8 @@ App::App(Cool::WindowManager& windows, Cool::ViewsManager& /* views */)
 #if defined(_WIN32)
     if (_project_manager.has_some_projects()) // Don't show it the first time users open the launcher after installing it, because we don't want to scare them with something that might look like a virus
     {
-        Cool::task_manager().run_small_task_in(500ms, // Small delay to make sure users see it pop up and it draws their attention
-                                               std::make_shared<Task_CheckForLongPathsEnabled>());
+        Cool::task_manager().submit(after(500ms), // Small delay to make sure users see it pop up and it draws their attention
+                                    std::make_shared<Task_CheckForLongPathsEnabled>());
     }
 #endif
 }

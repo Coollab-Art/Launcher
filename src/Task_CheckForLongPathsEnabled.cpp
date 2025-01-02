@@ -1,13 +1,14 @@
 #include "Task_CheckForLongPathsEnabled.hpp"
+#include <ImGuiNotify/ImGuiNotify.hpp>
 #include "Cool/EnableLongPaths/EnableLongPaths.hpp"
 #include "Cool/Task/TaskManager.hpp"
 
-void Task_CheckForLongPathsEnabled::do_work()
+void Task_CheckForLongPathsEnabled::execute()
 {
     if (Cool::has_long_paths_enabled())
     {
         if (_notification_id.has_value())
-            ImGuiNotify::close_after_small_delay(*_notification_id);
+            ImGuiNotify::close_immediately(*_notification_id);
         return;
     }
 
@@ -24,5 +25,5 @@ void Task_CheckForLongPathsEnabled::do_work()
             .duration = std::nullopt,
         });
     }
-    Cool::task_manager().run_small_task_in(1s, std::make_shared<Task_CheckForLongPathsEnabled>(_notification_id));
+    Cool::task_manager().submit(after(1s), std::make_shared<Task_CheckForLongPathsEnabled>(_notification_id));
 }

@@ -4,6 +4,7 @@
 #include "Cool/File/File.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/Log/ToUser.h"
+#include "Cool/Task/TaskManager.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "Version.hpp"
 #include "VersionManager.hpp"
@@ -12,7 +13,7 @@
 #include "miniz.h"
 #include "tl/expected.hpp"
 
-static auto download_zip(std::string const& download_url, std::atomic<float>& progression, std::atomic<bool> const& cancel)
+static auto download_zip(std::string const& download_url, std::function<void(float)> const& set_progress, std::function<bool()> const& wants_to_cancel)
     -> tl::expected<std::string, std::string>
 {
     auto cli = httplib::Client{"https://github.com"};
@@ -24,11 +25,11 @@ static auto download_zip(std::string const& download_url, std::atomic<float>& pr
     cli.set_write_timeout(99999h);
 
     auto res = cli.Get(download_url, [&](uint64_t current, uint64_t total) {
-        progression.store(static_cast<float>(current) / static_cast<float>(total));
-        return !cancel.load();
+        set_progress(static_cast<float>(current) / static_cast<float>(total));
+        return !wants_to_cancel();
     });
 
-    if (cancel.load())
+    if (wants_to_cancel())
         return "";
     if (!res)
     {
@@ -46,7 +47,7 @@ static auto download_zip(std::string const& download_url, std::atomic<float>& pr
     return res->body;
 }
 
-static auto extract_zip(std::string const& zip, std::filesystem::path const& installation_path, std::atomic<float>& progression, std::atomic<bool> const& cancel)
+static auto extract_zip(std::string const& zip, std::filesystem::path const& installation_path, std::function<void(float)> const& set_progress, std::function<bool()> const& wants_to_cancel)
     -> tl::expected<void, std::string>
 {
     auto const file_error = [&]() {
@@ -75,9 +76,9 @@ static auto extract_zip(std::string const& zip, std::filesystem::path const& ins
     auto const files_count = mz_zip_reader_get_num_files(&zip_archive);
     for (mz_uint i = 0; i < files_count; ++i)
     {
-        if (cancel.load())
+        if (wants_to_cancel())
             break;
-        progression.store(static_cast<float>(i) / static_cast<float>(files_count));
+        set_progress(static_cast<float>(i) / static_cast<float>(files_count));
 
         auto file_stat = mz_zip_archive_file_stat{};
         if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
@@ -137,104 +138,105 @@ static auto make_file_executable(std::filesystem::path const& path) -> tl::expec
     return {};
 }
 
-Task_InstallVersion::Task_InstallVersion(VersionName version_name, std::string download_url, ImGuiNotify::NotificationId notification_id)
-    : _version_name{std::move(version_name)}
-    , _download_url{std::move(download_url)}
-    , _notification_id{notification_id}
+void Task_InstallVersion::on_submit()
 {
-    ImGuiNotify::change(
-        _notification_id,
-        {
-            .type                 = ImGuiNotify::Type::Info,
-            .title                = name(),
-            .custom_imgui_content = [data = _data]() {
-                Cool::ImGuiExtras::disabled_if(data->cancel.load(), "", [&]() {
-                    ImGui::ProgressBar(data->download_progress.load() * 0.9f + 0.1f * data->extraction_progress.load());
-                    if (ImGui::Button("Cancel"))
-                        data->cancel.store(true);
-                });
-            },
-            .duration    = std::nullopt,
-            .is_closable = false,
-        }
-    );
+    Cool::TaskWithProgressBar::on_submit();
+
+    if (_version_name.has_value())
+        version_manager().set_installation_status(*_version_name, InstallationStatus::Installing);
 }
 
-void Task_InstallVersion::on_success()
+auto Task_InstallVersion::text_in_notification_while_waiting_to_execute() const -> std::string
 {
-    version_manager().set_installation_status(_version_name, InstallationStatus::Installed);
-    ImGuiNotify::change(
-        _notification_id,
-        {
-            .type    = ImGuiNotify::Type::Success,
-            .title   = fmt::format("Installed {}", _version_name.as_string()),
-            .content = "Success",
-        }
-    );
+    if (version_manager().status_of_fetch_list_of_versions() == Status::Completed)
+        return Cool::TaskWithProgressBar::text_in_notification_while_waiting_to_execute();
+    return "Waiting to connect to the Internet";
 }
 
-void Task_InstallVersion::on_version_not_installed()
+auto Task_InstallVersion::notification_after_execution_completes() const -> ImGuiNotify::Notification
 {
-    version_manager().set_installation_status(_version_name, InstallationStatus::NotInstalled);
-    Cool::File::remove_folder(installation_path(_version_name)); // Cleanup any files that we might have started to extract from the zip
+    if (!_error_message.has_value())
+        return Cool::TaskWithProgressBar::notification_after_execution_completes();
+
+    return ImGuiNotify::Notification{
+        .type     = ImGuiNotify::Type::Error,
+        .title    = name(),
+        .content  = *_error_message,
+        .duration = std::nullopt,
+    };
 }
 
-void Task_InstallVersion::on_cancel()
+void Task_InstallVersion::cleanup(bool has_been_canceled)
 {
-    on_version_not_installed();
-    ImGuiNotify::close_immediately(_notification_id);
-}
+    Cool::TaskWithProgressBar::cleanup(has_been_canceled);
 
-void Task_InstallVersion::on_error(std::string const& error_message)
-{
-    on_version_not_installed();
-    ImGuiNotify::change(
-        _notification_id,
-        {
-            .type     = ImGuiNotify::Type::Error,
-            .title    = fmt::format("Installation failed ({})", _version_name.as_string()),
-            .content  = error_message,
-            .duration = std::nullopt,
-        }
-    );
-}
-
-void Task_InstallVersion::do_work()
-{
-    version_manager().set_installation_status(_version_name, InstallationStatus::Installing); // TODO(Launcher) should be done in constructor
-
-    auto const zip = download_zip(_download_url, _data->download_progress, _data->cancel);
-    if (_data->cancel.load())
-    {
-        on_cancel();
+    if (!_version_name.has_value())
         return;
+
+    if (has_been_canceled || _error_message.has_value())
+    {
+        version_manager().set_installation_status(*_version_name, InstallationStatus::NotInstalled);
+        Cool::File::remove_folder(installation_path(*_version_name)); // Cleanup any files that we might have started to extract from the zip
     }
+    else
+    {
+        version_manager().set_installation_status(*_version_name, InstallationStatus::Installed);
+    }
+}
+
+void Task_InstallVersion::execute()
+{
+    // Find version name and/or download url if necessary
+    if (!_version_name.has_value())
+    {
+        auto const* const version = version_manager().latest_version();
+        if (!version || !version->download_url.has_value())
+        {
+            _error_message = "Didn't find any version to install";
+            return;
+        }
+        _version_name = version->name;
+        _download_url = version->download_url;
+        version_manager().set_installation_status(*_version_name, InstallationStatus::Installing);
+    }
+    if (!_download_url.has_value())
+    {
+        auto const* const version = version_manager().find(*_version_name);
+        if (!version || !version->download_url.has_value())
+        {
+            _error_message = "This version is not available online";
+            return;
+        }
+        _download_url = version->download_url;
+    }
+
+    // Download zip
+    auto const zip = download_zip(*_download_url, [&](float progress) { set_progress(0.9f * progress); }, [&]() { return cancel_requested(); });
+    if (cancel_requested())
+        return;
     if (!zip.has_value())
     {
-        on_error(zip.error());
+        _error_message = zip.error();
         return;
     }
-    {
-        auto const success = extract_zip(*zip, installation_path(_version_name), _data->extraction_progress, _data->cancel);
-        if (_data->cancel.load())
-        {
-            on_cancel();
+
+    { // Extract zip
+        auto const success = extract_zip(*zip, installation_path(*_version_name), [&](float progress) { set_progress(0.9f + 0.1f * progress); }, [&]() { return cancel_requested(); });
+        if (cancel_requested())
             return;
-        }
         if (!success.has_value())
         {
-            on_error(success.error());
-            return;
-        }
-    }
-    {
-        auto const success = make_file_executable(executable_path(_version_name));
-        if (!success.has_value())
-        {
-            on_error(success.error());
+            _error_message = success.error();
             return;
         }
     }
 
-    on_success();
+    { // Make file executable
+        auto const success = make_file_executable(executable_path(*_version_name));
+        if (!success.has_value())
+        {
+            _error_message = success.error();
+            return;
+        }
+    }
 }

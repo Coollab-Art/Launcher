@@ -38,10 +38,9 @@ auto main(int argc, char** argv) -> int
     Cool::run<App>(
         argc, argv,
         {
-            .windows_configs   = {{
-                  .maximize_on_startup_if = false,
+            .windows_configs = {{
+                .maximize_on_startup_if = false,
             }},
-            .imgui_ini_version = 0,
         }
     );
 }

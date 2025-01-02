@@ -1,7 +1,9 @@
 #include "Task_LaunchVersion.hpp"
+#include <ImGuiNotify/ImGuiNotify.hpp>
 #include "Cool/AppManager/close_application.hpp"
 #include "Cool/Task/TaskManager.hpp"
 #include "Cool/spawn_process.hpp"
+#include "Version/VersionRef.hpp"
 #include "VersionManager.hpp"
 #include "installation_path.hpp"
 
@@ -28,7 +30,22 @@ void Task_LaunchVersion::on_submit()
 
 void Task_LaunchVersion::cleanup(bool /* has_been_canceled */)
 {
-    ImGuiNotify::close_immediately(_notification_id);
+    if (_failed_to_launch)
+    {
+        ImGuiNotify::change(
+            _notification_id,
+            {
+                .type     = ImGuiNotify::Type::Error,
+                .title    = name(),
+                .content  = fmt::format("Can't launch because we failed to install {}", as_string(_version_ref)),
+                .duration = std::nullopt,
+            }
+        );
+    }
+    else
+    {
+        ImGuiNotify::close_immediately(_notification_id);
+    }
 }
 
 void Task_LaunchVersion::execute()
@@ -36,7 +53,7 @@ void Task_LaunchVersion::execute()
     auto const* const version = version_manager().find_installed_version(_version_ref);
     if (!version || version->installation_status != InstallationStatus::Installed)
     {
-        // TODO(Launcher) unexpected error, version got uninstalled before we could launch, please try again
+        _failed_to_launch = true;
         return;
     }
 

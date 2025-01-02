@@ -1,6 +1,8 @@
 #include "Task_LaunchVersion.hpp"
 #include <ImGuiNotify/ImGuiNotify.hpp>
 #include "Cool/AppManager/close_application.hpp"
+#include "Cool/DebugOptions/DebugOptions.h"
+#include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
 #include "Cool/spawn_process.hpp"
 #include "Version/VersionRef.hpp"
@@ -30,14 +32,14 @@ void Task_LaunchVersion::on_submit()
 
 void Task_LaunchVersion::cleanup(bool /* has_been_canceled */)
 {
-    if (_failed_to_launch)
+    if (!_error_message.empty())
     {
         ImGuiNotify::change(
             _notification_id,
             {
                 .type     = ImGuiNotify::Type::Error,
                 .title    = name(),
-                .content  = fmt::format("Can't launch because we failed to install {}", as_string(_version_ref)),
+                .content  = _error_message,
                 .duration = std::nullopt,
             }
         );
@@ -53,13 +55,21 @@ void Task_LaunchVersion::execute()
     auto const* const version = version_manager().find_installed_version(_version_ref);
     if (!version || version->installation_status != InstallationStatus::Installed)
     {
-        _failed_to_launch = true;
+        _error_message = fmt::format("Can't launch because we failed to install {}", as_string(_version_ref));
         return;
     }
 
-    Cool::spawn_process(
+    auto const maybe_error = Cool::spawn_process(
         executable_path(version->name),
         _project_file_path.has_value() ? std::vector<std::string>{_project_file_path->string()} : std::vector<std::string>{}
     );
+    if (maybe_error.has_value())
+    {
+        if (Cool::DebugOptions::log_debug_warnings())
+            Cool::Log::ToUser::warning("Launch", *maybe_error);
+        _error_message = fmt::format("{} is corrupted. You should uninstall and reinstall it", as_string(_version_ref));
+        return;
+    }
+
     Cool::close_application_if_all_tasks_are_done(); // If some installations are still in progress we want to keep the launcher open so that they can finish. And once they are done, if we were to close the launcher it would feel weird for the user that it suddenly closed, so we just keep it open.
 }

@@ -25,5 +25,5 @@ private:
     VersionRef                           _version_ref;
     std::optional<std::filesystem::path> _project_file_path{};
     ImGuiNotify::NotificationId          _notification_id{};
-    bool                                 _failed_to_launch{false};
+    std::string                          _error_message{""};
 };

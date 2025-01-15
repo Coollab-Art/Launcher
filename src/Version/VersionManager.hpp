@@ -51,6 +51,7 @@ private:
 
     void set_download_url(VersionName const&, std::string download_url);
     void set_installation_status(VersionName const&, InstallationStatus);
+    void on_finished_fetching_list_of_versions();
 
 private:
     std::vector<Version> _versions{}; // Sorted, from latest to oldest version

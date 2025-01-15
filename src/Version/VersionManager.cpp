@@ -10,7 +10,9 @@
 #include "Cool/ImGui/ImGuiExtras_dropdown.hpp"
 #include "Cool/Task/TaskManager.hpp"
 #include "Cool/Task/WaitToExecuteTask.hpp"
+#include "LauncherSettings.hpp"
 #include "Path.hpp"
+#include "Status.hpp"
 #include "Task_FetchListOfVersions.hpp"
 #include "Task_InstallVersion.hpp"
 #include "Task_LaunchVersion.hpp"
@@ -291,6 +293,18 @@ void VersionManager::set_installation_status(VersionName const& name, Installati
     }
 }
 
+void VersionManager::on_finished_fetching_list_of_versions()
+{
+    _status_of_fetch_list_of_versions.store(Status::Completed);
+
+    if (launcher_settings().automatically_install_latest_version)
+    {
+        auto const* const latest_version = latest_version_no_locking();
+        if (latest_version && latest_version->installation_status == InstallationStatus::NotInstalled)
+            install(*latest_version);
+    }
+}
+
 auto VersionManager::is_installed(VersionName const& version_name) const -> bool
 {
     auto const* const version = find(version_name);
@@ -427,8 +441,8 @@ void VersionManager::imgui_versions_dropdown(VersionRef& ref)
     };
 
     auto entries = std::vector<DropdownEntry_VersionRef>{
-        DropdownEntry_VersionRef{LatestVersion{}, &ref},
         DropdownEntry_VersionRef{LatestInstalledVersion{}, &ref},
+        DropdownEntry_VersionRef{LatestVersion{}, &ref},
     };
     for (auto const& version : _versions)
         entries.emplace_back(version.name, &ref);

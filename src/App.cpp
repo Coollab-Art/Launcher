@@ -4,6 +4,7 @@
 #include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
+#include "LauncherSettings.hpp"
 #include "Task_CheckForLongPathsEnabled.hpp"
 #include "Version/VersionManager.hpp"
 #include "Version/VersionName.hpp"
@@ -25,8 +26,6 @@ void App::update()
 {
     if (inputs_are_allowed() && !ImGui::GetIO().WantTextInput)
     {
-        if (ImGui::GetIO().KeyCtrl && ImGui::GetIO().KeyShift && ImGui::GetIO().KeyAlt && ImGui::IsKeyReleased(ImGuiKey_D))
-            _wants_to_show_menu_bar = !_wants_to_show_menu_bar;
     }
 }
 
@@ -60,6 +59,12 @@ void App::imgui_windows()
 
 void App::imgui_menus()
 {
+    if (ImGui::BeginMenu("Settings"))
+    {
+        launcher_settings().imgui();
+        ImGui::EndMenu();
+    }
+
     ImGui::SetCursorPosX( // HACK while waiting for ImGui to support right-to-left layout. See issue https://github.com/ocornut/imgui/issues/5875
         ImGui::GetWindowSize().x
         - ImGui::CalcTextSize("Debug").x

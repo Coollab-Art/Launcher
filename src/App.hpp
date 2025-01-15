@@ -17,7 +17,7 @@ public:
     void update() override;
     void imgui_windows() override;
     void imgui_menus() override;
-    auto wants_to_show_menu_bar() const -> bool override { return _wants_to_show_menu_bar; }
+    auto wants_to_show_menu_bar() const -> bool override { return true; }
 
 private:
     void launch(Project const& project);
@@ -25,9 +25,8 @@ private:
 
 private:
     ProjectManager _project_manager{};
-    VersionRef     _version_to_use_for_new_project{LatestVersion{}};
+    VersionRef     _version_to_use_for_new_project{LatestInstalledVersion{}};
     Cool::Window&  _window; // NOLINT(*avoid-const-or-ref-data-members)
-    bool           _wants_to_show_menu_bar{false};
 
     DebugOptionsManager::AutoSerializer _auto_serializer_for_debug_options{};
 

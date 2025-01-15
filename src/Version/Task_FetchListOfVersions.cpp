@@ -74,7 +74,7 @@ void Task_FetchListOfVersions::execute()
             Cool::Log::ToUser::error("Fetch list of versions", e.what());
     }
 
-    version_manager()._status_of_fetch_list_of_versions.store(Status::Completed);
+    version_manager().on_finished_fetching_list_of_versions();
 
     if (_warning_notification_id.has_value())
         ImGuiNotify::close_immediately(*_warning_notification_id);

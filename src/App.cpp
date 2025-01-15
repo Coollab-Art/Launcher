@@ -3,6 +3,7 @@
 #include "Cool/ImGui/markdown.h"
 #include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
+#include "Cool/UserSettings/UserSettings.h"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "LauncherSettings.hpp"
 #include "Task_CheckForLongPathsEnabled.hpp"
@@ -41,7 +42,7 @@ void App::imgui_windows()
 
     { // New Project
         ImGui::Begin("New Project");
-        if (ImGui::Button("New Project")) // TODO(Launcher) Nice big blue button
+        if (Cool::ImGuiExtras::colored_button("New Project", Cool::user_settings().color_themes.editor().get_color("Accent")))
             version_manager().install_ifn_and_launch(_version_to_use_for_new_project);
         ImGui::SameLine();
         version_manager().imgui_versions_dropdown(_version_to_use_for_new_project);

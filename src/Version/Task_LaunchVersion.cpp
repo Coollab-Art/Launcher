@@ -1,10 +1,14 @@
 #include "Task_LaunchVersion.hpp"
 #include <ImGuiNotify/ImGuiNotify.hpp>
+#include <filesystem>
+#include <vector>
 #include "Cool/AppManager/close_application.hpp"
 #include "Cool/DebugOptions/DebugOptions.h"
+#include "Cool/File/File.h"
 #include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
 #include "Cool/spawn_process.hpp"
+#include "Path.hpp"
 #include "Version/VersionRef.hpp"
 #include "VersionManager.hpp"
 #include "installation_path.hpp"
@@ -59,10 +63,26 @@ void Task_LaunchVersion::execute()
         return;
     }
 
-    auto const maybe_error = Cool::spawn_process(
-        executable_path(version->name),
-        _project_file_path.has_value() ? std::vector<std::string>{_project_file_path->string()} : std::vector<std::string>{}
-    );
+    auto const path_arg = [](std::filesystem::path const& path) {
+        return Cool::File::weakly_canonical(path).string(); // No need to have the path quoted because spawn_process() already handles args with spaces
+    };
+
+    auto args = std::vector<std::string>{
+        "--projects_info_folder_for_the_launcher",
+        path_arg(Path::projects_info_folder()),
+    };
+    if (_project_file_path.has_value())
+    {
+        args.emplace_back("--open_project");
+        args.emplace_back(path_arg(*_project_file_path));
+    }
+    else
+    {
+        args.emplace_back("--create_new_project_in_folder");
+        args.emplace_back(path_arg(Path::default_projects_folder())); // TODO path
+    }
+
+    auto const maybe_error = Cool::spawn_process(executable_path(version->name), args);
     if (maybe_error.has_value())
     {
         if (Cool::DebugOptions::log_debug_warnings())

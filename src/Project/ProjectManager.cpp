@@ -8,6 +8,7 @@
 #include "Cool/TextureSource/TextureLibrary_Image.h"
 #include "Path.hpp"
 #include "Project.hpp"
+#include "Version/VersionManager.hpp"
 #include "open/open.hpp"
 
 ProjectManager::ProjectManager()
@@ -71,7 +72,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                 ImGui::BeginGroup();
                 ImGui::TextUnformatted(project.file_path().string().c_str());
                 ImGui::PushFont(Cool::Font::italic());
-                ImGui::TextUnformatted(project.version_name().as_string().c_str());
+                ImGui::TextUnformatted(version_manager().label_with_installation_icon(project.version_name()).c_str());
                 ImGui::PopFont();
                 ImGui::EndGroup();
             }))

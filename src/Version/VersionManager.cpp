@@ -5,6 +5,7 @@
 #include <optional>
 #include <tl/expected.hpp>
 #include <utility>
+#include "Cool/ImGui/IcoMoonCodepoints.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/ImGui/ImGuiExtras_dropdown.hpp"
 #include "Cool/Task/TaskManager.hpp"
@@ -372,22 +373,40 @@ void VersionManager::imgui_manage_versions()
     }
 }
 
-auto VersionManager::label(VersionRef const& ref) const -> std::string
+auto VersionManager::label_with_installation_icon(VersionRef const& ref) const -> std::string
 {
     return std::visit(
         Cool::overloaded{
+            [&](LatestInstalledVersion) {
+                auto const* version = latest_installed_version_no_locking();
+                if (!version)
+                    version = latest_version_no_locking();
+                return fmt::format(
+                    "{} Latest Installed ({})",
+                    (version && version_manager().is_installed(version->name))
+                        ? ICOMOON_CHECKBOX_CHECKED
+                        : ICOMOON_CHECKBOX_UNCHECKED,
+                    version ? version->name.as_string() : "None"
+                );
+            },
             [&](LatestVersion) {
                 auto const* const version = latest_version_no_locking();
-                return fmt::format("Latest ({})", version ? version->name.as_string() : "None");
-                // return _label.c_str();
-            },
-            [&](LatestInstalledVersion) {
-                auto const* const version = latest_installed_version_no_locking();
-                return fmt::format("Latest Installed ({})", version ? version->name.as_string() : "None");
-                // return _label.c_str();
+                return fmt::format(
+                    "{} Latest ({})",
+                    (version && version_manager().is_installed(version->name))
+                        ? ICOMOON_CHECKBOX_CHECKED
+                        : ICOMOON_CHECKBOX_UNCHECKED,
+                    version ? version->name.as_string() : "None"
+                );
             },
             [](VersionName const& name) {
-                return name.as_string();
+                return fmt::format(
+                    "{} {}",
+                    version_manager().is_installed(name)
+                        ? ICOMOON_CHECKBOX_CHECKED
+                        : ICOMOON_CHECKBOX_UNCHECKED,
+                    name.as_string()
+                );
             }
         },
         ref
@@ -412,24 +431,8 @@ void VersionManager::imgui_versions_dropdown(VersionRef& ref)
 
         auto get_label() -> const char*
         {
-            return std::visit(
-                Cool::overloaded{
-                    [&](LatestVersion) {
-                        auto const version = version_manager().latest_version_no_locking();
-                        _label             = fmt::format("Latest ({})", version ? version->name.as_string() : "None");
-                        return _label.c_str();
-                    },
-                    [&](LatestInstalledVersion) {
-                        auto const version = version_manager().latest_installed_version_no_locking();
-                        _label             = fmt::format("Latest Installed ({})", version ? version->name.as_string() : "None");
-                        return _label.c_str();
-                    },
-                    [](VersionName const& name) {
-                        return name.as_string().c_str(); // TODO(Launcher2) indicate if this is installed or not, with a small icon
-                    }
-                },
-                _value
-            );
+            _label = version_manager().label_with_installation_icon(_value);
+            return _label.c_str();
         }
 
         void apply_value()
@@ -449,5 +452,5 @@ void VersionManager::imgui_versions_dropdown(VersionRef& ref)
     };
     for (auto const& version : _versions)
         entries.emplace_back(version.name, &ref);
-    Cool::ImGuiExtras::dropdown("Version", label(ref).c_str(), entries);
+    Cool::ImGuiExtras::dropdown("Version", label_with_installation_icon(ref).c_str(), entries);
 }

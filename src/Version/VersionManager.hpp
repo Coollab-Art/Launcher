@@ -26,13 +26,14 @@ public:
     auto status_of_fetch_list_of_versions() const -> Status { return _status_of_fetch_list_of_versions.load(); }
     auto is_installed(VersionName const&) const -> bool;
 
+    auto label_with_installation_icon(VersionRef const&) const -> std::string;
+
 private:
     auto find_no_locking(VersionName const&) -> Version*;
     auto find_no_locking(VersionName const&) const -> Version const*;
     auto latest_version_no_locking() const -> Version const*;
     auto latest_installed_version_no_locking() const -> Version const*;
     auto latest_version_with_download_url_no_locking() const -> Version const*;
-    auto label(VersionRef const&) const -> std::string;
 
     void with_version_found(VersionName const& name, std::function<void(Version&)> const& callback);
     void with_version_found_or_created(VersionName const& name, std::function<void(Version&)> const& callback);

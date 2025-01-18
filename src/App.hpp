@@ -5,6 +5,7 @@
 #include "Cool/View/ViewsManager.h"
 #include "Cool/Window/Window.h"
 #include "Cool/Window/WindowManager.h"
+#include "LauncherSettings.hpp"
 #include "Project/ProjectManager.hpp"
 #include "Version/VersionRef.hpp"
 
@@ -34,11 +35,11 @@ private:
     // Serialization
     friend class ser20::access;
     template<class Archive>
-    void serialize(Archive& /* archive */)
+    void serialize(Archive& archive)
     {
-        // archive(
-        //     ser20::make_nvp("Project Manager", _project_manager)
-        // );
+        archive(
+            ser20::make_nvp("Settings", launcher_settings())
+        );
     }
 };
 

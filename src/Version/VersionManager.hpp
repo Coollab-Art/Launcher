@@ -1,11 +1,10 @@
 #pragma once
 #include <ImGuiNotify/ImGuiNotify.hpp>
-#include <filesystem>
 #include <map>
-#include <shared_mutex>
 #include <tl/expected.hpp>
 #include "Cool/Task/Task.hpp"
 #include "Cool/Task/WaitToExecuteTask.hpp"
+#include "ProjectToOpenOrCreate.hpp"
 #include "Status.hpp"
 #include "Version.hpp"
 #include "VersionName.hpp"
@@ -15,7 +14,8 @@ class VersionManager {
 public:
     VersionManager();
 
-    void install_ifn_and_launch(VersionRef const&, std::optional<std::filesystem::path> const& project_file_path = {});
+    void install_ifn_and_launch(VersionRef const&, ProjectToOpenOrCreate);
+    void install_latest_version();
 
     void imgui_manage_versions();
     void imgui_versions_dropdown(VersionRef&);

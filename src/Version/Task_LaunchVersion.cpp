@@ -7,16 +7,35 @@
 #include "Cool/File/File.h"
 #include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
+#include "Cool/Utils/overloaded.hpp"
 #include "Cool/spawn_process.hpp"
 #include "Path.hpp"
 #include "Version/VersionRef.hpp"
 #include "VersionManager.hpp"
 #include "installation_path.hpp"
 
-Task_LaunchVersion::Task_LaunchVersion(VersionRef version_ref, std::optional<std::filesystem::path> project_file_path)
+auto Task_LaunchVersion::name() const -> std::string
+{
+    return fmt::format(
+        "Launching {}",
+        std::visit(
+            Cool::overloaded{
+                [&](FileToOpen const& file) {
+                    return fmt::format("\"{}\"", Cool::File::file_name_without_extension(file.path));
+                },
+                [&](FolderToCreateNewProject const&) {
+                    return "a new project"s;
+                },
+            },
+            _project_to_open_or_create
+        )
+    );
+}
+
+Task_LaunchVersion::Task_LaunchVersion(VersionRef version_ref, ProjectToOpenOrCreate project_to_open_or_create)
     : Cool::Task{reg::generate_uuid() /* give a unique id to this task, so that we can cancel it */}
     , _version_ref{std::move(version_ref)}
-    , _project_file_path{std::move(project_file_path)}
+    , _project_to_open_or_create{std::move(project_to_open_or_create)}
 {}
 
 void Task_LaunchVersion::on_submit()
@@ -71,16 +90,22 @@ void Task_LaunchVersion::execute()
         "--projects_info_folder_for_the_launcher",
         path_arg(Path::projects_info_folder()),
     };
-    if (_project_file_path.has_value())
-    {
-        args.emplace_back("--open_project");
-        args.emplace_back(path_arg(*_project_file_path));
-    }
-    else
-    {
-        args.emplace_back("--create_new_project_in_folder");
-        args.emplace_back(path_arg(Path::default_projects_folder())); // TODO path
-    }
+    std::visit(
+        Cool::overloaded{
+            [&](FileToOpen const& file) {
+                args.emplace_back("--open_project");
+                args.emplace_back(path_arg(file.path));
+            },
+            [&](FolderToCreateNewProject const& folder) {
+                args.emplace_back("--create_new_project_in_folder");
+                auto path = folder.path;
+                if (Cool::File::is_relative(path))
+                    path = Path::default_projects_folder() / path;
+                args.emplace_back(path_arg(path));
+            },
+        },
+        _project_to_open_or_create
+    );
 
     auto const maybe_error = Cool::spawn_process(executable_path(version->name), args);
     if (maybe_error.has_value())

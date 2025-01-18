@@ -6,6 +6,7 @@
 #include "Cool/Window/Window.h"
 #include "Cool/Window/WindowManager.h"
 #include "LauncherSettings.hpp"
+#include "Path.hpp"
 #include "Project/ProjectManager.hpp"
 #include "Version/VersionRef.hpp"
 
@@ -25,9 +26,10 @@ private:
     void launch(std::filesystem::path const& project_file_path);
 
 private:
-    ProjectManager _project_manager{};
-    VersionRef     _version_to_use_for_new_project{LatestInstalledVersion{}};
-    Cool::Window&  _window; // NOLINT(*avoid-const-or-ref-data-members)
+    ProjectManager        _project_manager{};
+    VersionRef            _version_to_use_for_new_project{LatestInstalledVersion{}};
+    Cool::Window&         _window; // NOLINT(*avoid-const-or-ref-data-members)
+    std::filesystem::path _projects_folder{};
 
     DebugOptionsManager::AutoSerializer _auto_serializer_for_debug_options{};
 
@@ -38,7 +40,8 @@ private:
     void serialize(Archive& archive)
     {
         archive(
-            ser20::make_nvp("Settings", launcher_settings())
+            ser20::make_nvp("Settings", launcher_settings()),
+            ser20::make_nvp("Projects folder", _projects_folder)
         );
     }
 };

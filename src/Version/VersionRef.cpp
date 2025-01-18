@@ -1,10 +1,10 @@
 #include "VersionRef.hpp"
-#include "wcam/src/overloaded.hpp"
+#include "Cool/Utils/overloaded.hpp"
 
 auto as_string(VersionRef const& version_ref) -> std::string
 {
     return std::visit(
-        wcam::overloaded{
+        Cool::overloaded{
             [&](LatestVersion) {
                 return "latest version"s;
             },

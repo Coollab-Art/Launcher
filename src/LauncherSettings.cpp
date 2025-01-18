@@ -1,7 +1,12 @@
 #include "LauncherSettings.hpp"
 #include "Cool/ImGui/ImGuiExtras.h"
+#include "Version/VersionManager.hpp"
 
 void LauncherSettings::imgui()
 {
-    Cool::ImGuiExtras::toggle("Automatically install latest version", &automatically_install_latest_version);
+    if (Cool::ImGuiExtras::toggle("Automatically install latest version", &automatically_install_latest_version))
+    {
+        if (automatically_install_latest_version)
+            version_manager().install_latest_version();
+    }
 }

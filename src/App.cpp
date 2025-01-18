@@ -1,5 +1,7 @@
 #include "App.hpp"
+#include <imgui.h>
 #include "Cool/DebugOptions/debug_options_windows.h"
+#include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/ImGui/markdown.h"
 #include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
@@ -7,6 +9,7 @@
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "LauncherSettings.hpp"
 #include "Task_CheckForLongPathsEnabled.hpp"
+#include "Version/Task_LaunchVersion.hpp"
 #include "Version/VersionManager.hpp"
 #include "Version/VersionName.hpp"
 #include "Version/VersionRef.hpp"
@@ -43,9 +46,11 @@ void App::imgui_windows()
     { // New Project
         ImGui::Begin("New Project");
         if (Cool::ImGuiExtras::colored_button("New Project", Cool::user_settings().color_themes.editor().get_color("Accent")))
-            version_manager().install_ifn_and_launch(_version_to_use_for_new_project);
+            version_manager().install_ifn_and_launch(_version_to_use_for_new_project, FolderToCreateNewProject{_projects_folder});
         ImGui::SameLine();
         version_manager().imgui_versions_dropdown(_version_to_use_for_new_project);
+        Cool::ImGuiExtras::folder("", &_projects_folder);
+        ImGui::SetItemTooltip("%s", "Folder where the new project will be saved");
         ImGui::End();
     }
 
@@ -96,7 +101,7 @@ void App::launch(Project const& project)
         });
         return;
     }
-    version_manager().install_ifn_and_launch(project.version_name(), project.file_path());
+    version_manager().install_ifn_and_launch(project.version_name(), FileToOpen{project.file_path()});
 }
 
 void App::launch(std::filesystem::path const& project_file_path)

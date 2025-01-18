@@ -5,11 +5,11 @@
 #include <optional>
 #include <tl/expected.hpp>
 #include <utility>
-#include <wcam/src/overloaded.hpp>
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/ImGui/ImGuiExtras_dropdown.hpp"
 #include "Cool/Task/TaskManager.hpp"
 #include "Cool/Task/WaitToExecuteTask.hpp"
+#include "Cool/Utils/overloaded.hpp"
 #include "LauncherSettings.hpp"
 #include "Path.hpp"
 #include "Status.hpp"
@@ -107,7 +107,7 @@ auto VersionManager::after_version_installed(VersionRef const& version_ref) -> s
     };
     // TODO(Launcher) lock
     return std::visit(
-        wcam::overloaded{
+        Cool::overloaded{
             [&](LatestVersion) -> std::shared_ptr<Cool::WaitToExecuteTask> {
                 return after_latest_version_installed();
             },
@@ -161,12 +161,19 @@ auto VersionManager::get_latest_installing_version_if_any() const -> std::shared
     return res;
 }
 
-void VersionManager::install_ifn_and_launch(VersionRef const& version_ref, std::optional<std::filesystem::path> const& project_file_path)
+void VersionManager::install_ifn_and_launch(VersionRef const& version_ref, ProjectToOpenOrCreate project_to_open_or_create)
 {
     Cool::task_manager().submit(
         after_version_installed(version_ref),
-        std::make_shared<Task_LaunchVersion>(version_ref, project_file_path)
+        std::make_shared<Task_LaunchVersion>(version_ref, std::move(project_to_open_or_create))
     );
+}
+
+void VersionManager::install_latest_version()
+{
+    auto const* const latest_version = latest_version_no_locking();
+    if (latest_version && latest_version->installation_status == InstallationStatus::NotInstalled)
+        install(*latest_version);
 }
 
 void VersionManager::install(Version const& version)
@@ -219,7 +226,7 @@ auto VersionManager::find_no_locking(VersionName const& name) const -> Version c
 auto VersionManager::find_installed_version(VersionRef const& version_ref) const -> Version const*
 {
     return std::visit(
-        wcam::overloaded{
+        Cool::overloaded{
             [&](LatestVersion) {
                 return latest_installed_version_no_locking();
             },
@@ -298,11 +305,7 @@ void VersionManager::on_finished_fetching_list_of_versions()
     _status_of_fetch_list_of_versions.store(Status::Completed);
 
     if (launcher_settings().automatically_install_latest_version)
-    {
-        auto const* const latest_version = latest_version_no_locking();
-        if (latest_version && latest_version->installation_status == InstallationStatus::NotInstalled)
-            install(*latest_version);
-    }
+        install_latest_version();
 }
 
 auto VersionManager::is_installed(VersionName const& version_name) const -> bool
@@ -372,7 +375,7 @@ void VersionManager::imgui_manage_versions()
 auto VersionManager::label(VersionRef const& ref) const -> std::string
 {
     return std::visit(
-        wcam::overloaded{
+        Cool::overloaded{
             [&](LatestVersion) {
                 auto const* const version = latest_version_no_locking();
                 return fmt::format("Latest ({})", version ? version->name.as_string() : "None");
@@ -410,7 +413,7 @@ void VersionManager::imgui_versions_dropdown(VersionRef& ref)
         auto get_label() -> const char*
         {
             return std::visit(
-                wcam::overloaded{
+                Cool::overloaded{
                     [&](LatestVersion) {
                         auto const version = version_manager().latest_version_no_locking();
                         _label             = fmt::format("Latest ({})", version ? version->name.as_string() : "None");

@@ -1,5 +1,6 @@
 #include "App.hpp"
 #include <imgui.h>
+#include "Cool/CommandLineArgs/CommandLineArgs.h"
 #include "Cool/DebugOptions/debug_options_windows.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/ImGui/markdown.h"
@@ -9,14 +10,21 @@
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "LauncherSettings.hpp"
 #include "Task_CheckForLongPathsEnabled.hpp"
-#include "Version/Task_LaunchVersion.hpp"
 #include "Version/VersionManager.hpp"
 #include "Version/VersionName.hpp"
 #include "Version/VersionRef.hpp"
 
 App::App(Cool::WindowManager& windows, Cool::ViewsManager& /* views */)
     : _window{windows.main_window()}
+{}
+
+void App::init()
 {
+    // When double-clicking on a Coollab file, this will open the launcher and pass the path to that file as a command-line argument
+    // We want to launch that project asap
+    if (!Cool::command_line_args().get().empty())
+        launch(Cool::command_line_args().get()[0]);
+
 #if defined(_WIN32)
     if (_project_manager.has_some_projects()) // Don't show it the first time users open the launcher after installing it, because we don't want to scare them with something that might look like a virus
     {
@@ -106,5 +114,5 @@ void App::launch(Project const& project)
 
 void App::launch(std::filesystem::path const& project_file_path)
 {
-    // TODO(Launcher) open the file, find the version name, and then call version_manager.launch
+    launch(Project{project_file_path, {}});
 }

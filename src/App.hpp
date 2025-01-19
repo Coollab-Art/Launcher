@@ -16,6 +16,7 @@ class App : public Cool::IApp {
 public:
     App(Cool::WindowManager& windows, Cool::ViewsManager& /* views */);
 
+    void init() override;
     void update() override;
     void imgui_windows() override;
     void imgui_menus() override;

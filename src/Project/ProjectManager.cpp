@@ -72,7 +72,10 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                 ImGui::BeginGroup();
                 ImGui::TextUnformatted(project.file_path().string().c_str());
                 ImGui::PushFont(Cool::Font::italic());
-                ImGui::TextUnformatted(version_manager().label_with_installation_icon(project.version_name()).c_str());
+                if (project.version_name().has_value())
+                    ImGui::TextUnformatted(version_manager().label_with_installation_icon(*project.version_name()).c_str());
+                else
+                    ImGui::TextUnformatted("Unknown version");
                 ImGui::PopFont();
                 ImGui::EndGroup();
             }))

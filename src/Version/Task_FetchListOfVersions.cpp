@@ -48,8 +48,8 @@ void Task_FetchListOfVersions::execute()
 
             try
             {
-                auto const version_name = VersionName{version.at("name")};
-                if (!version_name.is_valid())
+                auto const version_name = VersionName::from(version.at("name"));
+                if (!version_name.has_value()) // This will ignore all the old Beta versions, which is what we want because they are not compatible with the launcher
                     continue;
 
                 for (auto const& asset : version.at("assets"))
@@ -57,7 +57,7 @@ void Task_FetchListOfVersions::execute()
                     auto const download_url = std::string{asset.at("browser_download_url")};
                     if (download_url.find(zip_name_for_current_os()) == std::string::npos)
                         continue;
-                    version_manager().set_download_url(version_name, download_url);
+                    version_manager().set_download_url(*version_name, download_url);
                     break;
                 }
             }

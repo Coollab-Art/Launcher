@@ -94,22 +94,16 @@ void App::imgui_menus()
 
 void App::launch(Project const& project)
 {
-    if (project.version_name() < VersionName{"Beta 19"})
+    if (!project.version_name().has_value())
     {
         ImGuiNotify::send({
-            .type                 = ImGuiNotify::Type::Error,
-            .title                = "Can't open project",
-            .custom_imgui_content = [&]() {
-                Cool::ImGuiExtras::markdown(fmt::format(
-                    "Old versions cannot be used with the launcher.\n"
-                    "You can download Coollab **{}** manually from [our release page](https://github.com/CoolLibs/Lab/releases)",
-                    project.version_name().as_string()
-                ));
-            },
+            .type    = ImGuiNotify::Type::Error,
+            .title   = "Can't open project",
+            .content = "Unknown version",
         });
         return;
     }
-    version_manager().install_ifn_and_launch(project.version_name(), FileToOpen{project.file_path()});
+    version_manager().install_ifn_and_launch(*project.version_name(), FileToOpen{project.file_path()});
 }
 
 void App::launch(std::filesystem::path const& project_file_path)

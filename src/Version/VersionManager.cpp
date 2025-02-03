@@ -40,7 +40,9 @@ static auto get_all_locally_installed_versions(std::vector<Version>& versions) -
                     return version.name.as_string() == name;
                 }))
             {
-                versions.emplace_back(VersionName{name}, InstallationStatus::Installed);
+                auto const version_name = VersionName::from(name);
+                if (version_name.has_value())
+                    versions.emplace_back(*version_name, InstallationStatus::Installed);
             }
         }
     }

@@ -2,17 +2,20 @@
 #include <cassert>
 #include <compare>
 
-
 static auto is_number(char c) -> bool
 {
     return '0' <= c && c <= '9';
 }
 
-VersionName::VersionName(std::string name)
-    : _name{std::move(name)}
-    , _is_experimental{_name.find("Experimental(") != std::string::npos}
-    , _is_beta{_name.starts_with("Beta ")}
+auto VersionName::from(std::string name) -> std::optional<VersionName>
 {
+    if (name.empty())
+        return std::nullopt;
+
+    VersionName ver;
+    ver._name            = std::move(name);
+    ver._is_experimental = ver._name.find("Experimental(") != std::string::npos;
+
     auto       acc                           = std::string{};
     auto       nb_dots                       = 0;
     auto const register_current_version_part = [&]() {
@@ -21,53 +24,56 @@ VersionName::VersionName(std::string name)
             int const nb = std::stoi(acc);
             acc          = "";
             if (nb_dots == 0)
-                _major = nb;
+                ver._major = nb;
             else if (nb_dots == 1)
-                _minor = nb;
+                ver._minor = nb;
             else
             {
                 assert(nb_dots == 2);
-                _patch = nb;
+                ver._patch = nb;
             }
         }
         catch (...)
         {
-            _is_valid = false;
-            return;
+            return std::nullopt;
         }
     };
 
-    for (size_t i = _is_beta ? 5 /*skip "Beta "*/ : 0; i <= _name.size(); ++i)
+    for (size_t i = 0; i <= ver._name.size(); ++i)
     {
-        if (i == _name.size())
+        if (i == ver._name.size())
         {
             register_current_version_part();
             break;
         }
-        if (is_number(_name[i]))
-            acc += _name[i];
-        else if (_name[i] == '.')
+
+        if (is_number(ver._name[i]))
+        {
+            acc += ver._name[i];
+        }
+        else if (ver._name[i] == '.')
         {
             register_current_version_part();
             nb_dots++;
             if (nb_dots > 2)
                 break;
         }
-        else
+        else if (ver._name[i] == ' ')
         {
             register_current_version_part();
             break;
         }
+        else
+        {
+            return std::nullopt;
+        }
     }
+
+    return ver;
 }
 
 auto operator<=>(VersionName const& a, VersionName const& b) -> std::strong_ordering
 {
-    if (a._is_beta && !b._is_beta)
-        return std::strong_ordering::less;
-    if (!a._is_beta && b._is_beta)
-        return std::strong_ordering::greater;
-
     if (a._major < b._major)
         return std::strong_ordering::less;
     if (b._major < a._major)
@@ -104,66 +110,48 @@ TEST_CASE("Parsing Coollab Version from string")
 {
     SUBCASE("")
     {
-        auto const version = VersionName{"Beta 18"};
-        CHECK(version.is_beta() == true);
-        CHECK(version.is_experimental() == false);
-        CHECK(version.major() == 18);
-        CHECK(version.minor() == 0);
-        CHECK(version.patch() == 0);
+        auto const version = VersionName::from("3.7.2 Launcher");
+        CHECK(version.has_value());
+        CHECK(version->is_experimental() == false);
+        CHECK(version->major() == 3);
+        CHECK(version->minor() == 7);
+        CHECK(version->patch() == 2);
     }
     SUBCASE("")
     {
-        auto const version = VersionName{"Beta 21.1"};
-        CHECK(version.is_beta() == true);
-        CHECK(version.is_experimental() == false);
-        CHECK(version.major() == 21);
-        CHECK(version.minor() == 1);
-        CHECK(version.patch() == 0);
+        auto const version = VersionName::from("18");
+        CHECK(version.has_value());
+        CHECK(version->is_experimental() == false);
+        CHECK(version->major() == 18);
+        CHECK(version->minor() == 0);
+        CHECK(version->patch() == 0);
     }
     SUBCASE("")
     {
-        auto const version = VersionName{"Beta 5.71.3"};
-        CHECK(version.is_beta() == true);
-        CHECK(version.is_experimental() == false);
-        CHECK(version.major() == 5);
-        CHECK(version.minor() == 71);
-        CHECK(version.patch() == 3);
+        auto const version = VersionName::from("21.1");
+        CHECK(version.has_value());
+        CHECK(version->is_experimental() == false);
+        CHECK(version->major() == 21);
+        CHECK(version->minor() == 1);
+        CHECK(version->patch() == 0);
     }
     SUBCASE("")
     {
-        auto const version = VersionName{"18"};
-        CHECK(version.is_beta() == false);
-        CHECK(version.is_experimental() == false);
-        CHECK(version.major() == 18);
-        CHECK(version.minor() == 0);
-        CHECK(version.patch() == 0);
+        auto const version = VersionName::from("5.71.3");
+        CHECK(version.has_value());
+        CHECK(version->is_experimental() == false);
+        CHECK(version->major() == 5);
+        CHECK(version->minor() == 71);
+        CHECK(version->patch() == 3);
     }
     SUBCASE("")
     {
-        auto const version = VersionName{"21.1"};
-        CHECK(version.is_beta() == false);
-        CHECK(version.is_experimental() == false);
-        CHECK(version.major() == 21);
-        CHECK(version.minor() == 1);
-        CHECK(version.patch() == 0);
-    }
-    SUBCASE("")
-    {
-        auto const version = VersionName{"5.71.3"};
-        CHECK(version.is_beta() == false);
-        CHECK(version.is_experimental() == false);
-        CHECK(version.major() == 5);
-        CHECK(version.minor() == 71);
-        CHECK(version.patch() == 3);
-    }
-    SUBCASE("")
-    {
-        auto const version = VersionName{"5.71.3 Experimental(LED)"};
-        CHECK(version.is_beta() == false);
-        CHECK(version.is_experimental() == true);
-        CHECK(version.major() == 5);
-        CHECK(version.minor() == 71);
-        CHECK(version.patch() == 3);
+        auto const version = VersionName::from("5.71.3 Experimental(LED)");
+        CHECK(version.has_value());
+        CHECK(version->is_experimental() == true);
+        CHECK(version->major() == 5);
+        CHECK(version->minor() == 71);
+        CHECK(version->patch() == 3);
     }
 }
 #endif

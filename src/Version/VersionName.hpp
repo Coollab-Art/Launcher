@@ -4,7 +4,7 @@
 
 class VersionName {
 public:
-    explicit VersionName(std::string name);
+    static auto from(std::string name) -> std::optional<VersionName>;
 
     auto as_string() const -> std::string const& { return _name; }
 
@@ -12,9 +12,6 @@ public:
     auto minor() const -> int { return _minor; };
     auto patch() const -> int { return _patch; };
     auto is_experimental() const -> bool { return _is_experimental; }
-    auto is_beta() const -> bool { return _is_beta; }
-
-    auto is_valid() const -> bool { return _is_valid; };
 
     friend auto operator<=>(VersionName const&, VersionName const&) -> std::strong_ordering;
     friend auto operator==(VersionName const&, VersionName const&) -> bool;
@@ -25,7 +22,4 @@ private:
     int         _minor{0};
     int         _patch{0};
     bool        _is_experimental{false};
-    bool        _is_beta{false};
-
-    bool _is_valid{true};
 };

@@ -14,18 +14,15 @@ auto Project::name() const -> std::string
     return Cool::File::file_name_without_extension(_file_path).string();
 }
 
-auto Project::version_name() const -> VersionName const&
+auto Project::version_name() const -> std::optional<VersionName> const&
 {
-    return _version_name.get_value([&]() {
+    return _version_name.get_value([&]() -> std::optional<VersionName> {
         auto file = std::ifstream{file_path()};
         if (!file.is_open())
-        {
-            // TODO(Launcher) Handler error:   std::cerr << "Error: " << strerror(errno) << std::endl;
-            return VersionName{"1.0.0"}; // TODO(Launcher) better default version
-        }
+            return std::nullopt;
         auto version = ""s;
         std::getline(file, version);
-        return VersionName{version};
+        return VersionName::from(version);
     });
 }
 

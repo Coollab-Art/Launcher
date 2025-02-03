@@ -33,13 +33,13 @@ static auto download_zip(std::string const& download_url, std::function<void(flo
         return "";
     if (!res)
     {
-        if (Cool::DebugOptions::log_debug_warnings())
+        if (Cool::DebugOptions::log_internal_warnings())
             Cool::Log::ToUser::warning("Download version", httplib::to_string(res.error()));
         return tl::make_unexpected("No Internet connection");
     }
     if (res->status != 200)
     {
-        if (Cool::DebugOptions::log_debug_warnings())
+        if (Cool::DebugOptions::log_internal_warnings())
             Cool::Log::ToUser::warning("Download version", fmt::format("Status code {}", std::to_string(res->status)));
         return tl::make_unexpected("Oops, our online versions provider is unavailable, please check back later");
     }
@@ -64,7 +64,7 @@ static auto extract_zip(std::string const& zip, std::filesystem::path const& ins
     memset(&zip_archive, 0, sizeof(zip_archive));
 
     auto const zip_error = [&]() {
-        if (Cool::DebugOptions::log_debug_warnings())
+        if (Cool::DebugOptions::log_internal_warnings())
             Cool::Log::ToUser::warning("Unzip version", mz_zip_get_error_string(mz_zip_get_last_error(&zip_archive)));
         return tl::make_unexpected("An unexpected error has occurred, please try again");
     };
@@ -114,7 +114,7 @@ static auto make_file_executable(std::filesystem::path const& path) -> tl::expec
     FILE* const pipe = popen(command.c_str(), "r");
     if (!pipe)
     {
-        if (Cool::DebugOptions::log_debug_warnings())
+        if (Cool::DebugOptions::log_internal_warnings())
             Cool::Log::ToUser::warning("Make file executable", "Failed to open command pipe");
         return tl::make_unexpected(fmt::format("Make sure you have the permission to edit the file \"{}\"", path));
     }
@@ -128,7 +128,7 @@ static auto make_file_executable(std::filesystem::path const& path) -> tl::expec
 
     if (pclose(pipe) != 0)
     {
-        if (Cool::DebugOptions::log_debug_warnings())
+        if (Cool::DebugOptions::log_internal_warnings())
             Cool::Log::ToUser::warning("Make file executable", error_message);
         return tl::make_unexpected(fmt::format("Make sure you have the permission to edit the file \"{}\"", path));
     }

@@ -2,11 +2,11 @@
 #include <imgui.h>
 #include "Cool/CommandLineArgs/CommandLineArgs.h"
 #include "Cool/DebugOptions/debug_options_windows.h"
+#include "Cool/ImGui/ColorThemes.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/ImGui/markdown.h"
 #include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
-#include "Cool/UserSettings/UserSettings.h"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "LauncherSettings.hpp"
 #include "Task_CheckForLongPathsEnabled.hpp"
@@ -53,12 +53,12 @@ void App::imgui_windows()
 
     { // New Project
         ImGui::Begin("New Project");
-        if (Cool::ImGuiExtras::colored_button("New Project", Cool::user_settings().color_themes.editor().get_color("Accent")))
+        if (Cool::ImGuiExtras::colored_button("New Project", Cool::color_themes()->editor().get_color("Accent")))
             version_manager().install_ifn_and_launch(_version_to_use_for_new_project, FolderToCreateNewProject{_projects_folder});
         ImGui::SameLine();
         version_manager().imgui_versions_dropdown(_version_to_use_for_new_project);
         Cool::ImGuiExtras::folder("", &_projects_folder);
-        ImGui::SetItemTooltip("%s", "Folder where the new project will be saved");
+        ImGui::SetItemTooltip("%s", "Folder where the new project will be saved.\nIf left empty or relative, it will be relative to the launcher's User Data folder");
         ImGui::End();
     }
 

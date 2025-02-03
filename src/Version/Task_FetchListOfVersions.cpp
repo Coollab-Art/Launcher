@@ -63,14 +63,14 @@ void Task_FetchListOfVersions::execute()
             }
             catch (std::exception const& e)
             {
-                if (Cool::DebugOptions::log_debug_warnings())
+                if (Cool::DebugOptions::log_internal_warnings())
                     Cool::Log::ToUser::error("Fetch list of versions", e.what());
             }
         }
     }
     catch (std::exception const& e)
     {
-        if (Cool::DebugOptions::log_debug_warnings())
+        if (Cool::DebugOptions::log_internal_warnings())
             Cool::Log::ToUser::error("Fetch list of versions", e.what());
     }
 
@@ -82,7 +82,7 @@ void Task_FetchListOfVersions::execute()
 
 void Task_FetchListOfVersions::handle_error(httplib::Result const& res)
 {
-    if (Cool::DebugOptions::log_debug_warnings())
+    if (Cool::DebugOptions::log_internal_warnings())
     {
         Cool::Log::ToUser::warning(
             "Download version",

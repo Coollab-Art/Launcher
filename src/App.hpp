@@ -32,18 +32,14 @@ private:
     Cool::Window&         _window; // NOLINT(*avoid-const-or-ref-data-members)
     std::filesystem::path _projects_folder{};
 
-    DebugOptionsManager::AutoSerializer _auto_serializer_for_debug_options{};
-
 private:
-    // Serialization
-    friend class ser20::access;
-    template<class Archive>
-    void serialize(Archive& archive)
+    void save_to_json(nlohmann::json& json) const override
     {
-        archive(
-            ser20::make_nvp("Settings", launcher_settings()),
-            ser20::make_nvp("Projects folder", _projects_folder)
-        );
+        Cool::json_set(json, "Projects folder", _projects_folder);
+    }
+    void load_from_json(nlohmann::json const& json) override
+    {
+        Cool::json_get(json, "Projects folder", _projects_folder);
     }
 };
 

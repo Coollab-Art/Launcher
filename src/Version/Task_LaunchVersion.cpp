@@ -110,9 +110,9 @@ void Task_LaunchVersion::execute()
     auto const maybe_error = Cool::spawn_process(executable_path(version->name), args);
     if (maybe_error.has_value())
     {
-        if (Cool::DebugOptions::log_debug_warnings())
+        if (Cool::DebugOptions::log_internal_warnings())
             Cool::Log::ToUser::warning("Launch", *maybe_error);
-        _error_message = fmt::format("{} is corrupted. You should uninstall and reinstall it", as_string(_version_ref));
+        _error_message = fmt::format("{} is corrupted. You should uninstall and reinstall it.", as_string(_version_ref));
         return;
     }
 

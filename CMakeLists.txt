@@ -69,12 +69,8 @@ if(WIN32)
     target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Coollab-Launcher.manifest")
 endif()
 
-# OpenSSL
-set(OPENSSL_USE_STATIC_LIBS TRUE)
-find_package(OpenSSL REQUIRED)
-target_link_libraries(Coollab-Launcher-Properties INTERFACE OpenSSL::SSL OpenSSL::Crypto)
-
 # cpp-httplib
+set(OPENSSL_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
 set(HTTPLIB_REQUIRE_OPENSSL ON CACHE BOOL "" FORCE)
 add_subdirectory(Lab/lib/cpp-httplib)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE httplib)

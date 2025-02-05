@@ -36,7 +36,6 @@ include(FetchContent)
 # Make sure we link the static version
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
-set(OPENSSL_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
 
 # spawn_process
 add_subdirectory(lib/spawn_process)
@@ -69,6 +68,17 @@ target_include_directories(Coollab-Launcher-Properties INTERFACE ${PROJECT_SOURC
 if(WIN32)
     target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Coollab-Launcher.manifest")
 endif()
+
+# OpenSSL
+set(OPENSSL_USE_STATIC_LIBS TRUE)
+
+find_package(OpenSSL 3)
+
+if(NOT OpenSSL_FOUND)
+    find_package(OpenSSL 1.1.1 REQUIRED)
+endif()
+
+target_link_libraries(Coollab-Launcher-Properties INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 
 # cpp-httplib
 set(HTTPLIB_REQUIRE_OPENSSL ON CACHE BOOL "" FORCE)

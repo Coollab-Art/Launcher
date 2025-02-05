@@ -18,7 +18,7 @@ auto VersionName::from(std::string name) -> std::optional<VersionName>
 
     auto       acc                           = std::string{};
     auto       nb_dots                       = 0;
-    auto const register_current_version_part = [&]() {
+    auto const register_current_version_part = [&]() -> bool { // Returns true iff it was successful
         try
         {
             int const nb = std::stoi(acc);
@@ -32,10 +32,11 @@ auto VersionName::from(std::string name) -> std::optional<VersionName>
                 assert(nb_dots == 2);
                 ver._patch = nb;
             }
+            return true;
         }
         catch (...)
         {
-            return std::nullopt;
+            return false;
         }
     };
 
@@ -43,7 +44,8 @@ auto VersionName::from(std::string name) -> std::optional<VersionName>
     {
         if (i == ver._name.size())
         {
-            register_current_version_part();
+            if (!register_current_version_part())
+                return std::nullopt;
             break;
         }
 
@@ -53,14 +55,16 @@ auto VersionName::from(std::string name) -> std::optional<VersionName>
         }
         else if (ver._name[i] == '.')
         {
-            register_current_version_part();
+            if (!register_current_version_part())
+                return std::nullopt;
             nb_dots++;
             if (nb_dots > 2)
                 break;
         }
         else if (ver._name[i] == ' ')
         {
-            register_current_version_part();
+            if (!register_current_version_part())
+                return std::nullopt;
             break;
         }
         else

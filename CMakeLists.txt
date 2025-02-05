@@ -45,7 +45,7 @@ target_link_libraries(Coollab-Launcher-Properties INTERFACE Cool::spawn_process)
 FetchContent_Declare(
     miniz
     GIT_REPOSITORY https://github.com/richgel999/miniz.git
-    GIT_TAG 3.0.2
+    GIT_TAG 0c30a001bc3c70770a8742ff00899e662f040c75
     SYSTEM
 )
 FetchContent_MakeAvailable(miniz)

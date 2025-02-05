@@ -41,14 +41,9 @@ set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
 add_subdirectory(lib/spawn_process)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE Cool::spawn_process)
 
-# MINIZ
-FetchContent_Declare(
-    miniz
-    GIT_REPOSITORY https://github.com/richgel999/miniz.git
-    GIT_TAG 0c30a001bc3c70770a8742ff00899e662f040c75
-    SYSTEM
-)
-FetchContent_MakeAvailable(miniz)
+# miniz
+add_subdirectory(lib/miniz)
+target_compile_definitions(miniz PUBLIC "MINIZ_NO_ZLIB_COMPATIBLE_NAMES")
 target_link_libraries(Coollab-Launcher-Properties INTERFACE miniz)
 
 # Grab all the source files

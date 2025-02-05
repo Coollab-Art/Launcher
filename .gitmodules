@@ -1,9 +1,12 @@
 [submodule "Lab"]
 	path = Lab
-	url = https://github.com/CoolLibs/Lab.git
+	url = git@github.com:CoolLibs/Lab.git
 [submodule "tooling"]
 	path = tooling
 	url = https://github.com/CoolLibs/tooling
 [submodule "lib/spawn_process"]
 	path = lib/spawn_process
 	url = https://github.com/CoolLibs/spawn_process
+[submodule "lib/miniz"]
+	path = lib/miniz
+	url = https://github.com/richgel999/miniz

@@ -60,6 +60,20 @@ jobs:
         if: matrix.config.name == 'Windows MSVC'
         uses: ilammy/msvc-dev-cmd@v1.13.0
 
+      - name: Install vcpkg
+        if: runner.os == 'Windows'
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git ${{ runner.temp }}\vcpkg
+          cd ${{ runner.temp }}\vcpkg
+          .\bootstrap-vcpkg.bat
+        shell: cmd
+
+      - name: Install Windows dependencies
+        if: runner.os == 'Windows'
+        run: |
+          ${{ runner.temp }}\vcpkg\vcpkg.exe install openssl:x64-windows
+        shell: cmd
+
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
@@ -83,7 +97,7 @@ jobs:
         with:
           cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           cmakeListsTxtPath: ${{github.workspace}}/${{env.cmakelists_folder}}/CMakeLists.txt
-          cmakeAppendedArgs: ${{env.cmake_configure_args}} -D CMAKE_BUILD_TYPE=${{matrix.build_type}} ${{matrix.config.cmake_configure_args}} -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmakeAppendedArgs: ${{env.cmake_configure_args}} -D CMAKE_BUILD_TYPE=${{matrix.build_type}} ${{matrix.config.cmake_configure_args}} -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache -D CMAKE_TOOLCHAIN_FILE=${{ runner.temp }}/vcpkg/scripts/buildsystems/vcpkg.cmake
           buildWithCMakeArgs: --config ${{matrix.build_type}} --target ${{env.cmake_target}}
           cmakeBuildType: ${{matrix.build_type}}
           buildDirectory: ${{github.workspace}}/build

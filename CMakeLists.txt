@@ -71,13 +71,7 @@ endif()
 
 # OpenSSL
 set(OPENSSL_USE_STATIC_LIBS TRUE)
-
-find_package(OpenSSL 3)
-
-if(NOT OpenSSL_FOUND)
-    find_package(OpenSSL 1.1.1 REQUIRED)
-endif()
-
+find_package(OpenSSL REQUIRED)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 
 # cpp-httplib

@@ -115,5 +115,3 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
     if (project_to_remove != _projects.end())
         _projects.erase(project_to_remove);
 }
-
-}

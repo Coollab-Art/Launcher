@@ -3,6 +3,7 @@
 #include "Cool/EnableLongPaths/EnableLongPaths.hpp"
 #include "Cool/Task/TaskManager.hpp"
 
+#if defined(_WIN32)
 void Task_CheckForLongPathsEnabled::execute()
 {
     if (Cool::has_long_paths_enabled())
@@ -27,3 +28,4 @@ void Task_CheckForLongPathsEnabled::execute()
     }
     Cool::task_manager().submit(after(1s), std::make_shared<Task_CheckForLongPathsEnabled>(_notification_id));
 }
+#endif

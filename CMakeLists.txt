@@ -41,20 +41,12 @@ set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
 add_subdirectory(lib/spawn_process)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE Cool::spawn_process)
 
-# JSON
-FetchContent_Declare(
-    json
-    GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG v3.11.3
-)
-FetchContent_MakeAvailable(json)
-target_link_libraries(Coollab-Launcher-Properties INTERFACE nlohmann_json::nlohmann_json)
-
 # MINIZ
 FetchContent_Declare(
     miniz
     GIT_REPOSITORY https://github.com/richgel999/miniz.git
     GIT_TAG 3.0.2
+    SYSTEM
 )
 FetchContent_MakeAvailable(miniz)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE miniz)

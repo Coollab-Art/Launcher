@@ -42,8 +42,9 @@ ProjectManager::ProjectManager()
             _projects.emplace_back(path, *maybe_uuid);
         }
     }
-    catch (std::exception const& e)
+    catch (std::exception const&)
     {
+        // TODO(Launcher) error
         // return fmt::format("{}", e.what());
     }
     std::sort(_projects.begin(), _projects.end(), [](Project const& a, Project const& b) {
@@ -115,16 +116,4 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
         _projects.erase(project_to_remove);
 }
 
-void ProjectManager::launch(std::filesystem::path const& project_path)
-{
-    // auto const* release = release_manager.get(project.coollab_version());
-    // if (!release)
-    // {
-    //     boxer::show(
-    //         fmt::format("Please connect to the Internet so that we can install Coollab {}.\n This version is required to launch project \"\"", project.coollab_version().name(), project.name()),
-    //         "You are offline"
-    //     );
-    //     return;
-    // }
-    // release.launch(project.file_path());
 }

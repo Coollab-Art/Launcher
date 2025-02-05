@@ -97,7 +97,7 @@ jobs:
         with:
           cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           cmakeListsTxtPath: ${{github.workspace}}/${{env.cmakelists_folder}}/CMakeLists.txt
-          cmakeAppendedArgs: ${{env.cmake_configure_args}} -D CMAKE_BUILD_TYPE=${{matrix.build_type}} ${{matrix.config.cmake_configure_args}} -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache -D CMAKE_TOOLCHAIN_FILE=${{ runner.temp }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmakeAppendedArgs: ${{env.cmake_configure_args}} -D CMAKE_BUILD_TYPE=${{matrix.build_type}} ${{matrix.config.cmake_configure_args}} -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache ${{runner.os == 'Windows' && '-D CMAKE_TOOLCHAIN_FILE=${{ runner.temp }}/vcpkg/scripts/buildsystems/vcpkg.cmake' || ''}}
           buildWithCMakeArgs: --config ${{matrix.build_type}} --target ${{env.cmake_target}}
           cmakeBuildType: ${{matrix.build_type}}
           buildDirectory: ${{github.workspace}}/build

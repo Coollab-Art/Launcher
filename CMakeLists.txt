@@ -79,7 +79,6 @@ function(Lab_copy_folder FOLDER_RELATIVE_PATH)
 endfunction()
 
 Lab_copy_folder("User data Default")
-Lab_copy_folder("User data Init")
 
 # ---------------------
 # ---CPack---

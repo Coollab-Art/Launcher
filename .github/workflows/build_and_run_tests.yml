@@ -115,7 +115,7 @@ jobs:
 
       - name: Set CMake Toolchain Argument
         if: runner.os == 'Windows'
-        run: echo "CMAKE_TOOLCHAIN_ARG=-DCMAKE_TOOLCHAIN_FILE=${{ runner.temp }}\vcpkg\scripts\buildsystems\vcpkg.cmake" >> $GITHUB_ENV
+        run: echo "CMAKE_TOOLCHAIN_ARG=-D CMAKE_TOOLCHAIN_FILE=${{ runner.temp }}\vcpkg\scripts\buildsystems\vcpkg.cmake" >> $GITHUB_ENV
         shell: bash
 
       - name: Build

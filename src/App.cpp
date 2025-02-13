@@ -44,7 +44,7 @@ void App::update()
 void App::imgui_windows()
 {
     Cool::Log::ToUser::console().imgui_window();
-    Cool::debug_options_windows(nullptr);
+    Cool::debug_options_windows(nullptr, _window);
     { // Versions
         ImGui::Begin("Versions");
         version_manager().imgui_manage_versions();

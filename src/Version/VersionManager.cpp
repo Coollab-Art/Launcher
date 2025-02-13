@@ -360,6 +360,9 @@ void VersionManager::imgui_manage_versions()
 
     for (auto& version : _versions)
     {
+        if (version.name.is_experimental() && !launcher_settings().show_experimental_versions)
+            continue;
+
         ImGui::PushID(&version);
         ImGui::SeparatorText(version.name.as_string().c_str());
         Cool::ImGuiExtras::disabled_if(version.installation_status != InstallationStatus::NotInstalled, version.installation_status == InstallationStatus::Installing ? "Installing" : "Already installed", [&]() {
@@ -453,6 +456,10 @@ void VersionManager::imgui_versions_dropdown(VersionRef& ref)
         DropdownEntry_VersionRef{LatestVersion{}, &ref},
     };
     for (auto const& version : _versions)
+    {
+        if (version.name.is_experimental() && !launcher_settings().show_experimental_versions)
+            continue;
         entries.emplace_back(version.name, &ref);
+    }
     Cool::ImGuiExtras::dropdown("Version", label_with_installation_icon(ref).c_str(), entries);
 }

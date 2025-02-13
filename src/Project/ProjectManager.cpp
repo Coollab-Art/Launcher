@@ -6,6 +6,7 @@
 #include "Cool/ImGui/Fonts.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/TextureSource/TextureLibrary_Image.h"
+#include "Cool/TextureSource/default_textures.h"
 #include "Path.hpp"
 #include "Project.hpp"
 #include "Version/VersionManager.hpp"
@@ -57,14 +58,18 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
     auto project_to_remove = _projects.end();
     for (auto it = _projects.begin(); it != _projects.end(); ++it)
     {
+        // Items that are outside of the view can be "clipped". We still need to render them because otherwise ImGui doesn't know the
+        // size of the whole dropdown list. But we can skip loading the texture, which is the only thing that actually costs some performance anyways.
+        bool const is_visible = ImGui::GetWindowPos().y - 1000.f < ImGui::GetCursorScreenPos().y
+                                && ImGui::GetCursorScreenPos().y < ImGui::GetWindowPos().y + ImGui::GetWindowSize().y;
+
         auto const& project = *it;
         ImGui::PushID(&project);
         ImGui::PushFont(Cool::Font::bold());
         ImGui::SeparatorText(project.name().c_str());
         ImGui::PopFont();
         if (Cool::ImGuiExtras::big_selectable([&]() {
-                // TODO(Launcher) only load image if it will actually be shown, and tell the texture library to only keep it for a few seconds
-                Cool::Texture const* thumbnail = Cool::TextureLibrary_Image::instance().get(project.thumbnail_path());
+                Cool::Texture const* thumbnail = is_visible ? Cool::TextureLibrary_Image::instance().get(project.thumbnail_path(), 1s) : &Cool::dummy_texture();
                 if (thumbnail)
                 {
                     Cool::ImGuiExtras::image_framed(thumbnail->imgui_texture_id(), {100.f, 100.f}, {.frame_thickness = 4.f}); // TODO(Launcher) render alpha checkerboard background bellow it

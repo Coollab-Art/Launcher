@@ -21,6 +21,7 @@ public:
     void imgui_windows() override;
     void imgui_menus() override;
     auto wants_to_show_menu_bar() const -> bool override { return true; }
+    void on_shutdown() override;
 
 private:
     void launch(Project const& project);

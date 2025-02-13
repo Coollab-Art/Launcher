@@ -41,6 +41,11 @@ void App::update()
     }
 }
 
+void App::on_shutdown()
+{
+    launcher_settings().save(); // Even if the user doesn't change the settings, we will save the settings they have seen once, so that if a new version of the software comes with new settings, we will not change settings that the user is used to
+}
+
 void App::imgui_windows()
 {
     Cool::Log::ToUser::console().imgui_window();

@@ -7,11 +7,12 @@ struct LauncherSettings {
     bool show_experimental_versions{false};
 
     void imgui();
+    void save() { _serializer.save(); }
 
 private:
     Cool::JsonAutoSerializer _serializer{
         "user_settings_launcher.json",
-        true /*autosave_when_destroyed*/, // Even if the user doesn't change the settings, we will save the settings they have seen once, so that if a new version of the software comes with new settings, we will not change settings that the user is used to
+        false /*autosave_when_destroyed*/, // This is a static instance, so saving it in the destructor is dangerous because we don't know when it will happen exactly. Instead, we call save manually in App::on_shutdown()
         [&](nlohmann::json const& json) {
             Cool::json_get(json, "Automatically install latest version", automatically_install_latest_version);
             Cool::json_get(json, "Show experimental versions", show_experimental_versions);

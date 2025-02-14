@@ -99,7 +99,8 @@ void App::imgui_menus()
 
 void App::launch(Project const& project)
 {
-    if (!project.version_name().has_value())
+    auto const version = project.version_to_launch();
+    if (!version.has_value())
     {
         ImGuiNotify::send({
             .type    = ImGuiNotify::Type::Error,
@@ -108,7 +109,7 @@ void App::launch(Project const& project)
         });
         return;
     }
-    version_manager().install_ifn_and_launch(*project.version_name(), FileToOpen{project.file_path()});
+    version_manager().install_ifn_and_launch(*version, FileToOpen{project.file_path()});
 }
 
 void App::launch(std::filesystem::path const& project_file_path)

@@ -7,9 +7,10 @@
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/TextureSource/TextureLibrary_Image.h"
 #include "Cool/TextureSource/default_textures.h"
+#include "Cool/Utils/overloaded.hpp"
 #include "Path.hpp"
 #include "Project.hpp"
-#include "Version/VersionManager.hpp"
+#include "boxer/boxer.h"
 #include "open/open.hpp"
 
 ProjectManager::ProjectManager()
@@ -63,7 +64,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
         bool const is_visible = ImGui::GetWindowPos().y - 1000.f < ImGui::GetCursorScreenPos().y
                                 && ImGui::GetCursorScreenPos().y < ImGui::GetWindowPos().y + ImGui::GetWindowSize().y;
 
-        auto const& project = *it;
+        auto& project = *it;
         ImGui::PushID(&project);
         ImGui::PushFont(Cool::Font::bold());
         ImGui::SeparatorText(project.name().c_str());
@@ -77,12 +78,23 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                 }
                 ImGui::BeginGroup();
                 ImGui::TextUnformatted(project.file_path().string().c_str());
-                ImGui::PushFont(Cool::Font::italic());
-                if (project.version_name().has_value())
-                    ImGui::TextUnformatted(version_manager().label_with_installation_icon(*project.version_name()).c_str());
+                // ImGui::PushFont(Cool::Font::italic());
+                if (project.current_version().has_value())
+                    ImGui::TextUnformatted(project.current_version()->as_string().c_str());
+                // ImGui::TextUnformatted(version_manager().label_with_installation_icon(*project.version_name()).c_str());
                 else
                     ImGui::TextUnformatted("Unknown version");
-                ImGui::PopFont();
+                // ImGui::PopFont();
+                std::visit(
+                    Cool::overloaded{
+                        [](VersionName const& version_name) {
+                            ImGui::SameLine();
+                            ImGui::Text("(Will be upgraded to %s)", version_name.as_string().c_str());
+                        },
+                        [&](DontUpgrade) {},
+                    },
+                    project.version_to_upgrade_to()
+                );
                 ImGui::EndGroup();
             }))
         {
@@ -92,13 +104,18 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
         {
             if (ImGui::Selectable("Delete project"))
             {
-                if (boxer::Selection::OK == boxer::show("Are you sure? This cannot be undone", "Deleting project", boxer::Style::Warning, boxer::Buttons::OKCancel))
-                // TODO(Launcher) move to trash
-                // and move to our own "trash", so that we can CTRL+Z the deletion
-                Cool::File::remove_folder(project.info_folder_path());
-                Cool::File::remove_file(project.file_path());
-                project_to_remove = it;
+                if (boxer::Selection::OK == boxer::show("Are you sure? This cannot be undone", fmt::format("Deleting project \"{}\"", project.name()).c_str(), boxer::Style::Warning, boxer::Buttons::OKCancel))
+                {
+                    // TODO(Launcher) move to trash
+                    // and move to our own "trash", so that we can CTRL+Z the deletion
+                    Cool::File::remove_folder(project.info_folder_path());
+                    Cool::File::remove_file(project.file_path());
+                    project_to_remove = it;
+                }
             }
+
+            project.imgui_version_to_upgrade_to();
+
             if (ImGui::Selectable("Reveal in File Explorer"))
             {
                 Cool::open_focused_in_explorer(project.file_path());

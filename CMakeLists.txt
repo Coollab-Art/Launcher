@@ -73,12 +73,12 @@ Cool__set_app_icon(${PROJECT_NAME} "Lab/res/logo.png" "${CMAKE_SOURCE_DIR}/Lab/a
 Cool__target_copy_file(${PROJECT_NAME} "Lab/res/logo.png")
 install(FILES "Lab/res/logo.png" DESTINATION "Lab/res")
 
-function(Lab_copy_folder FOLDER_RELATIVE_PATH)
+function(Launcher_copy_folder FOLDER_RELATIVE_PATH)
     Cool__target_copy_folder(${PROJECT_NAME} ${FOLDER_RELATIVE_PATH})
     install(DIRECTORY ${FOLDER_RELATIVE_PATH} DESTINATION bin)
 endfunction()
 
-Lab_copy_folder("User data Default")
+Launcher_copy_folder("User data Default")
 
 # ---------------------
 # ---CPack---

@@ -3,6 +3,7 @@
 #include "Cool/DebugOptions/DebugOptions.h"
 #include "Cool/File/File.h"
 #include "Cool/ImGui/ImGuiExtras.h"
+#include "Cool/ImGui/markdown.h"
 #include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
@@ -10,21 +11,14 @@
 #include "VersionManager.hpp"
 #include "httplib.h"
 #include "installation_path.hpp"
+#include "make_http_request.hpp"
 #include "miniz.h"
 #include "tl/expected.hpp"
 
 static auto download_zip(std::string const& download_url, std::function<void(float)> const& set_progress, std::function<bool()> const& wants_to_cancel)
     -> tl::expected<std::string, std::string>
 {
-    auto cli = httplib::Client{"https://github.com"};
-    // Allow the client to follow redirects
-    cli.set_follow_location(true);
-    // Don't cancel if we have a bad internet connection. This is done in a Task so this is non-blocking anyways
-    cli.set_connection_timeout(99999h);
-    cli.set_read_timeout(99999h);
-    cli.set_write_timeout(99999h);
-
-    auto res = cli.Get(download_url, [&](uint64_t current, uint64_t total) {
+    auto res = make_http_request(download_url, [&](uint64_t current, uint64_t total) {
         set_progress(static_cast<float>(current) / static_cast<float>(total));
         return !wants_to_cancel();
     });
@@ -156,13 +150,28 @@ auto Task_InstallVersion::text_in_notification_while_waiting_to_execute() const 
 auto Task_InstallVersion::notification_after_execution_completes() const -> ImGuiNotify::Notification
 {
     if (!_error_message.has_value())
-        return Cool::TaskWithProgressBar::notification_after_execution_completes();
+    {
+        auto notif                 = Cool::TaskWithProgressBar::notification_after_execution_completes();
+        notif.custom_imgui_content = extra_imgui_below_progress_bar();
+        return notif;
+    }
 
     return ImGuiNotify::Notification{
         .type     = ImGuiNotify::Type::Error,
         .title    = name(),
         .content  = *_error_message,
         .duration = std::nullopt,
+    };
+}
+
+auto Task_InstallVersion::extra_imgui_below_progress_bar() const -> std::function<void()>
+{
+    if (!_changelog_url.has_value())
+        return []() {
+        };
+
+    return [url = *_changelog_url]() {
+        Cool::ImGuiExtras::markdown(fmt::format("[View changes added in this version]({})", url));
     };
 }
 
@@ -187,6 +196,7 @@ void Task_InstallVersion::cleanup(bool has_been_canceled)
 void Task_InstallVersion::execute()
 {
     // Find version name and/or download url if necessary
+    // We need to do this in execute, because we might have been waiting for FetchListOfVersions to finish, so we didn't have access to the download url before that point
     if (!_version_name.has_value())
     {
         auto const* const version = version_manager().latest_version();
@@ -195,8 +205,9 @@ void Task_InstallVersion::execute()
             _error_message = "Didn't find any version to install";
             return;
         }
-        _version_name = version->name;
-        _download_url = version->download_url;
+        _version_name  = version->name;
+        _download_url  = version->download_url;
+        _changelog_url = version->changelog_url;
         version_manager().set_installation_status(*_version_name, InstallationStatus::Installing);
     }
     if (!_download_url.has_value())
@@ -207,8 +218,11 @@ void Task_InstallVersion::execute()
             _error_message = "This version is not available online";
             return;
         }
-        _download_url = version->download_url;
+        _download_url  = version->download_url;
+        _changelog_url = version->changelog_url;
     }
+
+    TaskWithProgressBar::change_notification_when_execution_starts(); // Must be done after finding the _changelog_url, because this will call extra_imgui_below_progress_bar(), which needs _changelog_url
 
     // Download zip
     auto const zip = download_zip(*_download_url, [&](float progress) { set_progress(0.9f * progress); }, [&]() { return cancel_requested(); });

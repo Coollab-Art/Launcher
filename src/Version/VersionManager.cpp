@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <ImGuiNotify/ImGuiNotify.hpp>
 #include <algorithm>
+#include <open/open.hpp>
 #include <optional>
 #include <tl/expected.hpp>
 #include <utility>
@@ -286,7 +287,15 @@ void VersionManager::set_download_url(VersionName const& name, std::string downl
 {
     with_version_found_or_created(name, [&](Version& version) {
         assert(!version.download_url.has_value());
-        version.download_url = download_url;
+        version.download_url = std::move(download_url);
+    });
+}
+
+void VersionManager::set_changelog_url(VersionName const& name, std::string changelog_url)
+{
+    with_version_found_or_created(name, [&](Version& version) {
+        assert(!version.changelog_url.has_value());
+        version.changelog_url = std::move(changelog_url);
     });
 }
 
@@ -365,6 +374,13 @@ void VersionManager::imgui_manage_versions()
 
         ImGui::PushID(&version);
         ImGui::SeparatorText(version.name.as_string().c_str());
+        if (version.changelog_url.has_value())
+        {
+            if (Cool::ImGuiExtras::button_with_text_icon(ICOMOON_LINK))
+                Cool::open_link(version.changelog_url->c_str());
+            ImGui::SetItemTooltip("%s", fmt::format("View the changes added in {}", version.name.as_string()).c_str());
+            ImGui::SameLine();
+        }
         Cool::ImGuiExtras::disabled_if(version.installation_status != InstallationStatus::NotInstalled, version.installation_status == InstallationStatus::Installing ? "Installing" : "Already installed", [&]() {
             if (ImGui::Button("Install"))
                 install(version);

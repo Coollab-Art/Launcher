@@ -51,6 +51,7 @@ private:
     friend class Task_InstallVersion;
 
     void set_download_url(VersionName const&, std::string download_url);
+    void set_changelog_url(VersionName const&, std::string changelog_url);
     void set_installation_status(VersionName const&, InstallationStatus);
     void on_finished_fetching_list_of_versions();
 

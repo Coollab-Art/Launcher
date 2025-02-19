@@ -35,18 +35,21 @@ void Task_FetchListOfVersions::execute()
     try
     {
         auto const json_response = nlohmann::json::parse(res->body);
-        for (auto const& version : json_response)
+        for (auto const& version_json : json_response)
         {
             if (_cancel.load())
                 return;
 
             try
             {
-                auto const version_name = VersionName::from(version.at("name"));
+                if (version_json.at("draft") == true)
+                    continue;
+
+                auto const version_name = VersionName::from(version_json.at("name"));
                 if (!version_name.has_value()) // This will ignore all the old Beta versions, which is what we want because they are not compatible with the launcher
                     continue;
 
-                for (auto const& asset : version.at("assets"))
+                for (auto const& asset : version_json.at("assets"))
                 {
                     auto const download_url = std::string{asset.at("browser_download_url")};
                     if (download_url.find(zip_name_for_current_os()) == std::string::npos)
@@ -54,6 +57,8 @@ void Task_FetchListOfVersions::execute()
                     version_manager().set_download_url(*version_name, download_url);
                     break;
                 }
+
+                version_manager().set_changelog_url(*version_name, fmt::format("https://github.com/CoolLibs/Lab/blob/{}/changelog.md", std::string{version_json.at("tag_name")}));
             }
             catch (std::exception const& e)
             {

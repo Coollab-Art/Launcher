@@ -434,10 +434,9 @@ void VersionManager::imgui_versions_dropdown(VersionRef& ref)
             return _value == *_ref;
         }
 
-        auto get_label() -> const char*
+        auto get_label() const -> std::string
         {
-            _label = version_manager().label_with_installation_icon(_value);
-            return _label.c_str();
+            return version_manager().label_with_installation_icon(_value);
         }
 
         void apply_value()
@@ -448,7 +447,6 @@ void VersionManager::imgui_versions_dropdown(VersionRef& ref)
     private:
         VersionRef  _value;
         VersionRef* _ref;
-        std::string _label;
     };
 
     auto entries = std::vector<DropdownEntry_VersionRef>{

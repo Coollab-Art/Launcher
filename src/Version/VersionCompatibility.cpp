@@ -1,39 +1,29 @@
 #include "VersionCompatibility.hpp"
-#include "Cool/String/String.h"
+#include "Cool/Task/TaskManager.hpp"
 #include "Cool/Utils/overloaded.hpp"
 #include "LauncherSettings.hpp"
+#include "Path.hpp"
+#include "Task_FetchCompatibilityFile.hpp"
 #include "VersionName.hpp"
+#include "parse_compatibility_file_line.hpp"
 
 VersionCompatibility::VersionCompatibility()
 {
-    auto ifs = std::ifstream{"C:/Dev/Cool/launcher/Lab/versions_compatibility.txt"}; // TODO(Launcher)
-
-    auto line = std::string{};
-    while (std::getline(ifs, line))
+    auto ifs = std::ifstream{Path::versions_compatibility_file()};
+    if (ifs.is_open())
     {
-        if (line.starts_with("---"))
-        {
-            auto const text = Cool::String::substring(line, 3, line.size());
-            if (text.empty())
-                _compatibility_entries.push_front(Incompatibility{});
-            else
-                _compatibility_entries.push_front(SemiIncompatibility{text});
-        }
-        else
-        {
-            auto const version_name = VersionName::from(line);
-            if (!version_name.has_value())
-            {
-                assert(false);
-                continue;
-            }
-            _compatibility_entries.push_front(*version_name);
-        }
+        auto line = std::string{};
+        while (std::getline(ifs, line))
+            parse_compatibility_file_line(line, _compatibility_entries);
     }
+
+    Cool::task_manager().submit(std::make_shared<Task_FetchCompatibilityFile>()); // It's simpler to submit the task after parsing the file, it avoids concurrency if the fetch finishes before we finished parsing the file here
 }
 
 auto VersionCompatibility::compatible_versions(VersionName const& version_name) const -> std::vector<VersionNameAndUpgradeInstructions>
 {
+    std::unique_lock lock{_mutex};
+
     auto res                  = std::vector<VersionNameAndUpgradeInstructions>{};
     auto upgrade_instructions = std::vector<std::string>{};
 
@@ -76,6 +66,8 @@ auto VersionCompatibility::compatible_versions(VersionName const& version_name) 
 
 auto VersionCompatibility::version_to_upgrade_to_automatically(VersionName const& version_name) const -> VersionToUpgradeTo
 {
+    std::unique_lock lock{_mutex};
+
     auto res = VersionToUpgradeTo{DontUpgrade{}};
 
     bool found{false};

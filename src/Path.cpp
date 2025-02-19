@@ -18,4 +18,9 @@ auto default_projects_folder() -> std::filesystem::path
     return Cool::Path::user_data() / "Projects";
 }
 
+auto versions_compatibility_file() -> std::filesystem::path
+{
+    return Cool::Path::user_data() / "versions_compatibility.txt";
+}
+
 } // namespace Path

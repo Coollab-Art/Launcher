@@ -8,5 +8,6 @@ auto installed_versions_folder() -> std::filesystem::path;
 auto projects_info_folder() -> std::filesystem::path;
 /// Folder where all the projects are stored by default
 auto default_projects_folder() -> std::filesystem::path;
+auto versions_compatibility_file() -> std::filesystem::path;
 
 } // namespace Path

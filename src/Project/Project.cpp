@@ -102,18 +102,15 @@ struct DropdownEntry_VersionToUpgradeTo {
         return *current_version_to_upgrade_to == this_entry;
     }
 
-    auto get_label() -> const char*
+    auto get_label() const -> std::string
     {
-        label = fmt::format("{}{}", has_semi_incompatibilities ? ICOMOON_WARNING "" : "", as_string(this_entry));
-        return label.c_str();
+        return fmt::format("{}{}", has_semi_incompatibilities ? ICOMOON_WARNING "" : "", as_string(this_entry));
     }
 
     void apply_value()
     {
         *version_selected_by_user = this_entry;
     }
-
-    std::string label;
 };
 
 void Project::imgui_version_to_upgrade_to()

@@ -1,12 +1,7 @@
 #pragma once
-#include "VersionName.hpp"
+#include <mutex>
 #include "VersionToUpgradeTo.hpp"
-
-struct Incompatibility {};
-struct SemiIncompatibility {
-    std::string upgrade_instruction;
-};
-using CompatibilityEntry = std::variant<VersionName, SemiIncompatibility, Incompatibility>;
+#include "parse_compatibility_file_line.hpp"
 
 struct VersionNameAndUpgradeInstructions {
     VersionName              name;
@@ -20,10 +15,19 @@ public:
     auto version_to_upgrade_to_automatically(VersionName const&) const -> VersionToUpgradeTo;
 
 private:
-    std::list<CompatibilityEntry> _compatibility_entries;
+    friend class Task_FetchCompatibilityFile;
+    void set_compatibility_entries(std::list<CompatibilityEntry>&& entries)
+    {
+        std::unique_lock lock{_mutex};
+        _compatibility_entries = std::move(entries);
+    }
+
+private:
+    std::list<CompatibilityEntry> _compatibility_entries; // TODO(Launcher) Use std::vector, psuh_back, and reverse when necessary
+    mutable std::mutex            _mutex;
 };
 
-inline auto version_compatibility() -> VersionCompatibility const&
+inline auto version_compatibility() -> VersionCompatibility&
 {
     static auto instance = VersionCompatibility{};
     return instance;

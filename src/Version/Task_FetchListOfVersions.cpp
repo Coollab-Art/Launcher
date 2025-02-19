@@ -4,6 +4,7 @@
 #include "Cool/Task/TaskManager.hpp"
 #include "Status.hpp"
 #include "VersionManager.hpp"
+#include "make_http_request.hpp"
 #include "nlohmann/json.hpp"
 
 static auto zip_name_for_current_os() -> std::string
@@ -21,14 +22,7 @@ static auto zip_name_for_current_os() -> std::string
 
 void Task_FetchListOfVersions::execute()
 {
-    auto cli = httplib::Client{"https://api.github.com"};
-    cli.set_follow_location(true);
-    // Don't cancel if we have a bad internet connection. This is done in a Task so this is non-blocking anyways
-    cli.set_connection_timeout(99999h);
-    cli.set_read_timeout(99999h);
-    cli.set_write_timeout(99999h);
-
-    auto const res = cli.Get("https://api.github.com/repos/CoolLibs/Lab/releases", [&](uint64_t, uint64_t) {
+    auto const res = make_http_request("https://api.github.com/repos/CoolLibs/Lab/releases", [&](uint64_t, uint64_t) {
         return !_cancel.load();
     });
 
@@ -85,7 +79,7 @@ void Task_FetchListOfVersions::handle_error(httplib::Result const& res)
     if (Cool::DebugOptions::log_internal_warnings())
     {
         Cool::Log::ToUser::warning(
-            "Download version",
+            "Fetch list of versions",
             !res ? httplib::to_string(res.error())
                  : fmt::format("Status code {}", std::to_string(res->status))
         );
@@ -108,7 +102,7 @@ void Task_FetchListOfVersions::handle_error(httplib::Result const& res)
                 auto const seconds           = duration_until_reset - minutes;
                 message                      = fmt::format("You need to wait {}\nYou opened the launcher more than 60 times in 1 hour, which is the maximum number of requests we can make to our online service to check for available versions", minutes.count() == 0 ? fmt::format("{}s", seconds.count()) : fmt::format("{}m {}s", minutes.count(), seconds.count()));
             }
-            catch (...)
+            catch (...) // NOLINT(*bugprone-empty-catch)
             {
             }
         }

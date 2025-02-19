@@ -38,7 +38,7 @@ auto VersionCompatibility::compatible_versions(VersionName const& version_name) 
                     if (found)
                     {
                         if (!ver.is_experimental() || launcher_settings().show_experimental_versions)
-                            res.emplace_back(ver, upgrade_instructions);
+                            res.emplace_back(VersionNameAndUpgradeInstructions{ver, upgrade_instructions});
                     }
                     else
                     {

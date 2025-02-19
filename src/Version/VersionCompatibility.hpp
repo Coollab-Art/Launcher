@@ -16,15 +16,15 @@ public:
 
 private:
     friend class Task_FetchCompatibilityFile;
-    void set_compatibility_entries(std::list<CompatibilityEntry>&& entries)
+    void set_compatibility_entries(std::vector<CompatibilityEntry>&& entries)
     {
         std::unique_lock lock{_mutex};
         _compatibility_entries = std::move(entries);
     }
 
 private:
-    std::list<CompatibilityEntry> _compatibility_entries; // TODO(Launcher) Use std::vector, psuh_back, and reverse when necessary
-    mutable std::mutex            _mutex;
+    std::vector<CompatibilityEntry> _compatibility_entries;
+    mutable std::mutex              _mutex;
 };
 
 inline auto version_compatibility() -> VersionCompatibility&

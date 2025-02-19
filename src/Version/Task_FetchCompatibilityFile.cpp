@@ -21,7 +21,7 @@ void Task_FetchCompatibilityFile::execute()
         return;
     }
 
-    auto compatibility_entries = std::list<CompatibilityEntry>{};
+    auto compatibility_entries = std::vector<CompatibilityEntry>{};
     auto string_stream         = std::stringstream{res->body};
     auto line                  = std::string{};
     while (std::getline(string_stream, line))

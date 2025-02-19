@@ -7,4 +7,4 @@ struct SemiIncompatibility {
 };
 using CompatibilityEntry = std::variant<VersionName, SemiIncompatibility, Incompatibility>;
 
-void parse_compatibility_file_line(std::string const& line, std::list<CompatibilityEntry>& entries);
+void parse_compatibility_file_line(std::string const& line, std::vector<CompatibilityEntry>& entries);

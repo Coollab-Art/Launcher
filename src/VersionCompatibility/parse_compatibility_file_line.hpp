@@ -1,5 +1,5 @@
 #pragma once
-#include "VersionName.hpp"
+#include "Version/VersionName.hpp"
 
 struct Incompatibility {};
 struct SemiIncompatibility {

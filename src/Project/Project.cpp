@@ -6,8 +6,8 @@
 #include "Cool/ImGui/ImGuiExtras_dropdown.hpp"
 #include "Cool/Utils/overloaded.hpp"
 #include "LauncherSettings.hpp"
-#include "Version/VersionCompatibility.hpp"
 #include "Version/VersionName.hpp"
+#include "VersionCompatibility/VersionCompatibility.hpp"
 #include "handle_error.hpp"
 
 void Project::init()

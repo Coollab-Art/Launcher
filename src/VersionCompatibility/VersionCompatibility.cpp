@@ -5,7 +5,7 @@
 #include "LauncherSettings.hpp"
 #include "Path.hpp"
 #include "Task_FetchCompatibilityFile.hpp"
-#include "VersionName.hpp"
+#include "Version/VersionName.hpp"
 #include "parse_compatibility_file_line.hpp"
 
 VersionCompatibility::VersionCompatibility()

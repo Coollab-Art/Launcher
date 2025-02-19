@@ -1,6 +1,6 @@
 #pragma once
 #include <mutex>
-#include "VersionToUpgradeTo.hpp"
+#include "Version/VersionToUpgradeTo.hpp"
 #include "parse_compatibility_file_line.hpp"
 
 struct VersionNameAndUpgradeInstructions {

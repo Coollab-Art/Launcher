@@ -99,7 +99,9 @@ void Task_LaunchVersion::execute()
             [&](FolderToCreateNewProject const& folder) {
                 args.emplace_back("--create_new_project_in_folder");
                 auto path = folder.path;
-                if (Cool::File::is_relative(path))
+                if (path.empty())
+                    path = Path::default_projects_folder();
+                else if (Cool::File::is_relative(path))
                     path = Path::default_projects_folder() / path;
                 args.emplace_back(path_arg(path));
             },

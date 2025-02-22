@@ -69,38 +69,44 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
         ImGui::PushFont(Cool::Font::bold());
         ImGui::SeparatorText(project.name().c_str());
         ImGui::PopFont();
-        if (Cool::ImGuiExtras::big_selectable([&]() {
-                Cool::Texture const* thumbnail = is_visible ? Cool::TextureLibrary_Image::instance().get(project.thumbnail_path(), 1s) : &Cool::dummy_texture();
-                if (thumbnail)
-                {
-                    Cool::ImGuiExtras::image_framed(thumbnail->imgui_texture_id(), {100.f, 100.f}, {.frame_thickness = 4.f}); // TODO(Launcher) render alpha checkerboard background bellow it
-                    ImGui::SameLine();
-                }
-                ImGui::BeginGroup();
-                ImGui::TextUnformatted(project.file_path().string().c_str());
-                // ImGui::PushFont(Cool::Font::italic());
-                if (project.current_version().has_value())
-                    ImGui::TextUnformatted(project.current_version()->as_string().c_str());
-                // ImGui::TextUnformatted(version_manager().label_with_installation_icon(*project.version_name()).c_str());
-                else
-                    ImGui::TextUnformatted("Unknown version");
-                // ImGui::PopFont();
-                std::visit(
-                    Cool::overloaded{
-                        [](VersionName const& version_name) {
-                            ImGui::SameLine();
-                            ImGui::Text("(Will be upgraded to %s)", version_name.as_string().c_str());
-                        },
-                        [&](DontUpgrade) {},
+
+        auto const widget = [&]() {
+            Cool::Texture const* thumbnail = is_visible ? Cool::TextureLibrary_Image::instance().get(project.thumbnail_path(), 1s) : &Cool::dummy_texture();
+            if (thumbnail)
+            {
+                Cool::ImGuiExtras::image_framed(thumbnail->imgui_texture_id(), {100.f, 100.f}, {.frame_thickness = 4.f}); // TODO(Launcher) render alpha checkerboard background bellow it
+                ImGui::SameLine();
+            }
+            ImGui::BeginGroup();
+            ImGui::TextUnformatted(project.file_path().string().c_str());
+            if (project.current_version().has_value())
+                ImGui::TextUnformatted(project.current_version()->as_string().c_str());
+            else if (!project.file_path_exists())
+                Cool::ImGuiExtras::warning_text("Project file not found");
+            else
+                Cool::ImGuiExtras::warning_text("Unknown version");
+            std::visit(
+                Cool::overloaded{
+                    [](VersionName const& version_name) {
+                        ImGui::SameLine();
+                        ImGui::Text("(Will be upgraded to %s)", version_name.as_string().c_str());
                     },
-                    project.version_to_upgrade_to()
-                );
-                ImGui::EndGroup();
-            }))
+                    [&](DontUpgrade) {},
+                },
+                project.version_to_upgrade_to()
+            );
+            ImGui::EndGroup();
+        };
+        if (project.file_path_exists())
         {
-            launch_project(project);
+            if (Cool::ImGuiExtras::big_selectable(widget))
+                launch_project(project);
         }
-        if (ImGui::BeginPopupContextItem())
+        else
+        {
+            widget();
+        }
+        if (ImGui::BeginPopupContextItem("##project_context_menu"))
         {
             if (ImGui::Selectable("Delete project"))
             {

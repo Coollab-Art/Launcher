@@ -20,6 +20,11 @@ auto Project::name() const -> std::string
     return Cool::File::file_name_without_extension(_file_path).string();
 }
 
+auto Project::file_path_exists() const -> bool
+{
+    return Cool::File::exists(file_path());
+}
+
 auto Project::current_version() const -> std::optional<VersionName>
 {
     return _version_name.get_value([&]() -> std::optional<VersionName> {

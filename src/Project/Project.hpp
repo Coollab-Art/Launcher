@@ -21,6 +21,7 @@ public:
     }
 
     auto file_path() const -> std::filesystem::path { return Cool::File::weakly_canonical(_file_path); }
+    auto file_path_exists() const -> bool;
     auto name() const -> std::string;
     auto id() const -> reg::AnyId const& { return _uuid; }
     auto current_version() const -> std::optional<VersionName>;

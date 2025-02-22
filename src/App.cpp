@@ -114,5 +114,5 @@ void App::launch(Project const& project)
 
 void App::launch(std::filesystem::path const& project_file_path)
 {
-    launch(Project{project_file_path, {}});
+    launch(Project{project_file_path});
 }

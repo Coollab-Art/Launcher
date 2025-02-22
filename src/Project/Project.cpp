@@ -10,11 +10,6 @@
 #include "VersionCompatibility/VersionCompatibility.hpp"
 #include "handle_error.hpp"
 
-void Project::init()
-{
-    // TODO(Launcher) Check that uuid matches the one in the file
-}
-
 auto Project::name() const -> std::string
 {
     return Cool::File::file_name_without_extension(_file_path).string();

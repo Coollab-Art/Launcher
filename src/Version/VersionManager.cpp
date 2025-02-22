@@ -64,8 +64,6 @@ static auto get_all_known_versions() -> std::vector<Version>
 
 // TODO(Launcher) Make VersionManager thread safe
 
-// TODO(Launcher) When saving an image, and a project with it, this project shouldn't be registered in the launcher
-
 VersionManager::VersionManager()
     : _versions{get_all_known_versions()}
 {

@@ -25,14 +25,6 @@ ProjectManager::ProjectManager()
                 continue;
             }
 
-            auto const uuid       = Cool::File::file_name(entry.path()).string();
-            auto const maybe_uuid = uuids::uuid::from_string(uuid);
-            if (!maybe_uuid)
-            {
-                // throw std::runtime_error{"[load(uuids::uuid)] Couldn't parse uuid: " + value}; // TODO(Launcher) handle error
-                continue;
-            }
-
             auto file = std::ifstream{entry.path() / "path.txt"};
             if (!file.is_open())
             {
@@ -41,7 +33,7 @@ ProjectManager::ProjectManager()
             }
             std::string path;
             std::getline(file, path);
-            _projects.emplace_back(path, *maybe_uuid);
+            _projects.emplace_back(path);
         }
     }
     catch (std::exception const&)
@@ -112,8 +104,6 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
             {
                 if (boxer::Selection::OK == boxer::show("Are you sure? This cannot be undone", fmt::format("Deleting project \"{}\"", project.name()).c_str(), boxer::Style::Warning, boxer::Buttons::OKCancel))
                 {
-                    // TODO(Launcher) move to trash
-                    // and move to our own "trash", so that we can CTRL+Z the deletion
                     Cool::File::remove_folder(project.info_folder_path());
                     Cool::File::remove_file(project.file_path());
                     project_to_remove = it;

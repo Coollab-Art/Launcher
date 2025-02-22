@@ -26,7 +26,7 @@ public:
     auto status_of_fetch_list_of_versions() const -> Status { return _status_of_fetch_list_of_versions.load(); }
     auto is_installed(VersionName const&) const -> bool;
 
-    auto label_with_installation_icon(VersionRef const&) const -> std::string;
+    auto label(VersionRef const&) const -> std::string;
 
 private:
     auto find_no_locking(VersionName const&) -> Version*;

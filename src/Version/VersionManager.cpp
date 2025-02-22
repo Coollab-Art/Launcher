@@ -392,7 +392,7 @@ void VersionManager::imgui_manage_versions()
     }
 }
 
-auto VersionManager::label_with_installation_icon(VersionRef const& ref) const -> std::string
+auto VersionManager::label(VersionRef const& ref) const -> std::string
 {
     return std::visit(
         Cool::overloaded{
@@ -400,32 +400,14 @@ auto VersionManager::label_with_installation_icon(VersionRef const& ref) const -
                 auto const* version = latest_installed_version_no_locking();
                 if (!version)
                     version = latest_version_no_locking();
-                return fmt::format(
-                    "{} Latest Installed ({})",
-                    (version && version_manager().is_installed(version->name))
-                        ? ICOMOON_CHECKBOX_CHECKED
-                        : ICOMOON_CHECKBOX_UNCHECKED,
-                    version ? version->name.as_string() : "None"
-                );
+                return fmt::format("Latest Installed ({})", version ? version->name.as_string() : "None");
             },
             [&](LatestVersion) {
                 auto const* const version = latest_version_no_locking();
-                return fmt::format(
-                    "{} Latest ({})",
-                    (version && version_manager().is_installed(version->name))
-                        ? ICOMOON_CHECKBOX_CHECKED
-                        : ICOMOON_CHECKBOX_UNCHECKED,
-                    version ? version->name.as_string() : "None"
-                );
+                return fmt::format("Latest ({})", version ? version->name.as_string() : "None");
             },
             [](VersionName const& name) {
-                return fmt::format(
-                    "{} {}",
-                    version_manager().is_installed(name)
-                        ? ICOMOON_CHECKBOX_CHECKED
-                        : ICOMOON_CHECKBOX_UNCHECKED,
-                    name.as_string()
-                );
+                return name.as_string();
             }
         },
         ref
@@ -450,7 +432,7 @@ void VersionManager::imgui_versions_dropdown(VersionRef& ref)
 
         auto get_label() const -> std::string
         {
-            return version_manager().label_with_installation_icon(_value);
+            return version_manager().label(_value);
         }
 
         void apply_value()
@@ -473,5 +455,5 @@ void VersionManager::imgui_versions_dropdown(VersionRef& ref)
             continue;
         entries.emplace_back(version.name, &ref);
     }
-    Cool::ImGuiExtras::dropdown("Version", label_with_installation_icon(ref).c_str(), entries);
+    Cool::ImGuiExtras::dropdown("Version", label(ref).c_str(), entries);
 }

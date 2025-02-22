@@ -102,7 +102,7 @@ auto VersionManager::after_version_installed(VersionRef const& version_ref) -> s
         }
         else
         {
-            auto const task_install_latest_version = std::make_shared<Task_InstallVersion>(); // TODO(Launcher) When this task starts executing, it should register itself as an installing task to the version manager
+            auto const task_install_latest_version = std::make_shared<Task_InstallVersion>(); // TODO(Launcher) When this task starts executing, it should register itself as an installing task to the version manager. Because since we don't yet know which version it will install we can't put it in the _install_tasks list immediately
             Cool::task_manager().submit(after_has_fetched_list_of_versions(), task_install_latest_version);
             return after(task_install_latest_version);
         }
@@ -118,10 +118,10 @@ auto VersionManager::after_version_installed(VersionRef const& version_ref) -> s
                     return after_nothing();
 
                 auto const install_task = get_latest_installing_version_if_any();
-                if (!install_task)
-                    return after_latest_version_installed();
-                else
+                if (install_task)
                     return after(install_task);
+                else // NOLINT(*else-after-return)
+                    return after_latest_version_installed();
             },
             [&](VersionName const& version_name) -> std::shared_ptr<Cool::WaitToExecuteTask> {
                 if (is_installed(version_name))
@@ -185,7 +185,7 @@ void VersionManager::install(Version const& version)
         assert(false);
         return;
     }
-    Cool::task_manager().submit(after_has_fetched_list_of_versions(), std::make_shared<Task_InstallVersion>(version.name));
+    get_install_task_or_create_and_submit_it(version.name);
 }
 
 void VersionManager::uninstall(Version& version)

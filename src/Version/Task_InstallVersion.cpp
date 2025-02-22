@@ -2,10 +2,8 @@
 #include <Cool/get_system_error.hpp>
 #include "Cool/DebugOptions/DebugOptions.h"
 #include "Cool/File/File.h"
-#include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/ImGui/markdown.h"
 #include "Cool/Log/ToUser.h"
-#include "Cool/Task/TaskManager.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "Version.hpp"
 #include "VersionManager.hpp"
@@ -197,7 +195,7 @@ void Task_InstallVersion::execute()
 {
     // Find version name and/or download url if necessary
     // We need to do this in execute, because we might have been waiting for FetchListOfVersions to finish, so we didn't have access to the download url before that point
-    if (!_version_name.has_value())
+    if (!_version_name.has_value()) // If we don't give us a version name, we will install the latest version (this happens when we want to install the latest version, but haven't fetched the list of versions yet so we can't know its name when creating the install task)
     {
         auto const* const version = version_manager().latest_version();
         if (!version || !version->download_url.has_value())

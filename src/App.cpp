@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include "Cool/CommandLineArgs/CommandLineArgs.h"
 #include "Cool/DebugOptions/debug_options_windows.h"
+#include "Cool/File/File.h"
 #include "Cool/ImGui/ColorThemes.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/ImGui/markdown.h"
@@ -46,6 +47,68 @@ void App::on_shutdown()
     launcher_settings().save(); // Even if the user doesn't change the settings, we will save the settings they have seen once, so that if a new version of the software comes with new settings, we will not change settings that the user is used to
 }
 
+static auto folder_path_error_message(std::string const& name) -> std::optional<std::string>
+{
+    for (char const invalid_char : {'.', '<', '>', '\"', '|', '?', '*', '\0'})
+    {
+        if (name.find(invalid_char) != std::string::npos)
+            return fmt::format("Folder name cannot contain a {}\nChange it below", invalid_char);
+    }
+    {
+        bool is_in_drive_part_of_the_path{Cool::File::is_absolute(name)};
+        for (char const c : name)
+        {
+            if (c == '/' || c == '\\')
+                is_in_drive_part_of_the_path = false;
+            else if (c == ':' && !is_in_drive_part_of_the_path)
+                return "Folder name cannot contain a :\nChange it below";
+        }
+    }
+
+    if (name.ends_with(' '))
+        return "Folder name cannot end with a space\nChange it below";
+
+    if (name.starts_with("--"))
+        return "Folder name cannot start with --\nChange it below"; // Otherwise, when passing this folder name as a command-line argument, we would think it's an argument and not a folder name
+
+    {
+        auto const check = [](std::string const& name) -> std::optional<std::string> {
+            auto upper_case_name = name;
+            std::transform(upper_case_name.begin(), upper_case_name.end(), upper_case_name.begin(), [](char c) {
+                return static_cast<char>(std::toupper(static_cast<unsigned char>(c))); // We need those static_casts to avoid undefined behaviour, cf. https://en.cppreference.com/w/cpp/string/byte/toupper
+            });
+            for (const char* invalid_name : {
+                     "CON", "PRN", "AUX", "NUL",
+                     "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+                     "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+                 })
+            {
+                if (upper_case_name == invalid_name)
+                    return fmt::format("{} is a reserved name\nChange it below", name);
+            }
+            return std::nullopt;
+        };
+        auto one_folder_name = std::string{};
+        for (char const c : name)
+        {
+            if (c == '/' || c == '\\')
+            {
+                auto const err = check(one_folder_name);
+                if (err.has_value())
+                    return err;
+                one_folder_name = "";
+            }
+            else
+                one_folder_name += c;
+        }
+        auto const err = check(one_folder_name);
+        if (err.has_value())
+            return err;
+    }
+
+    return std::nullopt;
+}
+
 void App::imgui_windows()
 {
     Cool::Log::ToUser::console().imgui_window();
@@ -58,12 +121,21 @@ void App::imgui_windows()
 
     { // New Project
         ImGui::Begin("New Project");
-        if (Cool::ImGuiExtras::colored_button("New Project", Cool::color_themes()->editor().get_color("Accent")))
-            version_manager().install_ifn_and_launch(_version_to_use_for_new_project, FolderToCreateNewProject{_projects_folder});
+
+        auto const err = folder_path_error_message(_projects_folder.string());
+
+        Cool::ImGuiExtras::disabled_if(err, [&]() {
+            if (Cool::ImGuiExtras::colored_button("New Project", Cool::color_themes()->editor().get_color("Accent")))
+                version_manager().install_ifn_and_launch(_version_to_use_for_new_project, FolderToCreateNewProject{_projects_folder});
+        });
         ImGui::SameLine();
         version_manager().imgui_versions_dropdown(_version_to_use_for_new_project);
+
+        if (err.has_value())
+            Cool::ImGuiExtras::warning_text(err->c_str());
         Cool::ImGuiExtras::folder("", &_projects_folder);
         ImGui::SetItemTooltip("%s", "Folder where the new project will be saved.\nIf left empty or relative, it will be relative to the launcher's User Data folder");
+
         ImGui::End();
     }
 

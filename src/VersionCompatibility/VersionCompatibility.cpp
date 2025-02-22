@@ -5,6 +5,7 @@
 #include "LauncherSettings.hpp"
 #include "Path.hpp"
 #include "Task_FetchCompatibilityFile.hpp"
+#include "Version/VersionManager.hpp"
 #include "Version/VersionName.hpp"
 #include "parse_compatibility_file_line.hpp"
 
@@ -37,8 +38,11 @@ auto VersionCompatibility::compatible_versions(VersionName const& version_name) 
                 [&](VersionName const& ver) {
                     if (found)
                     {
-                        if (!ver.is_experimental() || launcher_settings().show_experimental_versions)
+                        if ((!ver.is_experimental() || launcher_settings().show_experimental_versions)
+                            && version_manager().find(ver) != nullptr)
+                        {
                             res.emplace_back(VersionNameAndUpgradeInstructions{ver, upgrade_instructions});
+                        }
                     }
                     else
                     {
@@ -80,8 +84,11 @@ auto VersionCompatibility::version_to_upgrade_to_automatically(VersionName const
                 [&](VersionName const& ver) {
                     if (found)
                     {
-                        if (!ver.is_experimental() || launcher_settings().show_experimental_versions)
+                        if ((!ver.is_experimental() || launcher_settings().show_experimental_versions)
+                            && version_manager().find(ver) != nullptr)
+                        {
                             res = ver;
+                        }
                     }
                     else
                     {

@@ -1,4 +1,5 @@
 #pragma once
+#include "Cool/CheckerboardTexture/CheckerboardTexture.hpp"
 #include "Project.hpp"
 
 class ProjectManager {
@@ -10,5 +11,6 @@ public:
     auto has_some_projects() const -> bool { return !_projects.empty(); }
 
 private:
-    std::vector<Project> _projects{};
+    std::vector<Project>      _projects{};
+    Cool::CheckerboardTexture _checkerboard_texture{};
 };

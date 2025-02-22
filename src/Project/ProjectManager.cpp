@@ -66,7 +66,10 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
             Cool::Texture const* thumbnail = is_visible ? Cool::TextureLibrary_Image::instance().get(project.thumbnail_path(), 1s) : &Cool::dummy_texture();
             if (thumbnail)
             {
-                Cool::ImGuiExtras::image_framed(thumbnail->imgui_texture_id(), {100.f, 100.f}, {.frame_thickness = 4.f}); // TODO(Launcher) render alpha checkerboard background bellow it
+                Cool::ImGuiExtras::image_framed(thumbnail->imgui_texture_id(), {100.f, 100.f}, {
+                                                                                                   .frame_thickness       = 4.f,
+                                                                                                   .background_texture_id = _checkerboard_texture.get({100, 100}).imgui_texture_id(),
+                                                                                               });
                 ImGui::SameLine();
             }
             ImGui::BeginGroup();

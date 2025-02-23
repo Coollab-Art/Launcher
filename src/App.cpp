@@ -36,8 +36,13 @@ void App::init()
 
 void App::update()
 {
-    if (inputs_are_allowed() && !ImGui::GetIO().WantTextInput)
+    auto const& io = ImGui::GetIO();
+    if (inputs_are_allowed() && !io.WantTextInput)
     {
+        if (io.KeyCtrl && ImGui::IsKeyReleased(ImGuiKey_O))
+            open_external_project();
+        else if (io.KeyCtrl && ImGui::IsKeyReleased(ImGuiKey_N))
+            open_new_project();
     }
 }
 
@@ -125,7 +130,7 @@ void App::imgui_windows()
 
         Cool::ImGuiExtras::disabled_if(err, [&]() {
             if (Cool::ImGuiExtras::colored_button("New Project", Cool::color_themes()->editor().get_color("Accent")))
-                version_manager().install_ifn_and_launch(_version_to_use_for_new_project, FolderToCreateNewProject{_projects_folder});
+                open_new_project();
         });
         ImGui::SameLine();
         version_manager().imgui_versions_dropdown(_version_to_use_for_new_project);
@@ -142,14 +147,7 @@ void App::imgui_windows()
         ImGui::Begin("Projects");
 
         if (ImGui::Button("Open external project"))
-        {
-            auto const path = Cool::File::file_opening_dialog({
-                .file_filters   = {{"Coollab project", COOLLAB_FILE_EXTENSION}},
-                .initial_folder = {},
-            });
-            if (path.has_value())
-                launch(*path);
-        }
+            open_external_project();
         ImGui::SetItemTooltip("Browse your files to open a project that does not appear in the list of projects below");
 
         ImGui::BeginChild("##projects_list"); // Child window to make sure the "Open external project" button stays at the top, and the scrollbar only affects the list of projects
@@ -180,6 +178,21 @@ void App::imgui_menus()
         DebugOptionsManager::imgui_ui_for_all_options();
         ImGui::EndMenu();
     }
+}
+
+void App::open_external_project()
+{
+    auto const path = Cool::File::file_opening_dialog({
+        .file_filters   = {{"Coollab project", COOLLAB_FILE_EXTENSION}},
+        .initial_folder = {},
+    });
+    if (path.has_value())
+        launch(*path);
+}
+
+void App::open_new_project()
+{
+    version_manager().install_ifn_and_launch(_version_to_use_for_new_project, FolderToCreateNewProject{_projects_folder});
 }
 
 void App::launch(Project const& project)

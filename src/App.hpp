@@ -24,6 +24,8 @@ public:
     void on_shutdown() override;
 
 private:
+    void open_external_project();
+    void open_new_project();
     void launch(Project const& project);
     void launch(std::filesystem::path const& project_file_path);
 

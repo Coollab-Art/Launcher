@@ -5,14 +5,12 @@
 #include "Cool/File/File.h"
 #include "Cool/ImGui/ColorThemes.h"
 #include "Cool/ImGui/ImGuiExtras.h"
-#include "Cool/ImGui/markdown.h"
 #include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "LauncherSettings.hpp"
 #include "Task_CheckForLongPathsEnabled.hpp"
 #include "Version/VersionManager.hpp"
-#include "Version/VersionName.hpp"
 #include "Version/VersionRef.hpp"
 
 App::App(Cool::WindowManager& windows, Cool::ViewsManager& /* views */)

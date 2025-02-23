@@ -7,6 +7,7 @@
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/TextureSource/TextureLibrary_Image.h"
 #include "Cool/TextureSource/default_textures.h"
+#include "Cool/Utils/hash_project_path_for_info_folder.hpp"
 #include "Cool/Utils/overloaded.hpp"
 #include "Path.hpp"
 #include "Project.hpp"
@@ -49,6 +50,7 @@ ProjectManager::ProjectManager()
 void ProjectManager::imgui(std::function<void(Project const&)> const& launch_project)
 {
     auto project_to_remove = _projects.end();
+    auto project_to_add    = std::optional<Project>{};
     for (auto it = _projects.begin(); it != _projects.end(); ++it)
     {
         // Items that are outside of the view can be "clipped". We still need to render them because otherwise ImGui doesn't know the
@@ -76,7 +78,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
             ImGui::TextUnformatted(project.file_path().string().c_str());
             if (project.current_version().has_value())
                 ImGui::TextUnformatted(project.current_version()->as_string().c_str());
-            else if (!project.file_path_exists())
+            else if (project.file_not_found())
                 Cool::ImGuiExtras::warning_text("Project file not found");
             else
                 Cool::ImGuiExtras::warning_text("Unknown version");
@@ -92,17 +94,32 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
             );
             ImGui::EndGroup();
         };
-        if (project.file_path_exists())
+        if (project.file_not_found())
+        {
+            widget();
+        }
+        else
         {
             if (Cool::ImGuiExtras::big_selectable(widget))
                 launch_project(project);
         }
-        else
-        {
-            widget();
-        }
         if (ImGui::BeginPopupContextItem("##project_context_menu"))
         {
+            Cool::ImGuiExtras::disabled_if(project.file_not_found(), "File not found", [&]() {
+                if (ImGui::Selectable("Make a copy"))
+                {
+                    auto const new_path = Cool::File::find_available_path(project.file_path());
+                    Cool::File::copy_file(project.file_path(), new_path);
+
+                    project_to_add = Project{new_path};
+
+                    Cool::File::copy_file(project.info_folder_path() / "thumbnail.png", project_to_add->info_folder_path() / "thumbnail.png");
+                    Cool::File::set_content(project_to_add->info_folder_path() / "path.txt", Cool::File::weakly_canonical(new_path).string());
+                }
+                if (ImGui::Selectable("Rename"))
+                {
+                }
+            });
             if (ImGui::Selectable("Delete project"))
             {
                 if (boxer::Selection::OK == boxer::show("Are you sure? This cannot be undone", fmt::format("Deleting project \"{}\"", project.name()).c_str(), boxer::Style::Warning, boxer::Buttons::OKCancel))
@@ -115,9 +132,14 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
 
             project.imgui_version_to_upgrade_to();
 
+            ImGui::SeparatorText("");
+
             if (ImGui::Selectable("Reveal in File Explorer"))
             {
-                Cool::open_focused_in_explorer(project.file_path());
+                if (project.file_not_found())
+                    Cool::open_folder_in_explorer(Cool::File::without_file_name(project.file_path()));
+                else
+                    Cool::open_focused_in_explorer(project.file_path());
             }
             if (ImGui::Selectable("Copy file path"))
             {
@@ -135,4 +157,6 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
     }
     if (project_to_remove != _projects.end())
         _projects.erase(project_to_remove);
+    if (project_to_add.has_value())
+        _projects.insert(_projects.begin(), *project_to_add);
 }

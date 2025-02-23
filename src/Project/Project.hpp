@@ -14,7 +14,7 @@ public:
     {}
 
     auto file_path() const -> std::filesystem::path { return Cool::File::weakly_canonical(_file_path); }
-    auto file_path_exists() const -> bool;
+    auto file_not_found() const -> bool;
     auto name() const -> std::string;
     auto current_version() const -> std::optional<VersionName>;
     auto version_to_upgrade_to() const -> VersionToUpgradeTo;

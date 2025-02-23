@@ -15,9 +15,9 @@ auto Project::name() const -> std::string
     return Cool::File::file_name_without_extension(_file_path).string();
 }
 
-auto Project::file_path_exists() const -> bool
+auto Project::file_not_found() const -> bool
 {
-    return Cool::File::exists(file_path());
+    return !Cool::File::exists(file_path());
 }
 
 auto Project::current_version() const -> std::optional<VersionName>
@@ -66,7 +66,7 @@ auto Project::time_of_last_change() const -> std::filesystem::file_time_type con
     return _time_of_last_change.get_value([&]() {
         try
         {
-            return std::filesystem::last_write_time(thumbnail_path());
+            return std::filesystem::last_write_time(info_folder_path() / "path.txt");
         }
         catch (std::exception const& e)
         {
@@ -119,7 +119,7 @@ void Project::imgui_version_to_upgrade_to()
 
     if (!current_version().has_value())
     {
-        Cool::ImGuiExtras::disabled_if(true, "Unknown version", [&]() {
+        Cool::ImGuiExtras::disabled_if(true, file_not_found() ? "File not found" : "Unknown version", [&]() {
             ImGui::TextUnformatted(label);
         });
         return;

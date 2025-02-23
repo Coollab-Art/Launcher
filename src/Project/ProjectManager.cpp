@@ -113,16 +113,16 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                     });
                     if (path.has_value())
                     {
-                        std::optional<std::string> project_with_same_name{};
+                        std::optional<std::string> project_with_same_path{};
                         for (auto const& proj : _projects)
                         {
-                            if (&proj != &project && proj.file_path() == *path)
+                            if (&proj != &project && Cool::File::equivalent(proj.file_path(), *path))
                             {
-                                project_with_same_name = proj.name();
+                                project_with_same_path = proj.name();
                                 break;
                             }
                         }
-                        if (!project_with_same_name.has_value())
+                        if (!project_with_same_path.has_value())
                         {
                             auto const old_info_folder_path = project.info_folder_path();
                             project.set_file_path(*path);
@@ -134,7 +134,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                             ImGuiNotify::send({
                                 .type    = ImGuiNotify::Type::Warning,
                                 .title   = fmt::format("Invalid path \"{}\"", Cool::File::weakly_canonical(*path)),
-                                .content = fmt::format("\"{}\" already uses this path. You cannot assign it to \"{}\"", *project_with_same_name, project.name()),
+                                .content = fmt::format("\"{}\" already uses this path. You cannot assign it to \"{}\"", *project_with_same_path, project.name()),
                             });
                         }
                     }

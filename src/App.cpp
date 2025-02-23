@@ -1,5 +1,6 @@
 #include "App.hpp"
 #include <imgui.h>
+#include "COOLLAB_FILE_EXTENSION.hpp"
 #include "Cool/CommandLineArgs/CommandLineArgs.h"
 #include "Cool/DebugOptions/debug_options_windows.h"
 #include "Cool/File/File.h"
@@ -139,7 +140,21 @@ void App::imgui_windows()
 
     {
         ImGui::Begin("Projects");
+
+        if (ImGui::Button("Open external project"))
+        {
+            auto const path = Cool::File::file_opening_dialog({
+                .file_filters   = {{"Coollab project", COOLLAB_FILE_EXTENSION}},
+                .initial_folder = {},
+            });
+            if (path.has_value())
+                launch(*path);
+        }
+        ImGui::SetItemTooltip("Browse your files to open a project that does not appear in the list of projects below");
+
+        ImGui::BeginChild("##projects_list"); // Child window to make sure the "Open external project" button stays at the top, and the scrollbar only affects the list of projects
         _project_manager.imgui([&](Project const& project) { launch(project); });
+        ImGui::EndChild();
         ImGui::End();
     }
 

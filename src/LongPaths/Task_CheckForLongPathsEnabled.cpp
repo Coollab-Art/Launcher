@@ -18,7 +18,7 @@ void Task_CheckForLongPathsEnabled::execute()
         _notification_id = ImGuiNotify::send({
             .type                 = ImGuiNotify::Type::Warning,
             .title                = "Need to enable long file paths support",
-            .content              = "Files that are deep in too many folders and subfolders will not be able to be open. We can fix this by activating a simple option in Windows.",
+            .content              = "Some of your projects have too long of a file path.\nTo support them we need to activate a simple option in Windows:",
             .custom_imgui_content = []() {
                 if (ImGui::Button("Enable long paths"))
                     Cool::enable_long_paths_by_asking_user_permission();

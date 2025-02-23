@@ -9,6 +9,7 @@
 #include "Cool/TextureSource/default_textures.h"
 #include "Cool/Utils/overloaded.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
+#include "LongPaths/LongPathsChecker.hpp"
 #include "Path.hpp"
 #include "Project.hpp"
 #include "boxer/boxer.h"
@@ -36,6 +37,9 @@ ProjectManager::ProjectManager()
             std::string path;
             std::getline(file, path);
             _projects.emplace_back(path);
+#if defined(_WIN32)
+            long_paths_checker().check(path);
+#endif
         }
     }
     catch (std::exception const&)
@@ -128,6 +132,9 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                             project.set_file_path(*path);
                             Cool::File::rename(old_info_folder_path, project.info_folder_path());
                             Cool::File::set_content(project.info_folder_path() / "path.txt", Cool::File::weakly_canonical(*path).string());
+#if defined(_WIN32)
+                            long_paths_checker().check(project.file_path());
+#endif
                         }
                         else
                         {
@@ -170,6 +177,9 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
 
                     Cool::File::copy_file(project.info_folder_path() / "thumbnail.png", project_to_add->info_folder_path() / "thumbnail.png");
                     Cool::File::set_content(project_to_add->info_folder_path() / "path.txt", Cool::File::weakly_canonical(new_path).string());
+#if defined(_WIN32)
+                    long_paths_checker().check(project_to_add->file_path());
+#endif
                 }
                 if (ImGui::Selectable("Rename"))
                 {

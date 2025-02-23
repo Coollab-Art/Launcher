@@ -7,10 +7,8 @@
 #include "Cool/ImGui/ColorThemes.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/Log/ToUser.h"
-#include "Cool/Task/TaskManager.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "LauncherSettings.hpp"
-#include "Task_CheckForLongPathsEnabled.hpp"
 #include "Version/VersionManager.hpp"
 #include "Version/VersionRef.hpp"
 
@@ -24,14 +22,6 @@ void App::init()
     // We want to launch that project asap
     if (!Cool::command_line_args().get().empty())
         launch(Cool::command_line_args().get()[0]);
-
-#if defined(_WIN32)
-    if (_project_manager.has_some_projects()) // Don't show it the first time users open the launcher after installing it, because we don't want to scare them with something that might look like a virus
-    {
-        Cool::task_manager().submit(after(500ms), // Small delay to make sure users see it pop up and it draws their attention
-                                    std::make_shared<Task_CheckForLongPathsEnabled>());
-    }
-#endif
 }
 
 void App::update()

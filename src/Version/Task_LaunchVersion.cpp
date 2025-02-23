@@ -1,4 +1,5 @@
 #include "Task_LaunchVersion.hpp"
+#include <exe_path/exe_path.h>
 #include <ImGuiNotify/ImGuiNotify.hpp>
 #include <filesystem>
 #include <vector>
@@ -109,7 +110,11 @@ void Task_LaunchVersion::execute()
         _project_to_open_or_create
     );
 
-    auto const maybe_error = Cool::spawn_process(executable_path(version->name), args);
+    auto const maybe_error = Cool::spawn_process({
+        .executable_absolute_path = executable_path(version->name),
+        .command_line_args        = args,
+        .working_directory        = exe_path::dir(), // To make sure Coollab will find the DLLs
+    });
     if (maybe_error.has_value())
     {
         if (Cool::DebugOptions::log_internal_warnings())

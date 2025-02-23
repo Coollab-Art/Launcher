@@ -48,7 +48,10 @@ install(FILES "lib/miniz/LICENSE" DESTINATION "license/miniz")
 # Grab all the source files
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
-target_include_directories(Coollab-Launcher-Properties INTERFACE ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(Coollab-Launcher-Properties INTERFACE
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/Lab/src/ProjectManager # Hack to access COOLLAB_FILE_EXTENSION in the launcher
+)
 
 # Embed the manifest file into the executable. This manifest tells windows that our app supports long paths
 if(WIN32)

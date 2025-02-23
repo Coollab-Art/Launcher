@@ -1,17 +1,18 @@
 #include "ProjectManager.hpp"
-#include <imgui.h>
 #include <filesystem>
 #include <vector>
+#include "COOLLAB_FILE_EXTENSION.hpp"
 #include "Cool/File/File.h"
 #include "Cool/ImGui/Fonts.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/TextureSource/TextureLibrary_Image.h"
 #include "Cool/TextureSource/default_textures.h"
-#include "Cool/Utils/hash_project_path_for_info_folder.hpp"
 #include "Cool/Utils/overloaded.hpp"
+#include "ImGuiNotify/ImGuiNotify.hpp"
 #include "Path.hpp"
 #include "Project.hpp"
 #include "boxer/boxer.h"
+#include "imgui.h"
 #include "open/open.hpp"
 
 ProjectManager::ProjectManager()
@@ -45,6 +46,16 @@ ProjectManager::ProjectManager()
     std::sort(_projects.begin(), _projects.end(), [](Project const& a, Project const& b) {
         return a.time_of_last_change() > b.time_of_last_change();
     });
+}
+
+static auto find_closest_existing_folder(std::filesystem::path const& file_path) -> std::filesystem::path
+{
+    auto previous_length = file_path.string().size();
+
+    auto path = Cool::File::without_file_name(file_path);
+    while (!Cool::File::exists(path) && previous_length > path.string().size())
+        path = path.parent_path();
+    return path;
 }
 
 void ProjectManager::imgui(std::function<void(Project const&)> const& launch_project)
@@ -92,6 +103,43 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                 },
                 project.version_to_upgrade_to()
             );
+            if (project.file_not_found())
+            {
+                if (ImGui::Button("Find project file"))
+                {
+                    auto const path = Cool::File::file_opening_dialog({
+                        .file_filters   = {{"Coollab project", COOLLAB_FILE_EXTENSION}},
+                        .initial_folder = find_closest_existing_folder(project.file_path()),
+                    });
+                    if (path.has_value())
+                    {
+                        std::optional<std::string> project_with_same_name{};
+                        for (auto const& proj : _projects)
+                        {
+                            if (&proj != &project && proj.file_path() == *path)
+                            {
+                                project_with_same_name = proj.name();
+                                break;
+                            }
+                        }
+                        if (!project_with_same_name.has_value())
+                        {
+                            auto const old_info_folder_path = project.info_folder_path();
+                            project.set_file_path(*path);
+                            Cool::File::rename(old_info_folder_path, project.info_folder_path());
+                            Cool::File::set_content(project.info_folder_path() / "path.txt", Cool::File::weakly_canonical(*path).string());
+                        }
+                        else
+                        {
+                            ImGuiNotify::send({
+                                .type    = ImGuiNotify::Type::Warning,
+                                .title   = fmt::format("Invalid path \"{}\"", Cool::File::weakly_canonical(*path)),
+                                .content = fmt::format("\"{}\" already uses this path. You cannot assign it to \"{}\"", *project_with_same_name, project.name()),
+                            });
+                        }
+                    }
+                }
+            }
             ImGui::EndGroup();
         };
         if (project.file_not_found())

@@ -14,6 +14,12 @@ public:
     {}
 
     auto file_path() const -> std::filesystem::path { return Cool::File::weakly_canonical(_file_path); }
+    void set_file_path(std::filesystem::path file_path)
+    {
+        _file_path = std::move(file_path);
+        _version_name.invalidate_cache();
+        _time_of_last_change.invalidate_cache();
+    }
     auto file_not_found() const -> bool;
     auto name() const -> std::string;
     auto current_version() const -> std::optional<VersionName>;

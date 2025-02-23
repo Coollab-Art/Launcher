@@ -374,7 +374,7 @@ void VersionManager::imgui_manage_versions()
         ImGui::SeparatorText(version.name.as_string().c_str());
         if (version.changelog_url.has_value())
         {
-            if (Cool::ImGuiExtras::button_with_text_icon(ICOMOON_LINK))
+            if (Cool::ImGuiExtras::button_with_text_icon(ICOMOON_INFO))
                 Cool::open_link(version.changelog_url->c_str());
             ImGui::SetItemTooltip("%s", fmt::format("View the changes added in {}", version.name.as_string()).c_str());
             ImGui::SameLine();

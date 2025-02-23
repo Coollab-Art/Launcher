@@ -71,7 +71,7 @@ target_link_libraries(Coollab-Launcher-Properties INTERFACE Cool::Core)
 cool_setup(${PROJECT_NAME})
 Cool__set_app_icon(${PROJECT_NAME} "Lab/res/logo.png" "${CMAKE_SOURCE_DIR}/Lab/app-resources/icon.rc")
 Cool__target_copy_file(${PROJECT_NAME} "Lab/res/logo.png")
-install(FILES "Lab/res/logo.png" DESTINATION "Lab/res")
+install(FILES "Lab/res/logo.png" DESTINATION "bin/Lab/res")
 
 function(Launcher_copy_folder FOLDER_RELATIVE_PATH)
     Cool__target_copy_folder(${PROJECT_NAME} ${FOLDER_RELATIVE_PATH})

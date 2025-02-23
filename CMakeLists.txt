@@ -31,8 +31,6 @@ endif()
 
 include(FetchContent)
 
-# TODO(Launcher) don't copy ffmpeg DLLs, they are not needed for the launcher
-
 # Make sure we link the static version
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
@@ -45,6 +43,7 @@ target_link_libraries(Coollab-Launcher-Properties INTERFACE Cool::spawn_process)
 add_subdirectory(lib/miniz)
 target_compile_definitions(miniz PUBLIC "MINIZ_NO_ZLIB_COMPATIBLE_NAMES")
 target_link_libraries(Coollab-Launcher-Properties INTERFACE miniz)
+install(FILES "lib/miniz/LICENSE" DESTINATION "license/miniz")
 
 # Grab all the source files
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*)
@@ -59,8 +58,10 @@ endif()
 # cpp-httplib
 set(OPENSSL_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
 set(HTTPLIB_REQUIRE_OPENSSL ON CACHE BOOL "" FORCE)
+set(HTTPLIB_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory(Lab/lib/cpp-httplib)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE httplib)
+install(FILES "Lab/lib/cpp-httplib/LICENSE" DESTINATION "license/cpp-httplib")
 
 # Include Cool
 set(COOL_USE_OPENGL 410)
@@ -105,7 +106,7 @@ set(CPACK_PACKAGE_VENDOR "Coollab")
 set(CPACK_PACKAGE_EXECUTABLES "Coollab-Launcher" "Coollab Launcher") # Creates Start Menu shortcuts
 set(CPACK_PACKAGE_CONTACT "coollab.lib@gmail.com")
 
-# TODO(Launcher) Quand on désinsrtalle le launchze, déqinstaller toutes les vrsions de coollab
+# TODO(Launcher) Quand on désinstalle le launcher, désinstaller toutes les versions de coollab
 
 # Name of the installer exe file
 if(WIN32)

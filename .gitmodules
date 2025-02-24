@@ -9,4 +9,4 @@
 	url = https://github.com/CoolLibs/spawn_process
 [submodule "lib/miniz"]
 	path = lib/miniz
-	url = https://github.com/richgel999/miniz
+	url = https://github.com/richgel999/miniz.git

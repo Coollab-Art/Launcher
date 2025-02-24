@@ -27,7 +27,7 @@ jobs:
             }
           - {
               name: Linux,
-              os: ubuntu-latest,
+              os: ubuntu-22.04, # Some distros (like Debian 12) are still using an "old" glibc version (2.36). In order to be compatible with them we stay on this runner, which uses glibc 2.36
               cmake_configure_args: -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -G Ninja,
               cpack_generator: STGZ,
               installer_name: Coollab-Launcher-Linux.sh,

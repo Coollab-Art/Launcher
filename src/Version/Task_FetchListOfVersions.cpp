@@ -7,14 +7,14 @@
 #include "make_http_request.hpp"
 #include "nlohmann/json.hpp"
 
-static auto asset_name_for_current_os() -> std::string_view
+static auto asset_name_for_current_os() -> std::string
 {
 #if defined(_WIN32)
-    return "Coollab-Windows.zip"sv;
+    return "Coollab-Windows.zip";
 #elif defined(__linux__)
-    return "Coollab.AppImage"sv;
+    return "Coollab.AppImage";
 #elif defined(__APPLE__)
-    return "Coollab-MacOS.zip"sv;
+    return "Coollab-MacOS.zip";
 #else
 #error "Unsupported platform"
 #endif

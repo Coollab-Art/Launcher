@@ -49,13 +49,13 @@ static auto extract_zip(std::string const& zip, VersionName const& version_name,
     std::ignore = wants_to_cancel;
 #else
     auto const file_error = [&]() {
-        return tl::make_unexpected(fmt::format("Make sure you have the permission to write files in the folder \"{}\"", installation_path.parent_path()));
+        return tl::make_unexpected(fmt::format("Make sure you have the permission to write files in the folder \"{}\"", installation_path(version_name).parent_path()));
     };
     auto const system_error = [&]() {
         return tl::make_unexpected(Cool::get_system_error());
     };
 
-    if (!Cool::File::create_folders_if_they_dont_exist(installation_path))
+    if (!Cool::File::create_folders_if_they_dont_exist(installation_path(version_name)))
         return file_error();
 
     auto zip_archive = mz_zip_archive{};

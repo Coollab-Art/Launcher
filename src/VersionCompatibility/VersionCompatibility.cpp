@@ -1,5 +1,4 @@
 #include "VersionCompatibility.hpp"
-#include <ranges>
 #include "Cool/Task/TaskManager.hpp"
 #include "Cool/Utils/overloaded.hpp"
 #include "LauncherSettings.hpp"
@@ -8,6 +7,7 @@
 #include "Version/VersionManager.hpp"
 #include "Version/VersionName.hpp"
 #include "parse_compatibility_file_line.hpp"
+#include "range/v3/view.hpp"
 
 VersionCompatibility::VersionCompatibility()
 {
@@ -30,7 +30,7 @@ auto VersionCompatibility::compatible_versions(VersionName const& version_name) 
     auto upgrade_instructions = std::vector<std::string>{};
 
     bool found{false};
-    for (auto const& entry : _compatibility_entries | std::views::reverse)
+    for (auto const& entry : _compatibility_entries | ranges::views::reverse)
     {
         bool do_break{false};
         std::visit(
@@ -76,7 +76,7 @@ auto VersionCompatibility::version_to_upgrade_to_automatically(VersionName const
     auto res = VersionToUpgradeTo{DontUpgrade{}};
 
     bool found{false};
-    for (auto const& entry : _compatibility_entries | std::views::reverse)
+    for (auto const& entry : _compatibility_entries | ranges::views::reverse)
     {
         bool do_break{false};
         std::visit(

@@ -66,6 +66,10 @@ add_subdirectory(Lab/lib/cpp-httplib)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE httplib)
 install(FILES "Lab/lib/cpp-httplib/LICENSE" DESTINATION "license/cpp-httplib")
 
+# Include range-v3
+target_include_directories(Coollab-Launcher-Properties INTERFACE Lab/lib/range-v3/include)
+install(FILES "Lab/lib/range-v3/LICENSE.txt" DESTINATION "license/range-v3")
+
 # Include Cool
 set(COOL_USE_OPENGL 410)
 set(COOL_USE_INSTALLER ON)

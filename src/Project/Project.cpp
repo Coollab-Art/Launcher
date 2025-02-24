@@ -9,6 +9,7 @@
 #include "Version/VersionName.hpp"
 #include "VersionCompatibility/VersionCompatibility.hpp"
 #include "handle_error.hpp"
+#include "range/v3/view.hpp"
 
 auto Project::name() const -> std::string
 {
@@ -139,7 +140,7 @@ void Project::imgui_version_to_upgrade_to()
         auto       dropdown_entries  = std::vector<DropdownEntry_VersionToUpgradeTo>{};
         auto const ver_to_upgrade_to = version_to_upgrade_to();
         dropdown_entries.push_back(DropdownEntry_VersionToUpgradeTo{DontUpgrade{}, &ver_to_upgrade_to, &_version_to_upgrade_to_selected_by_user, false /*has_semi_incompatibilities*/});
-        for (auto const& version : compatible_versions | std::views::reverse)
+        for (auto const& version : compatible_versions | ranges::views::reverse)
             dropdown_entries.push_back(DropdownEntry_VersionToUpgradeTo{version.name, &ver_to_upgrade_to, &_version_to_upgrade_to_selected_by_user, !version.upgrade_instructions.empty() /*has_semi_incompatibilities*/});
         Cool::ImGuiExtras::dropdown("##Upgrade version", as_string(version_to_upgrade_to()).c_str(), dropdown_entries);
 
@@ -152,7 +153,7 @@ void Project::imgui_version_to_upgrade_to()
                         {
                             if (!ver.upgrade_instructions.empty())
                                 ImGui::TextUnformatted("Some things have changed and might break your project:");
-                            for (auto const& instruction : ver.upgrade_instructions | std::views::reverse)
+                            for (auto const& instruction : ver.upgrade_instructions | ranges::views::reverse)
                                 Cool::ImGuiExtras::warning_text(instruction.c_str());
                             break;
                         }

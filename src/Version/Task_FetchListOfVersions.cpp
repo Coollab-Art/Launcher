@@ -7,16 +7,16 @@
 #include "make_http_request.hpp"
 #include "nlohmann/json.hpp"
 
-static auto zip_name_for_current_os() -> std::string
+static auto asset_name_for_current_os() -> std::string_view
 {
-#ifdef __APPLE__
-    return "MacOS.zip";
-#elif _WIN32
-    return "Windows.zip";
-#elif __linux__
-    return "Linux.zip";
+#if defined(_WIN32)
+    return "Coollab-Windows.zip"sv;
+#elif defined(__linux__)
+    return "Coollab.AppImage"sv;
+#elif defined(__APPLE__)
+    return "Coollab-MacOS.zip"sv;
 #else
-    static_assert(false);
+#error "Unsupported platform"
 #endif
 }
 
@@ -51,10 +51,9 @@ void Task_FetchListOfVersions::execute()
 
                 for (auto const& asset : version_json.at("assets"))
                 {
-                    auto const download_url = std::string{asset.at("browser_download_url")};
-                    if (download_url.find(zip_name_for_current_os()) == std::string::npos)
+                    if (asset.at("name") != asset_name_for_current_os())
                         continue;
-                    version_manager().set_download_url(*version_name, download_url);
+                    version_manager().set_download_url(*version_name, asset.at("browser_download_url"));
                     break;
                 }
 

@@ -39,9 +39,15 @@ static auto download_zip(std::string const& download_url, std::function<void(flo
     return res->body;
 }
 
-static auto extract_zip(std::string const& zip, std::filesystem::path const& installation_path, std::function<void(float)> const& set_progress, std::function<bool()> const& wants_to_cancel)
+static auto extract_zip(std::string const& zip, VersionName const& version_name, std::function<void(float)> const& set_progress, std::function<bool()> const& wants_to_cancel)
     -> tl::expected<void, std::string>
 {
+#if defined(__linux__)
+    // On Linux we don't have a zip, just an AppImage that is already ready to use
+    Cool::File::set_content(executable_path(version_name), zip);
+    std::ignore = set_progress;
+    std::ignore = wants_to_cancel;
+#else
     auto const file_error = [&]() {
         return tl::make_unexpected(fmt::format("Make sure you have the permission to write files in the folder \"{}\"", installation_path.parent_path()));
     };
@@ -79,7 +85,7 @@ static auto extract_zip(std::string const& zip, std::filesystem::path const& ins
         if (file_stat.m_is_directory)
             continue;
 
-        auto const full_path = installation_path / file_stat.m_filename;
+        auto const full_path = installation_path(version_name) / file_stat.m_filename;
         if (!Cool::File::create_folders_for_file_if_they_dont_exist(full_path))
             return file_error();
 
@@ -94,7 +100,7 @@ static auto extract_zip(std::string const& zip, std::filesystem::path const& ins
         if (ofs.fail())
             return system_error();
     }
-
+#endif
     return {};
 }
 
@@ -191,6 +197,15 @@ void Task_InstallVersion::cleanup(bool has_been_canceled)
     }
 }
 
+static auto proportion_of_the_install_time_represented_by_download() -> float
+{
+#if defined(__linux__)
+    return 1.f; // On Linux there is no zip to extract, so downloading represents 100% of the install time
+#else
+    return 0.9f;
+#endif
+}
+
 void Task_InstallVersion::execute()
 {
     // Find version name and/or download url if necessary
@@ -223,7 +238,9 @@ void Task_InstallVersion::execute()
     TaskWithProgressBar::change_notification_when_execution_starts(); // Must be done after finding the _changelog_url, because this will call extra_imgui_below_progress_bar(), which needs _changelog_url
 
     // Download zip
-    auto const zip = download_zip(*_download_url, [&](float progress) { set_progress(0.9f * progress); }, [&]() { return cancel_requested(); });
+    float const dl_prop = proportion_of_the_install_time_represented_by_download();
+
+    auto const zip = download_zip(*_download_url, [&](float progress) { set_progress(dl_prop * progress); }, [&]() { return cancel_requested(); });
     if (cancel_requested())
         return;
     if (!zip.has_value())
@@ -233,7 +250,7 @@ void Task_InstallVersion::execute()
     }
 
     { // Extract zip
-        auto const success = extract_zip(*zip, installation_path(*_version_name), [&](float progress) { set_progress(0.9f + 0.1f * progress); }, [&]() { return cancel_requested(); });
+        auto const success = extract_zip(*zip, *_version_name, [&](float progress) { set_progress(dl_prop + (1.f - dl_prop) * progress); }, [&]() { return cancel_requested(); });
         if (cancel_requested())
             return;
         if (!success.has_value())

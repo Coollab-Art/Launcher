@@ -10,7 +10,9 @@ static auto exe_name() -> std::filesystem::path
 {
 #if defined(_WIN32)
     return "Coollab.exe";
-#elif defined(__linux__) || defined(__APPLE__)
+#elif defined(__linux__)
+    return "Coollab.AppImage";
+#elif defined(__APPLE__)
     return "Coollab";
 #else
 #error "Unsupported platform"

@@ -65,6 +65,7 @@ set(HTTPLIB_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory(Lab/lib/cpp-httplib)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE httplib)
 install(FILES "Lab/lib/cpp-httplib/LICENSE" DESTINATION "license/cpp-httplib")
+install(FILES "Lab/lib/openssl/LICENSE.txt" DESTINATION "license/openssl")
 
 # Include range-v3
 target_include_directories(Coollab-Launcher-Properties INTERFACE Lab/lib/range-v3/include)

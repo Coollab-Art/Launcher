@@ -19,6 +19,7 @@
 #include "Task_InstallVersion.hpp"
 #include "Task_LaunchVersion.hpp"
 #include "Version.hpp"
+#include "Version/installation_path.hpp"
 #include "VersionName.hpp"
 #include "VersionRef.hpp"
 #include "fmt/format.h"
@@ -370,6 +371,7 @@ void VersionManager::imgui_manage_versions()
         if (version.name.is_experimental() && !launcher_settings().show_experimental_versions)
             continue;
 
+        ImGui::BeginGroup();
         ImGui::PushID(&version);
         ImGui::SeparatorText(version.name.as_string().c_str());
         if (version.changelog_url.has_value())
@@ -389,6 +391,15 @@ void VersionManager::imgui_manage_versions()
                 uninstall(version);
         });
         ImGui::PopID();
+        ImGui::EndGroup();
+        if (ImGui::BeginPopupContextItem("##version_context_menu"))
+        {
+            Cool::ImGuiExtras::disabled_if(version.installation_status != InstallationStatus::Installed, "Version is not installed", [&]() {
+                if (ImGui::Selectable("Reveal in File Explorer"))
+                    Cool::open_focused_in_explorer(executable_path(version.name));
+            });
+            ImGui::EndPopup();
+        }
     }
 }
 

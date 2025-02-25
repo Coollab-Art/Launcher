@@ -55,7 +55,7 @@ target_include_directories(Coollab-Launcher-Properties INTERFACE
 
 # Embed the manifest file into the executable. This manifest tells windows that our app supports long paths
 if(WIN32)
-    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Coollab-Launcher.manifest")
+    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/app-resources/Coollab-Launcher.manifest")
 endif()
 
 # cpp-httplib

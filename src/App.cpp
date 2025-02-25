@@ -151,9 +151,11 @@ void App::imgui_windows()
 
 void App::imgui_menus()
 {
-    if (ImGui::BeginMenu("Settings"))
+    if (ImGui::BeginMenu(Cool::icon_fmt("Settings", ICOMOON_COG, true).c_str()))
     {
         launcher_settings().imgui();
+        Cool::color_themes()->imgui_theme_picker();
+
         ImGui::EndMenu();
     }
 

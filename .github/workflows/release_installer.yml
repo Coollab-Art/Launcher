@@ -154,10 +154,11 @@ jobs:
           cp -r "${{github.workspace}}/bin/Release/"* Coollab-Launcher.AppDir/usr/bin/
           strip Coollab-Launcher.AppDir/usr/bin/Coollab-Launcher
           chmod +x Coollab-Launcher.AppDir/AppRun
+          sudo apt-get install -y appstream
           wget https://github.com/linuxdeploy/linuxdeploy/releases/latest/download/linuxdeploy-x86_64.AppImage
           chmod +x linuxdeploy-x86_64.AppImage
           ./linuxdeploy-x86_64.AppImage --appdir Coollab-Launcher.AppDir --output appimage
-          mv Coollab-Launcher-x86_64.AppImage Coollab-Launcher.AppImage
+          mv Coollab_Launcher-x86_64.AppImage Coollab-Launcher.AppImage
 
       - name: Release (Window and MacOS)
         if: runner.os != 'Linux'

@@ -114,6 +114,14 @@ struct DropdownEntry_VersionToUpgradeTo {
     }
 };
 
+void Project::set_file_path(std::filesystem::path file_path)
+{
+    _file_path = std::move(file_path);
+    _next_name = Cool::File::file_name_without_extension(_file_path).string();
+    _version_name.invalidate_cache();
+    _time_of_last_change.invalidate_cache();
+}
+
 void Project::imgui_version_to_upgrade_to()
 {
     const char* label = "Upgrade Coollab version";

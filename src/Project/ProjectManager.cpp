@@ -62,6 +62,45 @@ static auto find_closest_existing_folder(std::filesystem::path const& file_path)
     return path;
 }
 
+auto project_name_error_message(std::string const& name, std::string const& current_name, std::filesystem::path const& new_path) -> std::optional<std::string>
+{
+    if (Cool::File::exists(new_path) && name != current_name)
+        return "Name already used by another project";
+
+    if (name.empty())
+        return "Name cannot be empty";
+
+    for (char const invalid_char : {'.', '<', '>', ':', '\"', '/', '\\', '|', '?', '*', '\0'})
+    {
+        if (name.find(invalid_char) != std::string::npos)
+            return fmt::format("Name cannot contain a {}", invalid_char);
+    }
+
+    if (name.ends_with(' '))
+        return "Name cannot end with a space";
+
+    if (name.starts_with("--"))
+        return "Name cannot start with --"; // Otherwise, when passing this file name as a command-line argument, we would think it's an argument and not a file name
+
+    {
+        auto upper_case_name = name;
+        std::transform(upper_case_name.begin(), upper_case_name.end(), upper_case_name.begin(), [](char c) {
+            return static_cast<char>(std::toupper(static_cast<unsigned char>(c))); // We need those static_casts to avoid undefined behaviour, cf. https://en.cppreference.com/w/cpp/string/byte/toupper
+        });
+        for (const char* invalid_name : {
+                 "CON", "PRN", "AUX", "NUL",
+                 "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+                 "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+             })
+        {
+            if (upper_case_name == invalid_name)
+                return fmt::format("{} is a reserved name", name);
+        }
+    }
+
+    return std::nullopt;
+}
+
 void ProjectManager::imgui(std::function<void(Project const&)> const& launch_project)
 {
     auto project_to_remove = _projects.end();
@@ -78,6 +117,8 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
         ImGui::PushFont(Cool::Font::bold());
         ImGui::SeparatorText(project.name().c_str());
         ImGui::PopFont();
+
+        auto const rename_popup_id = ImGui::GetID("##rename");
 
         auto const widget = [&]() {
             Cool::Texture const* thumbnail = is_visible ? Cool::TextureLibrary_Image::instance().get(project.thumbnail_path(), 1s) : &Cool::dummy_texture();
@@ -182,8 +223,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
 #endif
                 }
                 if (ImGui::Selectable("Rename"))
-                {
-                }
+                    ImGui::OpenPopup(rename_popup_id);
             });
             if (ImGui::Selectable("Delete project"))
             {
@@ -216,6 +256,45 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                 Cool::open_folder_in_explorer(project.info_folder_path());
             }
 #endif
+            ImGui::EndPopup();
+        }
+        if (ImGui::BeginPopup("##rename"))
+        {
+            if (ImGui::IsWindowAppearing())
+                ImGui::SetKeyboardFocusHere();
+            auto       new_path  = Cool::File::with_extension(Cool::File::without_file_name(project.file_path()) / project._next_name, COOLLAB_FILE_EXTENSION);
+            auto const maybe_err = project_name_error_message(project._next_name, project.name(), new_path);
+            if (ImGui::InputText("##name", &project._next_name, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
+            {
+                if (!maybe_err.has_value())
+                {
+                    ImGui::CloseCurrentPopup();
+                    if (project._next_name != project.name())
+                    {
+                        new_path                   = Cool::File::find_available_path(new_path);
+                        auto const old_info_folder = project.info_folder_path();
+                        if (Cool::File::rename(project.file_path(), new_path))
+                        {
+                            project.set_file_path(new_path);
+                            Cool::File::rename(old_info_folder, project.info_folder_path());
+                            Cool::File::set_content(project.info_folder_path() / "path.txt", Cool::File::weakly_canonical(new_path).string());
+#if defined(_WIN32)
+                            long_paths_checker().check(new_path);
+#endif
+                        }
+                        else
+                        {
+                            ImGuiNotify::send({
+                                .type    = ImGuiNotify::Type::Warning,
+                                .title   = "Failed to rename",
+                                .content = "Maybe your new name was too long?",
+                            });
+                        }
+                    }
+                }
+            }
+            if (maybe_err)
+                Cool::ImGuiExtras::warning_text(maybe_err->c_str());
             ImGui::EndPopup();
         }
         ImGui::PopID();

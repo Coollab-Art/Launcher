@@ -23,7 +23,8 @@ private:
             Cool::json_set(json, "Automatically install latest version", automatically_install_latest_version);
             Cool::json_set(json, "Automatically upgrade projects to latest compatible version", automatically_upgrade_projects_to_latest_compatible_version);
             Cool::json_set(json, "Show experimental versions", show_experimental_versions);
-        }
+        },
+        false /*use_shared_user_data*/
     };
 };
 

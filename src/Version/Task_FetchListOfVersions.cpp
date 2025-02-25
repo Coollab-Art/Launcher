@@ -53,11 +53,12 @@ void Task_FetchListOfVersions::execute()
                 {
                     if (asset.at("name") != asset_name_for_current_os())
                         continue;
+                    // This adds the version to our list of versions
+                    // We only do this is there is an actual executable ready to download
                     version_manager().set_download_url(*version_name, asset.at("browser_download_url"));
+                    version_manager().set_changelog_url(*version_name, fmt::format("https://github.com/CoolLibs/Lab/blob/{}/changelog.md", std::string{version_json.at("tag_name")}));
                     break;
                 }
-
-                version_manager().set_changelog_url(*version_name, fmt::format("https://github.com/CoolLibs/Lab/blob/{}/changelog.md", std::string{version_json.at("tag_name")}));
             }
             catch (std::exception const& e)
             {

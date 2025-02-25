@@ -45,6 +45,11 @@ target_compile_definitions(miniz PUBLIC "MINIZ_NO_ZLIB_COMPATIBLE_NAMES")
 target_link_libraries(Coollab-Launcher-Properties INTERFACE miniz)
 install(FILES "lib/miniz/LICENSE" DESTINATION "license/miniz")
 
+# License
+include("Lab/Cool/CMakeUtils/files_and_folders.cmake")
+install(FILES "LICENSE.txt" DESTINATION "license" RENAME "Coollab-Launcher-LICENSE.txt")
+Cool__target_copy_file(${PROJECT_NAME} LICENSE.txt)
+
 # Grab all the source files
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})

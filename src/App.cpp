@@ -1,16 +1,17 @@
 #include "App.hpp"
-#include <imgui.h>
 #include "COOLLAB_FILE_EXTENSION.hpp"
 #include "Cool/CommandLineArgs/CommandLineArgs.h"
 #include "Cool/DebugOptions/debug_options_windows.h"
 #include "Cool/File/File.h"
 #include "Cool/ImGui/ColorThemes.h"
 #include "Cool/ImGui/ImGuiExtras.h"
-#include "Cool/Log/ToUser.h"
+#include "Cool/Log/message_console.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "LauncherSettings.hpp"
 #include "Version/VersionManager.hpp"
 #include "Version/VersionRef.hpp"
+#include "imgui.h"
+#include "open/open.hpp"
 
 App::App(Cool::WindowManager& windows, Cool::ViewsManager& /* views */)
     : _window{windows.main_window()}
@@ -105,7 +106,7 @@ static auto folder_path_error_message(std::string const& name) -> std::optional<
 
 void App::imgui_windows()
 {
-    Cool::Log::ToUser::console().imgui_window();
+    Cool::message_console().imgui_window();
     Cool::debug_options_windows(nullptr, _window);
     { // Versions
         ImGui::Begin("Versions");
@@ -156,6 +157,13 @@ void App::imgui_menus()
         launcher_settings().imgui();
         Cool::color_themes()->imgui_theme_picker();
 
+        ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu(Cool::icon_fmt("Commands", ICOMOON_ROCKET, true).c_str()))
+    {
+        if (ImGui::Selectable(ICOMOON_FOLDER_OPEN " Open user-data folder"))
+            Cool::open_folder_in_explorer(Cool::Path::user_data());
         ImGui::EndMenu();
     }
 

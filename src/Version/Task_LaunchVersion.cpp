@@ -6,7 +6,6 @@
 #include "Cool/AppManager/close_application.hpp"
 #include "Cool/DebugOptions/DebugOptions.h"
 #include "Cool/File/File.h"
-#include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
 #include "Cool/Utils/overloaded.hpp"
 #include "Cool/spawn_process.hpp"
@@ -49,8 +48,8 @@ void Task_LaunchVersion::on_submit()
             if (ImGui::Button("Cancel"))
                 Cool::task_manager().cancel_all(task_id);
         },
-        .duration    = std::nullopt,
-        .is_closable = false,
+        .duration = std::nullopt,
+        .closable = false,
     });
 }
 
@@ -117,8 +116,7 @@ void Task_LaunchVersion::execute()
     });
     if (maybe_error.has_value())
     {
-        if (Cool::DebugOptions::log_internal_warnings())
-            Cool::Log::ToUser::warning("Launch", *maybe_error);
+        Cool::Log::internal_warning("Launch", *maybe_error);
         _error_message = fmt::format("{} is corrupted. You should uninstall and reinstall it.", as_string(_version_ref));
         return;
     }

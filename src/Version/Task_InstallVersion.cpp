@@ -3,7 +3,6 @@
 #include "Cool/DebugOptions/DebugOptions.h"
 #include "Cool/File/File.h"
 #include "Cool/ImGui/markdown.h"
-#include "Cool/Log/ToUser.h"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "Version.hpp"
 #include "VersionManager.hpp"
@@ -25,14 +24,12 @@ static auto download_zip(std::string const& download_url, std::function<void(flo
         return "";
     if (!res)
     {
-        if (Cool::DebugOptions::log_internal_warnings())
-            Cool::Log::ToUser::warning("Download version", httplib::to_string(res.error()));
+        Cool::Log::internal_warning("Download version", httplib::to_string(res.error()));
         return tl::make_unexpected("No Internet connection");
     }
     if (res->status != 200)
     {
-        if (Cool::DebugOptions::log_internal_warnings())
-            Cool::Log::ToUser::warning("Download version", fmt::format("Status code {}", std::to_string(res->status)));
+        Cool::Log::internal_warning("Download version", fmt::format("Status code {}", std::to_string(res->status)));
         return tl::make_unexpected("Oops, our online versions provider is unavailable, please check back later");
     }
 
@@ -62,8 +59,7 @@ static auto extract_zip(std::string const& zip, VersionName const& version_name,
     memset(&zip_archive, 0, sizeof(zip_archive));
 
     auto const zip_error = [&]() {
-        if (Cool::DebugOptions::log_internal_warnings())
-            Cool::Log::ToUser::warning("Unzip version", mz_zip_get_error_string(mz_zip_get_last_error(&zip_archive)));
+        Cool::Log::internal_warning("Unzip version", mz_zip_get_error_string(mz_zip_get_last_error(&zip_archive)));
         return tl::make_unexpected("An unexpected error has occurred, please try again");
     };
 

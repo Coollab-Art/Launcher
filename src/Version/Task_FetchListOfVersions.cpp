@@ -1,6 +1,5 @@
 #include "Task_FetchListOfVersions.hpp"
 #include "Cool/DebugOptions/DebugOptions.h"
-#include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
 #include "Status.hpp"
 #include "VersionManager.hpp"
@@ -62,15 +61,13 @@ void Task_FetchListOfVersions::execute()
             }
             catch (std::exception const& e)
             {
-                if (Cool::DebugOptions::log_internal_warnings())
-                    Cool::Log::ToUser::error("Fetch list of versions", e.what());
+                Cool::Log::internal_error("Fetch list of versions", e.what());
             }
         }
     }
     catch (std::exception const& e)
     {
-        if (Cool::DebugOptions::log_internal_warnings())
-            Cool::Log::ToUser::error("Fetch list of versions", e.what());
+        Cool::Log::internal_error("Fetch list of versions", e.what());
     }
 
     version_manager().on_finished_fetching_list_of_versions();
@@ -81,14 +78,11 @@ void Task_FetchListOfVersions::execute()
 
 void Task_FetchListOfVersions::handle_error(httplib::Result const& res)
 {
-    if (Cool::DebugOptions::log_internal_warnings())
-    {
-        Cool::Log::ToUser::warning(
-            "Fetch list of versions",
-            !res ? httplib::to_string(res.error())
-                 : fmt::format("Status code {}", std::to_string(res->status))
-        );
-    }
+    Cool::Log::internal_warning(
+        "Fetch list of versions",
+        !res ? httplib::to_string(res.error())
+             : fmt::format("Status code {}", std::to_string(res->status))
+    );
 
     auto message              = std::optional<std::string>{};
     auto duration_until_reset = std::chrono::seconds{};

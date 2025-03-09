@@ -2,7 +2,6 @@
 #include <sstream>
 #include "Cool/DebugOptions/DebugOptions.h"
 #include "Cool/File/File.h"
-#include "Cool/Log/ToUser.h"
 #include "Cool/Task/TaskManager.hpp"
 #include "Path.hpp"
 #include "VersionCompatibility.hpp"
@@ -33,14 +32,11 @@ void Task_FetchCompatibilityFile::execute()
 
 void Task_FetchCompatibilityFile::handle_error(httplib::Result const& res)
 {
-    if (Cool::DebugOptions::log_internal_warnings())
-    {
-        Cool::Log::ToUser::warning(
-            "Fetch compatibility file",
-            !res ? httplib::to_string(res.error())
-                 : fmt::format("Status code {}", std::to_string(res->status))
-        );
-    }
+    Cool::Log::internal_warning(
+        "Fetch compatibility file",
+        !res ? httplib::to_string(res.error())
+             : fmt::format("Status code {}", std::to_string(res->status))
+    );
 
     auto duration_until_reset = std::optional<std::chrono::seconds>{};
     if (res && res->status == 403)

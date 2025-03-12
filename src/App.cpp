@@ -5,6 +5,7 @@
 #include "Cool/File/File.h"
 #include "Cool/ImGui/ColorThemes.h"
 #include "Cool/ImGui/ImGuiExtras.h"
+#include "Cool/Log/file_logger_path.hpp"
 #include "Cool/Log/message_console.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "LauncherSettings.hpp"
@@ -162,8 +163,10 @@ void App::imgui_menus()
 
     if (ImGui::BeginMenu(Cool::icon_fmt("Commands", ICOMOON_ROCKET, true).c_str()))
     {
-        if (ImGui::Selectable(ICOMOON_FOLDER_OPEN " Open user-data folder"))
-            Cool::open_folder_in_explorer(Cool::Path::user_data());
+        if (ImGui::Selectable(ICOMOON_FILE_TEXT2 " Reveal Coollab logs in explorer"))
+            Cool::open_focused_in_explorer(Cool::file_logger_path("Coollab"));
+        if (ImGui::Selectable(ICOMOON_FILE_TEXT2 " Reveal Launcher logs in explorer"))
+            Cool::open_focused_in_explorer(Cool::file_logger_path());
         ImGui::EndMenu();
     }
 

@@ -185,11 +185,6 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
             ImGui::BeginGroup();
             widget();
             ImGui::EndGroup();
-            if (ImGui::BeginItemTooltip())
-            {
-                Cool::ImGuiExtras::warning_text("Project file not found");
-                ImGui::EndTooltip();
-            }
         }
         else
         {

@@ -18,7 +18,10 @@ auto Project::name() const -> std::string
 
 auto Project::file_not_found() const -> bool
 {
-    return !Cool::File::exists(file_path());
+    auto const not_found = !Cool::File::exists(file_path());
+    if (not_found)
+        _version_name.invalidate_cache();
+    return not_found;
 }
 
 auto Project::current_version() const -> std::optional<VersionName>

@@ -74,7 +74,7 @@ install(FILES "Lab/lib/cpp-httplib/LICENSE" DESTINATION "license/cpp-httplib")
 install(FILES "Lab/lib/openssl/LICENSE.txt" DESTINATION "license/openssl")
 
 # Include range-v3
-target_include_directories(Coollab-Launcher-Properties INTERFACE Lab/lib/range-v3/include)
+target_include_directories(Coollab-Launcher-Properties SYSTEM INTERFACE Lab/lib/range-v3/include)
 install(FILES "Lab/lib/range-v3/LICENSE.txt" DESTINATION "license/range-v3")
 
 # Include Cool

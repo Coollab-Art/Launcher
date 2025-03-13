@@ -108,8 +108,7 @@ static auto make_file_executable(std::filesystem::path const& path) -> tl::expec
     FILE* const pipe = popen(command.c_str(), "r");
     if (!pipe)
     {
-        if (Cool::DebugOptions::log_internal_warnings())
-            Cool::Log::ToUser::warning("Make file executable", "Failed to open command pipe");
+        Cool::Log::internal_warning("Make file executable", "Failed to open command pipe");
         return tl::make_unexpected(fmt::format("Make sure you have the permission to edit the file \"{}\"", path));
     }
 
@@ -122,8 +121,7 @@ static auto make_file_executable(std::filesystem::path const& path) -> tl::expec
 
     if (pclose(pipe) != 0)
     {
-        if (Cool::DebugOptions::log_internal_warnings())
-            Cool::Log::ToUser::warning("Make file executable", error_message);
+        Cool::Log::internal_warning("Make file executable", error_message);
         return tl::make_unexpected(fmt::format("Make sure you have the permission to edit the file \"{}\"", path));
     }
 #else

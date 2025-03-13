@@ -52,17 +52,7 @@ ProjectManager::ProjectManager()
     });
 }
 
-static auto find_closest_existing_folder(std::filesystem::path const& file_path) -> std::filesystem::path
-{
-    auto previous_length = file_path.string().size();
-
-    auto path = Cool::File::without_file_name(file_path);
-    while (!Cool::File::exists(path) && previous_length > path.string().size())
-        path = path.parent_path();
-    return path;
-}
-
-auto project_name_error_message(std::string const& name, std::string const& current_name, std::filesystem::path const& new_path) -> std::optional<std::string>
+static auto project_name_error_message(std::string const& name, std::string const& current_name, std::filesystem::path const& new_path) -> std::optional<std::string>
 {
     if (Cool::File::exists(new_path) && name != current_name)
         return "Name already used by another project";
@@ -154,7 +144,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                 {
                     auto const path = Cool::File::file_opening_dialog({
                         .file_filters   = {{"Coollab project", COOLLAB_FILE_EXTENSION}},
-                        .initial_folder = find_closest_existing_folder(project.file_path()),
+                        .initial_folder = Cool::File::find_closest_existing_folder(project.file_path()),
                     });
                     if (path.has_value())
                     {

@@ -44,17 +44,18 @@ jobs:
       - name: Import signing certificate (MacOS)
         if: runner.os == 'MacOS'
         env:
-          MACOS_CERT_P12: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
-          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-          MACOS_CERT_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_CERT_KEYCHAIN_PASSWORD }}
+          MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
         run: |
-          echo "$MACOS_CERT_P12" | base64 --decode > macos_cert.p12
-          security create-keychain -p "$MACOS_CERT_KEYCHAIN_PASSWORD" build.keychain
-          security import macos_cert.p12 -k build.keychain -P "$MACOS_CERT_PASSWORD" -T /usr/bin/codesign
-          security list-keychains -s build.keychain
-          security set-keychain-settings -t 3600 -u build.keychain
-          security unlock-keychain -p "$MACOS_CERT_KEYCHAIN_PASSWORD" build.keychain
-          security find-identity -v -p codesigning build.keychain
+          CERT_PATH=$RUNNER_TEMP/apple_certificate.p12
+          echo -n "$MACOS_CERTIFICATE_BASE64" | base64 --decode -o $CERT_PATH
+          security import $CERT_PATH -k ~/Library/Keychains/login.keychain-db -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k $(security find-generic-password -wa $USER) ~/Library/Keychains/login.keychain-db
+
+      - name: Verify Installed Certificates
+        run: |
+          security find-identity -v -p codesigning
+
       - uses: actions/checkout@v3
         with:
           submodules: recursive
@@ -136,11 +137,9 @@ jobs:
       - name: Sign the application (MacOS)
         if: runner.os == 'MacOS'
         env:
-          MACOS_CERT_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_CERT_KEYCHAIN_PASSWORD }}
           MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
         run: |
-          security unlock-keychain -p "$MACOS_CERT_KEYCHAIN_PASSWORD" build.keychain
-          codesign --deep --force --verify --verbose --sign "$MACOS_SIGNING_IDENTITY" ${{github.workspace}}/bin/Release/Coollab-Launcher
+          codesign --force --verbose --sign "$MACOS_SIGNING_IDENTITY" ${{github.workspace}}/bin/Release/Coollab-Launcher
 
       - name: Create Installer (Window and MacOS)
         if: runner.os != 'Linux'

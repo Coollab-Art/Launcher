@@ -371,8 +371,8 @@ void VersionManager::imgui_manage_versions()
         if (version.name.is_experimental() && !launcher_settings().show_experimental_versions)
             continue;
 
-        ImGui::BeginGroup();
         ImGui::PushID(&version);
+        ImGui::BeginGroup();
         ImGui::SeparatorText(version.name.as_string().c_str());
         if (version.changelog_url.has_value())
         {
@@ -390,7 +390,6 @@ void VersionManager::imgui_manage_versions()
             if (ImGui::Button("Uninstall"))
                 uninstall(version);
         });
-        ImGui::PopID();
         ImGui::EndGroup();
         if (ImGui::BeginPopupContextItem("##version_context_menu"))
         {
@@ -400,6 +399,7 @@ void VersionManager::imgui_manage_versions()
             });
             ImGui::EndPopup();
         }
+        ImGui::PopID();
     }
 }
 

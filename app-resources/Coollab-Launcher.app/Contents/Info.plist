@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>CFBundleVersion</key>
+        <string>1.1.1</string>
+
+        <key>CFBundleShortVersionString</key>
+        <string>1.1.1</string>
+
+        <key>CFBundleName</key>
+        <string>CoollabLauncher</string>
+
+        <key>CFBundleDisplayName</key>
+        <string>Coollab Launcher</string>
+
+        <key>CFBundleIdentifier</key>
+        <string>com.coollab.launcher</string>
+
+        <key>LSApplicationCategoryType</key>
+        <string>public.app-category.graphics-design</string>
+
+        <key>NSHighResolutionCapable</key>
+        <true/>
+
+        <key>NSSupportsAutomaticGraphicsSwitching</key>
+        <true/>
+
+        <key>LSMultipleInstancesProhibited</key>
+        <false/>
+
+        <key>NSSupportsSuddenTermination</key>
+        <false/>
+
+        <key>NSRemovableVolumesUsageDescription</key>
+        <string>Coollab Launcher needs access to external drives to save and load projects.</string>
+
+        <key>CFBundleDocumentTypes</key>
+        <array>
+            <dict>
+                <key>CFBundleTypeExtensions</key>
+                <array>
+                    <string>coollab</string>
+                </array>
+                <key>CFBundleTypeIconFile</key>
+                <string>icon.icns</string>
+                <key>CFBundleTypeName</key>
+                <string>Coollab Project</string>
+                <key>CFBundleTypeRole</key>
+                <string>Editor</string>
+                <key>LSItemContentTypes</key>
+                <array>
+                    <string>public.coollab</string>
+                </array>
+                <key>NSExportableTypes</key>
+                <array>
+                    <string>public.coollab</string>
+                </array>
+            </dict>
+        </array>
+
+        <key>CFBundleExecutable</key>
+        <string>Coollab-Launcher</string>
+
+        <key>CFBundlePackageType</key>
+        <string>APPL</string>
+
+        <key>CFBundleDevelopmentRegion</key>
+        <string>en-US</string>
+
+        <key>CFBundleIconFile</key>
+        <string>icon.icns</string>
+    </dict>
+</plist>

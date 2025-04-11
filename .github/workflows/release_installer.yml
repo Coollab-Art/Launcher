@@ -41,21 +41,6 @@ jobs:
             }
 
     steps:
-      - name: Import signing certificate (MacOS)
-        if: runner.os == 'MacOS'
-        env:
-          MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
-          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-        run: |
-          CERT_PATH=$RUNNER_TEMP/apple_certificate.p12
-          echo -n "$MACOS_CERTIFICATE_BASE64" | base64 --decode -o $CERT_PATH
-          security import $CERT_PATH -k ~/Library/Keychains/login.keychain-db -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple: -s -k $(security find-generic-password -wa $USER) ~/Library/Keychains/login.keychain-db
-
-      - name: Verify Installed Certificates
-        run: |
-          security find-identity -v -p codesigning
-
       - uses: actions/checkout@v3
         with:
           submodules: recursive
@@ -111,7 +96,6 @@ jobs:
       - name: Install MacOS dependencies
         if: runner.os == 'MacOS'
         run: |
-          brew install openssl
           brew install ffmpeg
 
       - name: ccache
@@ -134,18 +118,98 @@ jobs:
           cmakeBuildType: Release
           buildDirectory: ${{github.workspace}}/build
 
-      - name: Sign the application (MacOS)
+      - name: Build app bundle (MacOS)
+        if: runner.os == 'MacOS'
+        run: |
+          mkdir -p "${{github.workspace}}/app-resources/Coollab.app/Contents/Resources"
+          mkdir -p "${{github.workspace}}/app-resources/Coollab.app/Contents/MacOS"
+          rsync -av --exclude='Coollab-Launcher' "${{github.workspace}}/bin/Release/" "${{github.workspace}}/app-resources/Coollab-Launcher.app/Contents/Resources/"
+          cp "${{github.workspace}}/bin/Release/Coollab-Launcher" "${{github.workspace}}/app-resources/Coollab-Launcher.app/Contents/MacOS/Coollab-Launcher"
+          # Recursively find and copy all dynamic libraries
+          EXECUTABLE="${{ github.workspace }}/app-resources/Coollab-Launcher.app/Contents/MacOS/Coollab-Launcher"
+          FRAMEWORKS_DIR="${{ github.workspace }}/app-resources/Coollab-Launcher.app/Contents/Frameworks"
+           mkdir -p "$FRAMEWORKS_DIR"
+           function resolve_rpath_lib {
+              LIB_NAME=$1
+              LIB_PATH=$(find /usr/local /opt/homebrew -name "$LIB_NAME" 2>/dev/null | head -n 1)
+              echo "$LIB_PATH"
+          }
+           function process_library {
+              TARGET_LIB=$1
+              otool -L "$TARGET_LIB" | awk '{print $1}' | while read -r lib; do
+                BASENAME=$(basename "$lib")
+                 if [[ "$lib" == @rpath/* ]]; then
+                    REAL_LIB_PATH=$(resolve_rpath_lib "$BASENAME")
+                elif [[ "$lib" == "$HOMEBREW_PREFIX"* ]]; then
+                    REAL_LIB_PATH="$lib"
+                else
+                    continue
+                fi
+                 if [[ -n "$REAL_LIB_PATH" && ! -f "$FRAMEWORKS_DIR/$BASENAME" ]]; then
+                    echo "Copying $REAL_LIB_PATH to $FRAMEWORKS_DIR"
+                    cp "$REAL_LIB_PATH" "$FRAMEWORKS_DIR/"
+                    chmod +w "$FRAMEWORKS_DIR/$BASENAME"
+                    process_library "$FRAMEWORKS_DIR/$BASENAME"
+                fi
+              done
+          }
+          process_library "$EXECUTABLE"
+           # Update rpath for copied libraries:
+           install_name_tool -add_rpath "@executable_path/../Frameworks" "$EXECUTABLE"
+           # Change library paths in the executable
+          otool -L "$EXECUTABLE" | awk '{print $1}' | grep "^/opt/homebrew\|^/usr/local" | while read -r lib; do
+            BASENAME=$(basename "$lib")
+            DEST_LIB="$FRAMEWORKS_DIR/$BASENAME"
+             if [[ -f "$DEST_LIB" ]]; then
+              echo "Updating $EXECUTABLE: changing $lib -> @rpath/$BASENAME"
+              install_name_tool -change "$lib" "@rpath/$BASENAME" "$EXECUTABLE"
+            fi
+          done
+           # Change library paths for each copied Homebrew library
+          for LIB in "$FRAMEWORKS_DIR"/*; do
+            otool -L "$LIB" | awk '{print $1}' | grep "^/opt/homebrew\|^/usr/local" | while read -r dep; do
+              DEP_BASENAME=$(basename "$dep")
+              DEST_DEP="$FRAMEWORKS_DIR/$DEP_BASENAME"
+               if [[ -f "$DEST_DEP" ]]; then
+                echo "Updating $LIB: changing $dep -> @rpath/$DEP_BASENAME"
+                install_name_tool -change "$dep" "@rpath/$DEP_BASENAME" "$LIB"
+              fi
+            done
+          done
+
+      - name: Codesign and Notarize (MacOS)
         if: runner.os == 'MacOS'
         env:
-          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+          CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          APPLE_ID_USERNAME: ${{ secrets.APPLE_ID_USERNAME }}
+          APPLE_ID_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_ID_APP_SPECIFIC_PASSWORD }}
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          codesign --force --verbose --sign "$MACOS_SIGNING_IDENTITY" ${{github.workspace}}/bin/Release/Coollab-Launcher
+          echo "$CERTIFICATE_BASE64" | base64 --decode > certificate.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security import certificate.p12 -k build.keychain -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+          rm certificate.p12
+          find "${{github.workspace}}/app-resources/Coollab-Launcher.app" -name "*.dylib" -exec codesign --force --timestamp --options runtime --sign "Developer ID Application: Jules Fouchy ($TEAM_ID)" {} \;
+          codesign --timestamp --options runtime --sign "Developer ID Application: Jules Fouchy ($TEAM_ID)" --entitlements "${{github.workspace}}/app-resources/Coollab.entitlements" "${{github.workspace}}/app-resources/Coollab.app"
+          ditto -c -k --keepParent "${{github.workspace}}/app-resources/Coollab-Launcher.app" Coollab-Launcher.zip
+          xcrun notarytool submit Coollab-Launcher.zip --apple-id "$APPLE_ID_USERNAME" --password "$APPLE_ID_APP_SPECIFIC_PASSWORD" --team-id "$TEAM_ID" --wait
+          xcrun stapler staple "${{github.workspace}}/app-resources/Coollab-Launcher.app"
 
-      - name: Create Installer (Window and MacOS)
-        if: runner.os != 'Linux'
+      - name: Create Installer (Windows)
+        if: runner.os == 'Windows'
         run: |
           cd ${{github.workspace}}/build
           cpack
+
+      - name: Zip Release binaries (MacOS)
+        if: runner.os == 'MacOS'
+        run: |
+          ditto -c -k --keepParent "${{github.workspace}}/app-resources/Coollab-Launcher.app" Coollab-Launcher-${{matrix.config.name}}.zip
 
       - name: Build AppImage (Linux)
         if: runner.os == 'Linux'
@@ -161,15 +225,21 @@ jobs:
           ./linuxdeploy-x86_64.AppImage --appdir Coollab-Launcher.AppDir --output appimage
           mv Coollab_Launcher-x86_64.AppImage Coollab-Launcher.AppImage
 
-      - name: Release (Window and MacOS)
-        if: runner.os != 'Linux'
+      - name: Release (Windows)
+        if: runner.os == 'Windows'
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ${{runner.os != 'Windows' && github.workspace || ''}}${{runner.os != 'Windows' && '/' || ''}}build/${{matrix.config.installer_name}}
+            build/${{matrix.config.installer_name}}
 
       - name: Release (Linux)
         if: runner.os == 'Linux'
         uses: softprops/action-gh-release@v1
         with:
           files: ${{github.workspace}}/app-resources/Coollab-Launcher.AppImage
+
+      - name: Release (MacOS)
+        if: runner.os == 'MacOS'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "${{github.workspace}}/Coollab-Launcher-${{matrix.config.name}}.zip"

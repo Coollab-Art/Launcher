@@ -1,5 +1,4 @@
 #include "Project.hpp"
-#include <exception>
 #include "Cool/File/File.h"
 #include "Cool/ImGui/IcoMoonCodepoints.h"
 #include "Cool/ImGui/ImGuiExtras.h"
@@ -8,7 +7,6 @@
 #include "LauncherSettings.hpp"
 #include "Version/VersionName.hpp"
 #include "VersionCompatibility/VersionCompatibility.hpp"
-#include "handle_error.hpp"
 #include "range/v3/view.hpp"
 
 auto Project::name() const -> std::string
@@ -68,15 +66,7 @@ auto Project::version_to_launch() const -> std::optional<VersionName>
 auto Project::time_of_last_change() const -> std::filesystem::file_time_type const&
 {
     return _time_of_last_change.get_value([&]() {
-        try
-        {
-            return std::filesystem::last_write_time(info_folder_path() / "path.txt");
-        }
-        catch (std::exception const& e)
-        {
-            handle_error(e.what());
-            return std::filesystem::file_time_type{};
-        }
+        return Cool::File::last_write_time(info_folder_path() / "path.txt");
     });
 }
 

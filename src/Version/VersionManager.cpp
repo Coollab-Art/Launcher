@@ -9,6 +9,7 @@
 #include "Cool/ImGui/IcoMoonCodepoints.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/ImGui/ImGuiExtras_dropdown.hpp"
+#include "Cool/Log/Log.hpp"
 #include "Cool/Task/TaskManager.hpp"
 #include "Cool/Task/WaitToExecuteTask.hpp"
 #include "Cool/Utils/overloaded.hpp"
@@ -23,50 +24,50 @@
 #include "VersionName.hpp"
 #include "VersionRef.hpp"
 #include "fmt/format.h"
-#include "handle_error.hpp"
 #include "installation_path.hpp"
 
-static auto get_all_locally_installed_versions(std::vector<Version>& versions) -> std::optional<std::string>
+static auto get_all_locally_installed_versions() -> std::vector<Version>
 {
+    auto versions = std::vector<Version>{};
     try
     {
         for (auto const& entry : std::filesystem::directory_iterator{Path::installed_versions_folder()})
         {
-            if (!entry.is_directory())
+            try
             {
-                assert(false);
-                continue;
+                if (!entry.is_directory())
+                {
+                    assert(false);
+                    continue;
+                }
+                auto const name = entry.path().filename().string(); // Use filename() and not stem(), because stem() would stop at the first dot (e.g. "folder/19.0.3" would become "19" instead of "19.0.3")
+                if (std::none_of(versions.begin(), versions.end(), [&](Version const& version) {
+                        return version.name.as_string() == name;
+                    }))
+                {
+                    auto const version_name = VersionName::from(name);
+                    if (version_name.has_value())
+                        versions.emplace_back(Version{*version_name, InstallationStatus::Installed});
+                }
             }
-            auto const name = entry.path().filename().string(); // Use filename() and not stem(), because stem() would stop at the first dot (e.g. "folder/19.0.3" would become "19" instead of "19.0.3")
-            if (std::none_of(versions.begin(), versions.end(), [&](Version const& version) {
-                    return version.name.as_string() == name;
-                }))
+            catch (std::exception const& e)
             {
-                auto const version_name = VersionName::from(name);
-                if (version_name.has_value())
-                    versions.emplace_back(Version{*version_name, InstallationStatus::Installed});
+                Cool::Log::internal_error("Get all locally installed versions", e.what());
             }
         }
     }
     catch (std::exception const& e)
     {
-        return fmt::format("{}", e.what());
+        Cool::Log::internal_error("Get all locally installed versions", e.what());
     }
-    return std::nullopt;
-}
-
-static auto get_all_known_versions() -> std::vector<Version>
-{
-    auto res = std::vector<Version>{};
-    handle_error(get_all_locally_installed_versions(res));
-    std::sort(res.begin(), res.end());
-    return res;
+    std::sort(versions.begin(), versions.end());
+    return versions;
 }
 
 // TODO(Launcher) Make VersionManager thread safe
 
 VersionManager::VersionManager()
-    : _versions{get_all_known_versions()}
+    : _versions{get_all_locally_installed_versions()}
 {
     // TODO(Launcher) make sure to not send a request if we know which project to launch, and we already have that version, to save on the number of requests allowed by Github
     Cool::task_manager().submit(std::make_shared<Task_FetchListOfVersions>());

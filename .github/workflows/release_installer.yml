@@ -121,8 +121,8 @@ jobs:
       - name: Build app bundle (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          mkdir -p "${{github.workspace}}/app-resources/Coollab.app/Contents/Resources"
-          mkdir -p "${{github.workspace}}/app-resources/Coollab.app/Contents/MacOS"
+          mkdir -p "${{github.workspace}}/app-resources/Coollab-Launcher.app/Contents/Resources"
+          mkdir -p "${{github.workspace}}/app-resources/Coollab-Launcher.app/Contents/MacOS"
           rsync -av --exclude='Coollab-Launcher' "${{github.workspace}}/bin/Release/" "${{github.workspace}}/app-resources/Coollab-Launcher.app/Contents/Resources/"
           cp "${{github.workspace}}/bin/Release/Coollab-Launcher" "${{github.workspace}}/app-resources/Coollab-Launcher.app/Contents/MacOS/Coollab-Launcher"
           # Recursively find and copy all dynamic libraries

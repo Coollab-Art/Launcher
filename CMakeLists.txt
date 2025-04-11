@@ -79,7 +79,7 @@ install(FILES "Lab/lib/range-v3/LICENSE.txt" DESTINATION "license/range-v3")
 
 # Include Cool
 set(COOL_USE_OPENGL 410)
-set(COOL_USE_INSTALLER ON)
+set(COOL_USE_MACOS_BUNDLE ON)
 set(COOL_APP_NAME "Coollab Launcher")
 add_subdirectory(Lab/Cool)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE Cool::Core)
@@ -158,9 +158,9 @@ set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
 ")
 
 # MacOS Bundle specifics
-set(CPACK_BUNDLE_NAME "Coollab Launcher")
-set(CPACK_BUNDLE_PLIST "${CMAKE_SOURCE_DIR}/Lab/app-resources/Info.plist")
-set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/Lab/app-resources/icon.icns")
+# set(CPACK_BUNDLE_NAME "Coollab Launcher")
+# set(CPACK_BUNDLE_PLIST "${CMAKE_SOURCE_DIR}/app-resources/Coollab-Launcher.app/Contents/Info.plist")
+# set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/app-resources/Coollab-Launcher.app/Contents/Resources/icon.icns")
 
 #
 include(CPack)

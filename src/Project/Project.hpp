@@ -1,5 +1,5 @@
 #pragma once
-// #include "Cool/File/File.h"
+#include "Cool/File/File.h"
 #include "Cool/Utils/Cached.h"
 #include "Cool/Utils/hash_project_path_for_info_folder.hpp"
 #include "Path.hpp"

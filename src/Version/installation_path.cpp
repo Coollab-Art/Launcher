@@ -13,7 +13,7 @@ static auto exe_name() -> std::filesystem::path
 #elif defined(__linux__)
     return "Coollab.AppImage";
 #elif defined(__APPLE__)
-    return "Coollab";
+    return "Coollab.app";
 #else
 #error "Unsupported platform"
 #endif

@@ -3,6 +3,7 @@
 #include <vector>
 #include "COOLLAB_FILE_EXTENSION.hpp"
 #include "Cool/File/File.h"
+#include "Cool/File/PathChecks.hpp"
 #include "Cool/ImGui/Fonts.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/TextureSource/TextureLibrary_Image.h"
@@ -196,7 +197,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
             Cool::ImGuiExtras::disabled_if(project.file_not_found(), "File not found", [&]() {
                 if (ImGui::Selectable("Make a copy"))
                 {
-                    auto const new_path = Cool::File::find_available_path(project.file_path());
+                    auto const new_path = Cool::File::find_available_path(project.file_path(), Cool::PathChecks{});
                     Cool::File::copy_file(project.file_path(), new_path);
 
                     project_to_add = Project{new_path};
@@ -256,7 +257,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                     ImGui::CloseCurrentPopup();
                     if (project._next_name != project.name())
                     {
-                        new_path                   = Cool::File::find_available_path(new_path);
+                        new_path                   = Cool::File::find_available_path(new_path, Cool::PathChecks{});
                         auto const old_info_folder = project.info_folder_path();
                         if (Cool::File::rename(project.file_path(), new_path))
                         {

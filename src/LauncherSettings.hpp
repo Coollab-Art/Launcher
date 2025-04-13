@@ -17,12 +17,12 @@ private:
         [&](nlohmann::json const& json) {
             Cool::json_get(json, "Automatically install latest version", automatically_install_latest_version);
             Cool::json_get(json, "Automatically upgrade projects to latest compatible version", automatically_upgrade_projects_to_latest_compatible_version);
-            Cool::json_get(json, "Show experimental versions", show_experimental_versions);
+            /* Cool::json_get(json, "Show experimental versions", show_experimental_versions); */ // Don't serialize it because I don't want users to enable it once when I need to make them test something, then forget to disable it, and then see all the experimental versions and use them as if they were regular versions. Using an experimental version needs to be a very concious decision.
         },
         [&](nlohmann::json& json) {
             Cool::json_set(json, "Automatically install latest version", automatically_install_latest_version);
             Cool::json_set(json, "Automatically upgrade projects to latest compatible version", automatically_upgrade_projects_to_latest_compatible_version);
-            Cool::json_set(json, "Show experimental versions", show_experimental_versions);
+            /* Cool::json_set(json, "Show experimental versions", show_experimental_versions); */ // Don't serialize it because I don't want users to enable it once when I need to make them test something, then forget to disable it, and then see all the experimental versions and use them as if they were regular versions. Using an experimental version needs to be a very concious decision.
         },
         false /*use_shared_user_data*/
     };

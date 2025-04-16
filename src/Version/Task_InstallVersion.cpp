@@ -1,6 +1,5 @@
 #include "Task_InstallVersion.hpp"
 #include <Cool/get_system_error.hpp>
-#include "Cool/DebugOptions/DebugOptions.h"
 #include "Cool/File/File.h"
 #include "Cool/ImGui/markdown.h"
 #include "ImGuiNotify/ImGuiNotify.hpp"
@@ -9,7 +8,11 @@
 #include "httplib.h"
 #include "installation_path.hpp"
 #include "make_http_request.hpp"
-#include "miniz.h"
+#include "mz.h"
+#include "mz_strm.h"
+#include "mz_strm_mem.h"
+#include "mz_zip.h"
+#include "mz_zip_rw.h"
 #include "tl/expected.hpp"
 
 static auto download_zip(std::string const& download_url, std::function<void(float)> const& set_progress, std::function<bool()> const& wants_to_cancel)
@@ -36,54 +39,86 @@ static auto download_zip(std::string const& download_url, std::function<void(flo
     return res->body;
 }
 
-static auto extract_zip(std::string const& zip, VersionName const& version_name, std::function<void(float)> const& set_progress, std::function<bool()> const& wants_to_cancel)
+static auto minizip_error_string(int32_t code) -> std::string
+{
+    switch (code)
+    {
+    case MZ_OK: return "Success";
+    case MZ_MEM_ERROR: return "Memory error";
+    case MZ_PARAM_ERROR: return "Invalid parameter";
+    case MZ_FORMAT_ERROR: return "ZIP format error";
+    case MZ_EXIST_ERROR: return "File already exists";
+    case MZ_OPEN_ERROR: return "Cannot open file";
+    case MZ_CLOSE_ERROR: return "Cannot close file";
+    case MZ_READ_ERROR: return "Read error";
+    case MZ_WRITE_ERROR: return "Write error";
+    case MZ_CRC_ERROR: return "CRC mismatch";
+    default: return fmt::format("Unknown error ({})", code);
+    }
+}
+
+static auto extract_zip(std::string const& zip, VersionName const& version_name, std::function<bool()> const& wants_to_cancel)
     -> tl::expected<void, std::string>
 {
 #if defined(__linux__)
     // On Linux we don't have a zip, just an AppImage that is already ready to use
     Cool::File::set_content(executable_path(version_name), zip);
-    std::ignore = set_progress;
     std::ignore = wants_to_cancel;
 #else
     auto const file_error = [&]() {
         return tl::make_unexpected(fmt::format("Make sure you have the permission to write files in the folder \"{}\"", installation_path(version_name).parent_path()));
     };
+    auto const zip_error = [](std::string const& debug_error_message) {
+        Cool::Log::internal_warning("Unzip version", debug_error_message);
+        return tl::make_unexpected("An unexpected error has occurred, please try again");
+    };
 
     if (!Cool::File::create_folders_if_they_dont_exist(installation_path(version_name)))
         return file_error();
 
-    auto zip_archive = mz_zip_archive{};
-    memset(&zip_archive, 0, sizeof(zip_archive));
+    void* reader = mz_zip_reader_create();
+    if (!reader)
+        return zip_error("Failed to initialize zip reader");
+    auto const scope_guard = sg::make_scope_guard([&] { mz_zip_reader_delete(&reader); });
 
-    auto const zip_error = [&](std::string const& debug_info) {
-        Cool::Log::internal_warning("Unzip version", fmt::format("{}\n{}", debug_info, mz_zip_get_error_string(mz_zip_get_last_error(&zip_archive))));
-        return tl::make_unexpected("An unexpected error has occurred, please try again");
-    };
+    void* stream_mem = mz_stream_mem_create();
+    if (!stream_mem)
+        return zip_error("Failed to initialize stream memory");
+    auto const scope_guard2 = sg::make_scope_guard([&] { mz_stream_mem_delete(&stream_mem); });
 
-    if (!mz_zip_reader_init_mem(&zip_archive, zip.data(), zip.size(), 0))
-        return zip_error("Failed to init memory");
-    auto scope_guard = sg::make_scope_guard([&] { mz_zip_reader_end(&zip_archive); });
+    mz_stream_mem_set_buffer(stream_mem, reinterpret_cast<void*>(const_cast<char*>(zip.data())), static_cast<int32_t>(zip.size())); // NOLINT(*const-cast, *reinterpret-cast)
+    mz_stream_mem_seek(stream_mem, 0, MZ_SEEK_SET);
+    {
+        auto const res = mz_zip_reader_open(reader, stream_mem);
+        if (res != MZ_OK)
+            return zip_error(fmt::format("Failed to open zip from memory: {}", minizip_error_string(res)));
+    }
+    auto const scope_guard3 = sg::make_scope_guard([&] { mz_zip_reader_close(reader); });
 
-    auto const files_count = mz_zip_reader_get_num_files(&zip_archive);
-    for (mz_uint i = 0; i < files_count; ++i)
+    while (mz_zip_reader_goto_next_entry(reader) == MZ_OK)
     {
         if (wants_to_cancel())
             break;
-        set_progress(static_cast<float>(i) / static_cast<float>(files_count));
 
-        auto file_stat = mz_zip_archive_file_stat{};
-        if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
-            return zip_error("Failed to read file stat");
+        {
+            auto const res = mz_zip_reader_entry_open(reader);
+            if (res != MZ_OK)
+                return zip_error(fmt::format("Failed to open zip entry: {}", minizip_error_string(res)));
+        }
+        auto const scope_guard4 = sg::make_scope_guard([&] { mz_zip_reader_entry_close(reader); });
 
-        if (file_stat.m_is_directory)
-            continue;
+        mz_zip_file* file_info{};
+        mz_zip_reader_entry_get_info(reader, &file_info);
 
-        auto const full_path = installation_path(version_name) / file_stat.m_filename;
+        auto const full_path = installation_path(version_name) / file_info->filename;
         if (!Cool::File::create_folders_for_file_if_they_dont_exist(full_path))
             return file_error();
 
-        if (!mz_zip_reader_extract_to_file(&zip_archive, i, full_path.string().c_str(), 0))
-            return zip_error(fmt::format("Failed to extract file \"{}\"", file_stat.m_filename));
+        {
+            auto const res = mz_zip_reader_entry_save_file(reader, full_path.string().c_str());
+            if (res != MZ_OK)
+                return zip_error(fmt::format("Failed to extract file \"{}\": {}", file_info->filename, minizip_error_string(res)));
+        }
     }
 #endif
     return {};
@@ -180,15 +215,6 @@ void Task_InstallVersion::cleanup(bool has_been_canceled)
     }
 }
 
-static auto proportion_of_the_install_time_represented_by_download() -> float
-{
-#if defined(__linux__)
-    return 1.f; // On Linux there is no zip to extract, so downloading represents 100% of the install time
-#else
-    return 0.9f;
-#endif
-}
-
 void Task_InstallVersion::execute()
 {
     // Find version name and/or download url if necessary
@@ -221,9 +247,7 @@ void Task_InstallVersion::execute()
     TaskWithProgressBar::change_notification_when_execution_starts(); // Must be done after finding the _changelog_url, because this will call extra_imgui_below_progress_bar(), which needs _changelog_url
 
     // Download zip
-    float const dl_prop = proportion_of_the_install_time_represented_by_download();
-
-    auto const zip = download_zip(*_download_url, [&](float progress) { set_progress(dl_prop * progress); }, [&]() { return cancel_requested(); });
+    auto const zip = download_zip(*_download_url, [&](float progress) { set_progress(progress * 0.99f); }, [&]() { return cancel_requested(); });
     if (cancel_requested())
         return;
     if (!zip.has_value())
@@ -233,7 +257,7 @@ void Task_InstallVersion::execute()
     }
 
     { // Extract zip
-        auto const success = extract_zip(*zip, *_version_name, [&](float progress) { set_progress(dl_prop + (1.f - dl_prop) * progress); }, [&]() { return cancel_requested(); });
+        auto const success = extract_zip(*zip, *_version_name, [&]() { return cancel_requested(); });
         if (cancel_requested())
             return;
         if (!success.has_value())

@@ -40,11 +40,21 @@ set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
 add_subdirectory(lib/spawn_process)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE Cool::spawn_process)
 
-# miniz
-add_subdirectory(lib/miniz)
-target_compile_definitions(miniz PUBLIC "MINIZ_NO_ZLIB_COMPATIBLE_NAMES")
-target_link_libraries(Coollab-Launcher-Properties INTERFACE miniz)
-install(FILES "lib/miniz/LICENSE" DESTINATION "license/miniz")
+# minizip-ng
+set(MZ_FORCE_FETCH_LIBS ON CACHE BOOL "" FORCE)
+set(MZ_DECOMPRESS_ONLY ON CACHE BOOL "" FORCE)
+set(MZ_BZIP2 OFF CACHE BOOL "" FORCE)
+set(MZ_LZMA OFF CACHE BOOL "" FORCE)
+set(MZ_ZSTD OFF CACHE BOOL "" FORCE)
+set(MZ_PKCRYPT OFF CACHE BOOL "" FORCE)
+set(MZ_WZAES OFF CACHE BOOL "" FORCE)
+set(MZ_OPENSSL OFF CACHE BOOL "" FORCE)
+set(MZ_LIBBSD OFF CACHE BOOL "" FORCE)
+set(MZ_FILE32_API OFF CACHE BOOL "" FORCE)
+set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
+add_subdirectory(lib/minizip-ng)
+target_link_libraries(Coollab-Launcher-Properties INTERFACE MINIZIP::minizip)
+install(FILES "lib/minizip-ng/LICENSE" DESTINATION "license/minizip-ng")
 
 # License
 include("Lab/Cool/CMakeUtils/files_and_folders.cmake")

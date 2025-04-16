@@ -1,5 +1,4 @@
 #include "Task_FetchListOfVersions.hpp"
-#include "Cool/DebugOptions/DebugOptions.h"
 #include "Cool/Task/TaskManager.hpp"
 #include "Status.hpp"
 #include "VersionManager.hpp"

@@ -7,6 +7,6 @@
 [submodule "lib/spawn_process"]
 	path = lib/spawn_process
 	url = https://github.com/CoolLibs/spawn_process
-[submodule "lib/miniz"]
-	path = lib/miniz
-	url = https://github.com/richgel999/miniz.git
+[submodule "lib/minizip-ng"]
+	path = lib/minizip-ng
+	url = https://github.com/CoolLibs/minizip-ng

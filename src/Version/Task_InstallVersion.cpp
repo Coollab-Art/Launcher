@@ -55,13 +55,13 @@ static auto extract_zip(std::string const& zip, VersionName const& version_name,
     auto zip_archive = mz_zip_archive{};
     memset(&zip_archive, 0, sizeof(zip_archive));
 
-    auto const zip_error = [&]() {
-        Cool::Log::internal_warning("Unzip version", mz_zip_get_error_string(mz_zip_get_last_error(&zip_archive)));
+    auto const zip_error = [&](std::string const& debug_info) {
+        Cool::Log::internal_warning("Unzip version", fmt::format("{}\n{}", debug_info, mz_zip_get_error_string(mz_zip_get_last_error(&zip_archive))));
         return tl::make_unexpected("An unexpected error has occurred, please try again");
     };
 
     if (!mz_zip_reader_init_mem(&zip_archive, zip.data(), zip.size(), 0))
-        return zip_error();
+        return zip_error("Failed to init memory");
     auto scope_guard = sg::make_scope_guard([&] { mz_zip_reader_end(&zip_archive); });
 
     auto const files_count = mz_zip_reader_get_num_files(&zip_archive);
@@ -73,7 +73,7 @@ static auto extract_zip(std::string const& zip, VersionName const& version_name,
 
         auto file_stat = mz_zip_archive_file_stat{};
         if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
-            return zip_error();
+            return zip_error("Failed to read file stat");
 
         if (file_stat.m_is_directory)
             continue;
@@ -83,7 +83,7 @@ static auto extract_zip(std::string const& zip, VersionName const& version_name,
             return file_error();
 
         if (!mz_zip_reader_extract_to_file(&zip_archive, i, full_path.string().c_str(), 0))
-            return zip_error();
+            return zip_error(fmt::format("Failed to extract file \"{}\"", file_stat.m_filename));
     }
 #endif
     return {};

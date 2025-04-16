@@ -36,7 +36,7 @@ static auto download_zip(std::string const& download_url, std::function<void(flo
     return res->body;
 }
 
-static auto extract_zip(std::string const& zip, VersionName const& version_name, std::function<void(float)> const& set_progress, std::function<bool()> const& wants_to_cancel)
+static auto extract_zip(std::string const& zip_data, VersionName const& version_name, std::function<void(float)> const& set_progress, std::function<bool()> const& wants_to_cancel)
     -> tl::expected<void, std::string>
 {
 #if defined(__linux__)
@@ -52,50 +52,50 @@ static auto extract_zip(std::string const& zip, VersionName const& version_name,
         return tl::make_unexpected(Cool::get_system_error());
     };
 
-    if (!Cool::File::create_folders_if_they_dont_exist(installation_path(version_name)))
-        return file_error();
+    mz_zip_archive zip;
+    memset(&zip, 0, sizeof(zip));
 
-    auto zip_archive = mz_zip_archive{};
-    memset(&zip_archive, 0, sizeof(zip_archive));
-
-    auto const zip_error = [&]() {
-        Cool::Log::internal_warning("Unzip version", mz_zip_get_error_string(mz_zip_get_last_error(&zip_archive)));
+    auto const zip_error = [&](std::string const& context) {
+        Cool::Log::internal_warning("Unzip version", fmt::format("{}\n{}", context, mz_zip_get_error_string(mz_zip_get_last_error(&zip))));
         return tl::make_unexpected("An unexpected error has occurred, please try again");
     };
 
-    if (!mz_zip_reader_init_mem(&zip_archive, zip.data(), zip.size(), 0))
-        return zip_error();
-    auto scope_guard = sg::make_scope_guard([&] { mz_zip_reader_end(&zip_archive); });
-
-    auto const files_count = mz_zip_reader_get_num_files(&zip_archive);
-    for (mz_uint i = 0; i < files_count; ++i)
+    if (!mz_zip_reader_init_mem(&zip, zip_data.data(), zip_data.size(), 0))
     {
-        if (wants_to_cancel())
-            break;
-        set_progress(static_cast<float>(i) / static_cast<float>(files_count));
+        return zip_error("Failed to init zip from memory");
+    }
 
-        auto file_stat = mz_zip_archive_file_stat{};
-        if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
-            return zip_error();
+    int file_count = (int)mz_zip_reader_get_num_files(&zip);
 
-        if (file_stat.m_is_directory)
+    for (int i = 0; i < file_count; ++i)
+    {
+        mz_zip_archive_file_stat file_stat;
+        if (!mz_zip_reader_file_stat(&zip, i, &file_stat))
             continue;
 
-        auto const full_path = installation_path(version_name) / file_stat.m_filename;
-        if (!Cool::File::create_folders_for_file_if_they_dont_exist(full_path))
-            return file_error();
+        auto file_path = installation_path(version_name) / file_stat.m_filename;
 
-        auto file_data = std::vector<char>(file_stat.m_uncomp_size);
-        if (!mz_zip_reader_extract_to_mem(&zip_archive, i, file_data.data(), file_stat.m_uncomp_size, 0))
-            return zip_error();
+        if (mz_zip_reader_is_file_a_directory(&zip, i))
+        {
+            std::filesystem::create_directories(file_path);
+        }
+        else
+        {
+            std::filesystem::create_directories(std::filesystem::path(file_path).parent_path());
+            std::vector<char> file_data(file_stat.m_uncomp_size);
 
-        auto ofs = std::ofstream{full_path, std::ios::binary};
-        if (!ofs)
-            return system_error();
-        ofs.write(file_data.data(), static_cast<std::streamsize>(file_data.size()));
-        if (ofs.fail())
-            return system_error();
+            if (!mz_zip_reader_extract_to_mem(&zip, i, file_data.data(), file_data.size(), 0))
+            {
+                zip_error("Failed to extract file: "s + file_stat.m_filename);
+                continue;
+            }
+
+            std::ofstream ofs(file_path, std::ios::binary);
+            ofs.write(file_data.data(), file_data.size());
+        }
     }
+
+    mz_zip_reader_end(&zip);
 #endif
     return {};
 }

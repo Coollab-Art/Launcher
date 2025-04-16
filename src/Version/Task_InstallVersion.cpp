@@ -39,6 +39,7 @@ static auto download_zip(std::string const& download_url, std::function<void(flo
     return res->body;
 }
 
+#if !defined(__linux__) // This function is not used on Linux
 static auto minizip_error_string(int32_t code) -> std::string
 {
     switch (code)
@@ -56,6 +57,7 @@ static auto minizip_error_string(int32_t code) -> std::string
     default: return fmt::format("Unknown error ({})", code);
     }
 }
+#endif
 
 static auto extract_zip(std::string const& zip, VersionName const& version_name, std::function<bool()> const& wants_to_cancel)
     -> tl::expected<void, std::string>

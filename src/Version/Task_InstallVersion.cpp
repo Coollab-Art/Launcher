@@ -48,9 +48,6 @@ static auto extract_zip(std::string const& zip, VersionName const& version_name,
     auto const file_error = [&]() {
         return tl::make_unexpected(fmt::format("Make sure you have the permission to write files in the folder \"{}\"", installation_path(version_name).parent_path()));
     };
-    auto const system_error = [&]() {
-        return tl::make_unexpected(Cool::get_system_error());
-    };
 
     if (!Cool::File::create_folders_if_they_dont_exist(installation_path(version_name)))
         return file_error();
@@ -85,16 +82,8 @@ static auto extract_zip(std::string const& zip, VersionName const& version_name,
         if (!Cool::File::create_folders_for_file_if_they_dont_exist(full_path))
             return file_error();
 
-        auto file_data = std::vector<char>(file_stat.m_uncomp_size);
-        if (!mz_zip_reader_extract_to_mem(&zip_archive, i, file_data.data(), file_stat.m_uncomp_size, 0))
+        if (!mz_zip_reader_extract_to_file(&zip_archive, i, full_path.string().c_str(), 0))
             return zip_error();
-
-        auto ofs = std::ofstream{full_path, std::ios::binary};
-        if (!ofs)
-            return system_error();
-        ofs.write(file_data.data(), static_cast<std::streamsize>(file_data.size()));
-        if (ofs.fail())
-            return system_error();
     }
 #endif
     return {};

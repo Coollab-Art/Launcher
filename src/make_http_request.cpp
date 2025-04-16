@@ -8,10 +8,10 @@ auto make_http_request(std::string_view url, std::function<bool(uint64_t current
 
     // If page has been moved but there is a redirection from the old url to the new one, follow it
     cli.set_follow_location(true);
-    // Don't cancel if we have a bad internet connection. This is done in a Task so this is non-blocking anyways
-    cli.set_connection_timeout(99999h);
-    cli.set_read_timeout(99999h);
-    cli.set_write_timeout(99999h);
+    // Don't cancel if we have a bad internet connection. This is done in a Task so this is non-blocking anyways (NB: setting too big of a timeout (e.g. 99999h) caused the request to immediately fail on MacOS and Arch Linux)
+    cli.set_connection_timeout(15min);
+    cli.set_read_timeout(15min);
+    cli.set_write_timeout(15min);
 
     return cli.Get(std::string{url}, std::move(progress_callback));
 }

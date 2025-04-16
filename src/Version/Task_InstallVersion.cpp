@@ -223,7 +223,7 @@ void Task_InstallVersion::execute()
     // We need to do this in execute, because we might have been waiting for FetchListOfVersions to finish, so we didn't have access to the download url before that point
     if (!_version_name.has_value()) // If we don't give us a version name, we will install the latest version (this happens when we want to install the latest version, but haven't fetched the list of versions yet so we can't know its name when creating the install task)
     {
-        auto const* const version = version_manager().latest_version();
+        auto const* const version = version_manager().latest_version(false /*filter_experimental_versions*/);
         if (!version || !version->download_url.has_value())
         {
             _error_message = "Didn't find any version to install";
@@ -236,7 +236,7 @@ void Task_InstallVersion::execute()
     }
     if (!_download_url.has_value())
     {
-        auto const* const version = version_manager().find(*_version_name);
+        auto const* const version = version_manager().find(*_version_name, false /*filter_experimental_versions*/);
         if (!version || !version->download_url.has_value())
         {
             _error_message = "This version is not available online";

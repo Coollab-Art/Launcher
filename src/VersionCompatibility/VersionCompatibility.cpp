@@ -38,11 +38,8 @@ auto VersionCompatibility::compatible_versions(VersionName const& version_name) 
                 [&](VersionName const& ver) {
                     if (found)
                     {
-                        if ((!ver.is_experimental() || launcher_settings().show_experimental_versions)
-                            && version_manager().find(ver) != nullptr)
-                        {
+                        if (version_manager().find(ver, true /*filter_experimental_versions*/) != nullptr)
                             res.emplace_back(VersionNameAndUpgradeInstructions{ver, upgrade_instructions});
-                        }
                     }
                     else
                     {
@@ -84,8 +81,7 @@ auto VersionCompatibility::version_to_upgrade_to_automatically(VersionName const
                 [&](VersionName const& ver) {
                     if (found)
                     {
-                        if ((!ver.is_experimental() || launcher_settings().show_experimental_versions)
-                            && version_manager().find(ver) != nullptr)
+                        if (version_manager().find(ver, true /*filter_experimental_versions*/) != nullptr)
                         {
                             res = ver;
                         }

@@ -10,7 +10,7 @@ void LauncherSettings::imgui()
     {
         b = true;
         if (automatically_install_latest_version)
-            version_manager().install_latest_version();
+            version_manager().install_latest_version(true /*filter_experimental_versions*/);
     }
 
     b |= Cool::ImGuiExtras::toggle("Automatically upgrade projects to the latest compatible version", &automatically_upgrade_projects_to_latest_compatible_version);

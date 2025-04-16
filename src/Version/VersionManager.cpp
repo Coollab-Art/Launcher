@@ -89,7 +89,7 @@ auto VersionManager::after_version_installed(VersionRef const& version_ref) -> s
     auto const after_latest_version_installed = [&]() {
         if (_status_of_fetch_list_of_versions.load() == Status::Completed)
         {
-            auto const* const latest_version = latest_version_with_download_url_no_locking();
+            auto const* const latest_version = latest_version_with_download_url_no_locking(true /*filter_experimental_versions*/);
             if (!latest_version)
             {
                 // TODO(Launcher) error, should not happen
@@ -97,7 +97,7 @@ auto VersionManager::after_version_installed(VersionRef const& version_ref) -> s
             auto const install_task = get_install_task_or_create_and_submit_it(latest_version->name);
             return after(install_task);
         }
-        else if (has_at_least_one_version_installed())
+        else if (has_at_least_one_version_installed(true /*filter_experimental_versions*/))
         {
             // We don't want to wait, use whatever version is available
             return after_nothing();
@@ -116,7 +116,7 @@ auto VersionManager::after_version_installed(VersionRef const& version_ref) -> s
                 return after_latest_version_installed();
             },
             [&](LatestInstalledVersion) -> std::shared_ptr<Cool::WaitToExecuteTask> {
-                if (has_at_least_one_version_installed())
+                if (has_at_least_one_version_installed(true /*filter_experimental_versions*/))
                     return after_nothing();
 
                 auto const install_task = get_latest_installing_version_if_any();
@@ -126,7 +126,7 @@ auto VersionManager::after_version_installed(VersionRef const& version_ref) -> s
                     return after_latest_version_installed();
             },
             [&](VersionName const& version_name) -> std::shared_ptr<Cool::WaitToExecuteTask> {
-                if (is_installed(version_name))
+                if (is_installed(version_name, false /*filter_experimental_versions*/))
                     return after_nothing();
                 auto const install_task = get_install_task_or_create_and_submit_it(version_name);
                 return after(install_task);
@@ -173,9 +173,9 @@ void VersionManager::install_ifn_and_launch(VersionRef const& version_ref, Proje
     );
 }
 
-void VersionManager::install_latest_version()
+void VersionManager::install_latest_version(bool filter_experimental_versions)
 {
-    auto const* const latest_version = latest_version_no_locking();
+    auto const* const latest_version = latest_version_no_locking(filter_experimental_versions);
     if (latest_version && latest_version->installation_status == InstallationStatus::NotInstalled)
         install(*latest_version);
 }
@@ -201,55 +201,59 @@ void VersionManager::uninstall(Version& version)
     version.installation_status = InstallationStatus::NotInstalled;
 }
 
-auto VersionManager::find(VersionName const& name) const -> Version const*
+auto VersionManager::find(VersionName const& name, bool filter_experimental_versions) const -> Version const*
 {
     // auto lock = std::unique_lock{_mutex};
-    return find_no_locking(name);
+    return find_no_locking(name, filter_experimental_versions);
 }
 
-auto VersionManager::find_no_locking(VersionName const& name) -> Version*
+auto VersionManager::find_no_locking(VersionName const& name, bool filter_experimental_versions) -> Version*
 {
-    auto const it = std::find_if(_versions.begin(), _versions.end(), [&](Version const& version) {
+    auto filtered_versions = versions(filter_experimental_versions);
+
+    auto const it = std::find_if(filtered_versions.begin(), filtered_versions.end(), [&](Version const& version) {
         return version.name == name;
     });
-    if (it == _versions.end())
+    if (it == filtered_versions.end())
         return nullptr;
     return &*it;
 }
 
-auto VersionManager::find_no_locking(VersionName const& name) const -> Version const*
+auto VersionManager::find_no_locking(VersionName const& name, bool filter_experimental_versions) const -> Version const*
 {
-    auto const it = std::find_if(_versions.begin(), _versions.end(), [&](Version const& version) {
+    auto filtered_versions = versions(filter_experimental_versions);
+
+    auto const it = std::find_if(filtered_versions.begin(), filtered_versions.end(), [&](Version const& version) {
         return version.name == name;
     });
-    if (it == _versions.end())
+    if (it == filtered_versions.end())
         return nullptr;
     return &*it;
 }
 
-auto VersionManager::find_installed_version(VersionRef const& version_ref) const -> Version const*
+auto VersionManager::find_installed_version(VersionRef const& version_ref, bool filter_experimental_versions) const -> Version const*
 {
     return std::visit(
         Cool::overloaded{
             [&](LatestVersion) {
-                return latest_installed_version_no_locking();
+                return latest_installed_version_no_locking(filter_experimental_versions);
             },
             [&](LatestInstalledVersion) {
-                return latest_installed_version_no_locking();
+                return latest_installed_version_no_locking(filter_experimental_versions);
             },
             [&](VersionName const& name) {
-                return find(name);
+                return find(name, filter_experimental_versions);
             }
         },
         version_ref
     );
 }
 
-void VersionManager::with_version_found(VersionName const& name, std::function<void(Version&)> const& callback)
+void VersionManager::with_version_found(VersionName const& name, bool filter_experimental_versions, std::function<void(Version&)> const& callback)
 {
     // auto lock = std::unique_lock{_mutex};
 
-    auto* const version = find_no_locking(name);
+    auto* const version = find_no_locking(name, filter_experimental_versions);
     if (version == nullptr)
     {
         assert(false);
@@ -259,11 +263,11 @@ void VersionManager::with_version_found(VersionName const& name, std::function<v
     callback(*version);
 }
 
-void VersionManager::with_version_found_or_created(VersionName const& name, std::function<void(Version&)> const& callback)
+void VersionManager::with_version_found_or_created(VersionName const& name, bool filter_experimental_versions, std::function<void(Version&)> const& callback)
 {
     // auto lock = std::unique_lock{_mutex};
 
-    auto* version = find_no_locking(name);
+    auto* version = find_no_locking(name, filter_experimental_versions);
     if (version == nullptr)
     {
         auto const new_version = Version{name, InstallationStatus::NotInstalled};
@@ -274,18 +278,19 @@ void VersionManager::with_version_found_or_created(VersionName const& name, std:
     callback(*version);
 }
 
-auto VersionManager::has_at_least_one_version_installed() const -> bool
+auto VersionManager::has_at_least_one_version_installed(bool filter_experimental_versions) const -> bool
 {
     // auto lock = std::shared_lock{_mutex};
 
-    return std::any_of(_versions.begin(), _versions.end(), [&](Version const& version) {
+    auto filtered_versions = versions(filter_experimental_versions);
+    return std::any_of(filtered_versions.begin(), filtered_versions.end(), [&](Version const& version) {
         return version.installation_status == InstallationStatus::Installed;
     });
 }
 
 void VersionManager::set_download_url(VersionName const& name, std::string download_url)
 {
-    with_version_found_or_created(name, [&](Version& version) {
+    with_version_found_or_created(name, false /*filter_experimental_versions*/, [&](Version& version) {
         assert(!version.download_url.has_value());
         version.download_url = std::move(download_url);
     });
@@ -293,7 +298,7 @@ void VersionManager::set_download_url(VersionName const& name, std::string downl
 
 void VersionManager::set_changelog_url(VersionName const& name, std::string changelog_url)
 {
-    with_version_found_or_created(name, [&](Version& version) {
+    with_version_found_or_created(name, false /*  filter_experimental_versions */, [&](Version& version) {
         assert(!version.changelog_url.has_value());
         version.changelog_url = std::move(changelog_url);
     });
@@ -301,7 +306,7 @@ void VersionManager::set_changelog_url(VersionName const& name, std::string chan
 
 void VersionManager::set_installation_status(VersionName const& name, InstallationStatus installation_status)
 {
-    with_version_found_or_created(name, [&](Version& version) {
+    with_version_found_or_created(name, false /* filter_experimental_versions */, [&](Version& version) {
         version.installation_status = installation_status;
     });
     if (installation_status == InstallationStatus::Installed || installation_status == InstallationStatus::NotInstalled)
@@ -317,48 +322,53 @@ void VersionManager::on_finished_fetching_list_of_versions()
     _status_of_fetch_list_of_versions.store(Status::Completed);
 
     if (launcher_settings().automatically_install_latest_version)
-        install_latest_version();
+        install_latest_version(true /*filter_experimental_versions*/);
 }
 
-auto VersionManager::is_installed(VersionName const& version_name) const -> bool
+auto VersionManager::is_installed(VersionName const& version_name, bool filter_experimental_versions) const -> bool
 {
-    auto const* const version = find(version_name);
+    auto const* const version = find(version_name, filter_experimental_versions);
     if (!version)
         return false;
     return version->installation_status == InstallationStatus::Installed;
 }
 
-auto VersionManager::latest_version() const -> Version const*
+auto VersionManager::latest_version(bool filter_experimental_versions) const -> Version const*
 {
     // auto lock = std::unique_lock{_mutex};
-    return latest_version_no_locking();
+    return latest_version_no_locking(filter_experimental_versions);
 }
 
-auto VersionManager::latest_version_no_locking() const -> Version const*
+auto VersionManager::latest_version_no_locking(bool filter_experimental_versions) const -> Version const*
 {
-    if (_versions.empty())
-        return nullptr;
-    return &_versions.front();
+    auto filtered_versions = versions(filter_experimental_versions);
+    for (auto const& version : filtered_versions)
+        return &version; // Just return the first version found
+    return nullptr;
 }
 
-auto VersionManager::latest_installed_version_no_locking() const -> Version const*
+auto VersionManager::latest_installed_version_no_locking(bool filter_experimental_versions) const -> Version const*
 {
     // Versions are sorted from latest to oldest so the first one we find will be the latest
-    auto const it = std::find_if(_versions.begin(), _versions.end(), [](Version const& version) {
+    auto filtered_versions = versions(filter_experimental_versions);
+
+    auto const it = std::find_if(filtered_versions.begin(), filtered_versions.end(), [](Version const& version) {
         return version.installation_status == InstallationStatus::Installed;
     });
-    if (it == _versions.end())
+    if (it == filtered_versions.end())
         return nullptr;
     return &*it;
 }
 
-auto VersionManager::latest_version_with_download_url_no_locking() const -> Version const*
+auto VersionManager::latest_version_with_download_url_no_locking(bool filter_experimental_versions) const -> Version const*
 {
     // Versions are sorted from latest to oldest so the first one we find will be the latest
-    auto const it = std::find_if(_versions.begin(), _versions.end(), [](Version const& version) {
+    auto filtered_versions = versions(filter_experimental_versions);
+
+    auto const it = std::find_if(filtered_versions.begin(), filtered_versions.end(), [](Version const& version) {
         return version.download_url.has_value();
     });
-    if (it == _versions.end())
+    if (it == filtered_versions.end())
         return nullptr;
     return &*it;
 }
@@ -367,11 +377,9 @@ void VersionManager::imgui_manage_versions()
 {
     // auto lock = std::unique_lock{_mutex};
 
-    for (auto& version : _versions)
+    auto filtered_versions = versions(true /*filter_experimental_versions*/);
+    for (auto& version : filtered_versions)
     {
-        if (version.name.is_experimental() && !launcher_settings().show_experimental_versions)
-            continue;
-
         ImGui::PushID(&version);
         ImGui::BeginGroup();
         ImGui::SeparatorText(version.name.as_string().c_str());
@@ -404,18 +412,18 @@ void VersionManager::imgui_manage_versions()
     }
 }
 
-auto VersionManager::label(VersionRef const& ref) const -> std::string
+auto VersionManager::label(VersionRef const& ref, bool filter_experimental_versions) const -> std::string
 {
     return std::visit(
         Cool::overloaded{
             [&](LatestInstalledVersion) {
-                auto const* version = latest_installed_version_no_locking();
+                auto const* version = latest_installed_version_no_locking(filter_experimental_versions);
                 if (!version)
-                    version = latest_version_no_locking();
+                    version = latest_version_no_locking(filter_experimental_versions);
                 return fmt::format("Latest Installed ({})", version ? version->name.as_string() : "None");
             },
             [&](LatestVersion) {
-                auto const* const version = latest_version_no_locking();
+                auto const* const version = latest_version_no_locking(filter_experimental_versions);
                 return fmt::format("Latest ({})", version ? version->name.as_string() : "None");
             },
             [](VersionName const& name) {
@@ -444,7 +452,7 @@ void VersionManager::imgui_versions_dropdown(VersionRef& ref)
 
         auto get_label() const -> std::string
         {
-            return version_manager().label(_value);
+            return version_manager().label(_value, true /*filter_experimental_versions*/);
         }
 
         void apply_value()
@@ -461,11 +469,8 @@ void VersionManager::imgui_versions_dropdown(VersionRef& ref)
         DropdownEntry_VersionRef{LatestInstalledVersion{}, &ref},
         DropdownEntry_VersionRef{LatestVersion{}, &ref},
     };
-    for (auto const& version : _versions)
-    {
-        if (version.name.is_experimental() && !launcher_settings().show_experimental_versions)
-            continue;
+    auto filtered_versions = versions(true /*filter_experimental_versions*/);
+    for (auto const& version : filtered_versions)
         entries.emplace_back(version.name, &ref);
-    }
-    Cool::ImGuiExtras::dropdown("Version", label(ref).c_str(), entries);
+    Cool::ImGuiExtras::dropdown("Version", label(ref, true /*filter_experimental_versions*/).c_str(), entries);
 }

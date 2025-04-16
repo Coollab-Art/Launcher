@@ -1,6 +1,6 @@
 [submodule "Lab"]
 	path = Lab
-	url = git@github.com:CoolLibs/Lab.git
+	url = https://github.com/CoolLibs/Lab.git
 [submodule "tooling"]
 	path = tooling
 	url = https://github.com/CoolLibs/tooling

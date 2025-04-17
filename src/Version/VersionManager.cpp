@@ -36,10 +36,7 @@ static auto get_all_locally_installed_versions() -> std::vector<Version>
             try
             {
                 if (!entry.is_directory())
-                {
-                    assert(false);
                     continue;
-                }
                 auto const name = entry.path().filename().string(); // Use filename() and not stem(), because stem() would stop at the first dot (e.g. "folder/19.0.3" would become "19" instead of "19.0.3")
                 if (std::none_of(versions.begin(), versions.end(), [&](Version const& version) {
                         return version.name.as_string() == name;

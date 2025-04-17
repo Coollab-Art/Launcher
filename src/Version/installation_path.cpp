@@ -13,7 +13,7 @@ static auto exe_name() -> std::filesystem::path
 #elif defined(__linux__)
     return "Coollab.AppImage";
 #elif defined(__APPLE__)
-    return "Coollab.app";
+    return "Coollab.app/Contents/MacOS/Coollab"; // We can't pass command-line args if we just open the app bundle, so we have to use the actual executable that is inside the bundle
 #else
 #error "Unsupported platform"
 #endif

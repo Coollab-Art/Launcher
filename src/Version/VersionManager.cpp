@@ -339,9 +339,9 @@ auto VersionManager::latest_version(bool filter_experimental_versions) const -> 
 auto VersionManager::latest_version_no_locking(bool filter_experimental_versions) const -> Version const*
 {
     auto filtered_versions = versions(filter_experimental_versions);
-    for (auto const& version : filtered_versions)
-        return &version; // Just return the first version found
-    return nullptr;
+    if (filtered_versions.empty())
+        return nullptr;
+    return &filtered_versions.front();
 }
 
 auto VersionManager::latest_installed_version_no_locking(bool filter_experimental_versions) const -> Version const*

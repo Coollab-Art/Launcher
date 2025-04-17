@@ -89,7 +89,11 @@ static auto extract_zip(std::string const& zip, VersionName const& version_name,
     auto const scope_guard2 = sg::make_scope_guard([&] { mz_stream_mem_delete(&stream_mem); });
 
     mz_stream_mem_set_buffer(stream_mem, reinterpret_cast<void*>(const_cast<char*>(zip.data())), static_cast<int32_t>(zip.size())); // NOLINT(*const-cast, *reinterpret-cast)
-    mz_stream_mem_seek(stream_mem, 0, MZ_SEEK_SET);
+    {
+        auto const res = mz_stream_mem_seek(stream_mem, 0, MZ_SEEK_SET);
+        if (res != MZ_OK)
+            return zip_error(fmt::format("Failed to seek stream: {}", minizip_error_string(res)));
+    }
     {
         auto const res = mz_zip_reader_open(reader, stream_mem);
         if (res != MZ_OK)
@@ -100,7 +104,7 @@ static auto extract_zip(std::string const& zip, VersionName const& version_name,
     while (mz_zip_reader_goto_next_entry(reader) == MZ_OK)
     {
         if (wants_to_cancel())
-            break;
+            return {}; // No error
 
         {
             auto const res = mz_zip_reader_entry_open(reader);
@@ -110,7 +114,11 @@ static auto extract_zip(std::string const& zip, VersionName const& version_name,
         auto const scope_guard4 = sg::make_scope_guard([&] { mz_zip_reader_entry_close(reader); });
 
         mz_zip_file* file_info{};
-        mz_zip_reader_entry_get_info(reader, &file_info);
+        {
+            auto const res = mz_zip_reader_entry_get_info(reader, &file_info);
+            if (res != MZ_OK || file_info == nullptr || file_info->filename == nullptr)
+                return zip_error(fmt::format("Failed to get entry info: {}", minizip_error_string(res)));
+        }
 
         auto const full_path = installation_path(version_name) / file_info->filename;
         if (!Cool::File::create_folders_for_file_if_they_dont_exist(full_path))

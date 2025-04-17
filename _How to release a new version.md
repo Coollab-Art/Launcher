@@ -1,0 +1,5 @@
+- If new windows have been added, make sure that *imgui.ini* has been updated in *User data Default*
+- Change version number in *CMakeLists.txt* and *Info.plist* (in CFBundleVersion AND CFBundleShortVersionString)
+- Commit with the message "🔖 [version_number] Release" (make sure to replace with the right version number)
+- On GitHub, create a new release with the name of the version you just chose. Use a new tag with the same name as the version
+- Put the new installers to download on the website

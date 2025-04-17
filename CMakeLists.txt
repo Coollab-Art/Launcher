@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(Coollab-Launcher)
 add_executable(${PROJECT_NAME})
-set(COOL_APP_VERSION "1.1.0")
+set(COOL_APP_VERSION "2.0.0")
 
 add_library(Coollab-Launcher-Properties INTERFACE) # This is needed by both the launcher and its tests
 target_link_libraries(${PROJECT_NAME} PRIVATE Coollab-Launcher-Properties)

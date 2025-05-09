@@ -10,7 +10,7 @@
 
 void Task_FetchCompatibilityFile::execute()
 {
-    auto const res = make_http_request("https://raw.githubusercontent.com/CoolLibs/Lab/refs/heads/main/versions_compatibility.txt", [&](uint64_t, uint64_t) {
+    auto const res = make_http_request("https://raw.githubusercontent.com/Coollab-Art/Coollab/refs/heads/main/versions_compatibility.txt", [&](uint64_t, uint64_t) {
         return !_cancel.load();
     });
 

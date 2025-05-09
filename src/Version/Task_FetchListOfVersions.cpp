@@ -20,7 +20,7 @@ static auto asset_name_for_current_os() -> std::string
 
 void Task_FetchListOfVersions::execute()
 {
-    auto const res = make_http_request("https://api.github.com/repos/CoolLibs/Lab/releases", [&](uint64_t, uint64_t) {
+    auto const res = make_http_request("https://api.github.com/repos/Coollab-Art/Coollab/releases", [&](uint64_t, uint64_t) {
         return !_cancel.load();
     });
 
@@ -54,7 +54,7 @@ void Task_FetchListOfVersions::execute()
                     // This adds the version to our list of versions
                     // We only do this is there is an actual executable ready to download
                     version_manager().set_download_url(*version_name, asset.at("browser_download_url"));
-                    version_manager().set_changelog_url(*version_name, fmt::format("https://github.com/CoolLibs/Lab/blob/{}/changelog.md", std::string{version_json.at("tag_name")}));
+                    version_manager().set_changelog_url(*version_name, fmt::format("https://github.com/Coollab-Art/Coollab/blob/{}/changelog.md", std::string{version_json.at("tag_name")}));
                     break;
                 }
             }

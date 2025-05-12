@@ -6,6 +6,7 @@
 #include <optional>
 #include <tl/expected.hpp>
 #include <utility>
+#include "Cool/ImGui/Fonts.h"
 #include "Cool/ImGui/IcoMoonCodepoints.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/ImGui/ImGuiExtras_dropdown.hpp"
@@ -23,8 +24,8 @@
 #include "Version/installation_path.hpp"
 #include "VersionName.hpp"
 #include "VersionRef.hpp"
-#include "fmt/format.h"
 #include "installation_path.hpp"
+#include "fmt/format.h"
 
 static auto get_all_locally_installed_versions() -> std::vector<Version>
 {
@@ -406,6 +407,11 @@ void VersionManager::imgui_manage_versions()
             ImGui::EndPopup();
         }
         ImGui::PopID();
+        if(version_manager().status_of_fetch_list_of_versions() == Status::Waiting){
+            ImGui::PushFont(Cool::Font::italic());
+            ImGui::Text("Loading...");
+            ImGui::PopFont();
+        }
     }
 }
 

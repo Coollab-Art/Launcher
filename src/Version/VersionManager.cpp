@@ -412,6 +412,29 @@ void VersionManager::imgui_manage_versions()
             ImGui::Text("Loading...");
             ImGui::PopFont();
         }
+
+        if(version.should_delete_if_unused)
+        {
+            version.should_delete_if_unused = false;
+
+            auto compatibles = compatibility.compatible_versions(version.name);
+            bool has_compatible_installed = std::any_of(
+                compatibles.begin(), compatibles.end(),
+                [&](auto const& v){
+                    return version_manager().find(v.name, true) != nullptr;
+                }
+            );
+
+            if(!has_compatible_installed)
+            {
+                keep_versions.insert(version.name);
+            }
+
+            if(!keep_versions.contains(version.name) && version.installation_status == InstallationStatus::Installed)
+            {
+                uninstall(version);
+            }
+        }
     }
 }
 

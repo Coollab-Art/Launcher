@@ -1,5 +1,6 @@
 #include "Task_FetchListOfVersions.hpp"
 #include "Cool/Task/TaskManager.hpp"
+#include "DebugOptions/DebugOptions.hpp"
 #include "LauncherSettings.hpp"
 #include "Status.hpp"
 #include "VersionManager.hpp"
@@ -78,6 +79,11 @@ void Task_FetchListOfVersions::execute()
     { // Uninstall unused versions
         if(launcher_settings().automatically_uninstall_unused_versions)
         {
+            if(Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
+            {
+                Cool::Log::internal_info("Uninstall unused versions", "Checking versions...");
+            }
+
             for(auto& version : version_manager().versions(false))
             {
                 std::set<VersionName> keep_versions{};
@@ -97,8 +103,18 @@ void Task_FetchListOfVersions::execute()
 
                 if(!keep_versions.contains(version.name) && version.installation_status == InstallationStatus::Installed)
                 {
+                    if(Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
+                    {
+                        Cool::Log::internal_info("Uninstall unused versions", "Uninstalling version " + version.name.as_string() + "...");
+                    }
+
                     version_manager().uninstall(version);
                 }
+            }
+
+            if(Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
+            {
+                Cool::Log::internal_info("Uninstall unused versions", "Check complete");
             }
         }
     }

@@ -18,6 +18,8 @@ void LauncherSettings::imgui()
     b |= Cool::ImGuiExtras::toggle("Show experimental versions", &show_experimental_versions);
     Cool::ImGuiExtras::help_marker("These versions are highly unstable and should only be used if you know what you are doing");
 
+    b |= Cool::ImGuiExtras::toggle("Automatically uninstall unused versions at startup", &automatically_uninstall_unused_versions);
+
     if (b)
         _serializer.save();
 }

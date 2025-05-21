@@ -5,12 +5,11 @@
 #include "Cool/View/ViewsManager.h"
 #include "Cool/Window/Window.h"
 #include "Cool/Window/WindowManager.h"
-#include "LauncherSettings.hpp"
-#include "Path.hpp"
+#include "DebugOptions/DebugOptions.hpp"
 #include "Project/ProjectManager.hpp"
 #include "Version/VersionRef.hpp"
 
-using DebugOptionsManager = Cool::DebugOptionsManager<Cool::DebugOptions>;
+using DebugOptionsManager = Cool::DebugOptionsManager<Launcher::DebugOptions, Cool::DebugOptions>;
 
 class App : public Cool::IApp {
 public:

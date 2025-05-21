@@ -1,5 +1,6 @@
 #include "Task_FetchListOfVersions.hpp"
 #include "Cool/Task/TaskManager.hpp"
+#include "LauncherSettings.hpp"
 #include "Status.hpp"
 #include "VersionManager.hpp"
 #include "make_http_request.hpp"
@@ -73,6 +74,31 @@ void Task_FetchListOfVersions::execute()
 
     if (_warning_notification_id.has_value())
         ImGuiNotify::close_immediately(*_warning_notification_id);
+
+    { // Uninstall unused versions
+        for(auto& version : version_manager().versions(false))
+        {
+            std::set<VersionName> keep_versions{};
+
+            auto compatibles = version_compatibility().compatible_versions(version.name);
+            bool has_compatible_installed = std::any_of(
+                compatibles.begin(), compatibles.end(),
+                [&](auto const& v){
+                    return version_manager().find(v.name, true) != nullptr;
+                }
+            );
+
+            if(!has_compatible_installed)
+            {
+                keep_versions.insert(version.name);
+            }
+
+            if(!keep_versions.contains(version.name) && version.installation_status == InstallationStatus::Installed)
+            {
+                version_manager().uninstall(version);
+            }
+        }
+    }
 }
 
 void Task_FetchListOfVersions::handle_error(httplib::Result const& res)

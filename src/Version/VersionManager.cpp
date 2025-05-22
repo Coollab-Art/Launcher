@@ -14,6 +14,7 @@
 #include "Cool/Task/TaskManager.hpp"
 #include "Cool/Task/WaitToExecuteTask.hpp"
 #include "Cool/Utils/overloaded.hpp"
+#include "DebugOptions/DebugOptions.hpp"
 #include "LauncherSettings.hpp"
 #include "Path.hpp"
 #include "Status.hpp"
@@ -70,6 +71,8 @@ VersionManager::VersionManager()
 {
     // TODO(Launcher) make sure to not send a request if we know which project to launch, and we already have that version, to save on the number of requests allowed by Github
     Cool::task_manager().submit(std::make_shared<Task_FetchListOfVersions>());
+
+    // if(_status_of_fetch_list_of_versions.load() == Status::Completed)
 }
 
 class WaitToExecuteTask_HasFetchedListOfVersions : public Cool::WaitToExecuteTask {
@@ -200,6 +203,47 @@ void VersionManager::uninstall(Version& version)
     version.installation_status = InstallationStatus::NotInstalled;
 }
 
+void VersionManager::uninstall_unused_versions()
+{
+    if(Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
+    {
+        Cool::Log::internal_info("Uninstall unused versions", "Checking versions...");
+    }
+
+    for(auto& version : version_manager().versions(false))
+    {
+        std::set<VersionName> keep_versions{};
+
+        auto compatibles = version_compatibility().compatible_versions(version.name);
+        bool has_compatible_installed = std::any_of(
+            compatibles.begin(), compatibles.end(),
+            [&](auto const& v){
+                return version_manager().find(v.name, true) != nullptr;
+            }
+        );
+
+        if(!has_compatible_installed)
+        {
+            keep_versions.insert(version.name);
+        }
+
+        if(!keep_versions.contains(version.name) && version.installation_status == InstallationStatus::Installed)
+        {
+            if(Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
+            {
+                Cool::Log::internal_info("Uninstall unused versions", "Uninstalling version " + version.name.as_string() + "...");
+            }
+
+            version_manager().uninstall(version);
+        }
+    }
+
+    if(Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
+    {
+        Cool::Log::internal_info("Uninstall unused versions", "Check complete");
+    }
+}
+
 auto VersionManager::find(VersionName const& name, bool filter_experimental_versions) const -> Version const*
 {
     // auto lock = std::unique_lock{_mutex};
@@ -322,6 +366,9 @@ void VersionManager::on_finished_fetching_list_of_versions()
 
     if (launcher_settings().automatically_install_latest_version)
         install_latest_version(true /*filter_experimental_versions*/);
+
+    if(launcher_settings().automatically_uninstall_unused_versions)
+        uninstall_unused_versions();
 }
 
 auto VersionManager::is_installed(VersionName const& version_name, bool filter_experimental_versions) const -> bool

@@ -30,6 +30,8 @@ public:
     auto status_of_fetch_list_of_versions() const -> Status { return _status_of_fetch_list_of_versions.load(); }
     auto is_installed(VersionName const&, bool filter_experimental_versions) const -> bool;
 
+    void uninstall_unused_versions();
+
     auto label(VersionRef const&, bool filter_experimental_versions) const -> std::string;
 
 private:

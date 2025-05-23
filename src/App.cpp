@@ -5,6 +5,7 @@
 #include "Cool/File/File.h"
 #include "Cool/ImGui/ColorThemes.h"
 #include "Cool/ImGui/ImGuiExtras.h"
+#include "Cool/Log/Log.hpp"
 #include "Cool/Log/file_logger_path.hpp"
 #include "Cool/Log/message_console.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
@@ -210,6 +211,7 @@ void App::launch(Project const& project)
         });
         return;
     }
+
     version_manager().install_ifn_and_launch(*version, FileToOpen{project.file_path()});
 }
 

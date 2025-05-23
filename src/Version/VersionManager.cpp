@@ -127,6 +127,16 @@ auto VersionManager::after_version_installed(VersionRef const& version_ref) -> s
                 else // NOLINT(*else-after-return)
                     return after_latest_version_installed();
             },
+            [&](LatestInstalledStableVersion) -> std::shared_ptr<Cool::WaitToExecuteTask> {
+                if (has_at_least_one_version_installed(/*filter_experimental_versions=*/true))
+                    return after_nothing();
+
+                auto const install_task = get_latest_installing_version_if_any(/*filter_experimental_versions=*/true);
+                if (install_task)
+                    return after(install_task);
+                else
+                    return after_latest_version_installed(); // or create a stable-only alternative
+            },
             [&](VersionName const& version_name) -> std::shared_ptr<Cool::WaitToExecuteTask> {
                 if (is_installed(version_name, false /*filter_experimental_versions*/))
                     return after_nothing();
@@ -164,6 +174,30 @@ auto VersionManager::get_latest_installing_version_if_any() const -> std::shared
             res      = task;
         }
     }
+    return res;
+}
+
+auto VersionManager::get_latest_installing_version_if_any(bool filter_experimental_versions) const
+    -> std::shared_ptr<Cool::Task>
+{
+    auto res      = std::shared_ptr<Cool::Task>{};
+    auto ver_name = std::optional<VersionName>{};
+
+    for (auto const& [version_name, task] : _install_tasks)
+    {
+        if (task->has_been_canceled() || task->has_been_executed())
+            continue;
+
+        if (filter_experimental_versions && version_name.is_experimental())
+            continue;
+
+        if (!ver_name || *ver_name < version_name)
+        {
+            ver_name = version_name;
+            res      = task;
+        }
+    }
+
     return res;
 }
 
@@ -283,6 +317,9 @@ auto VersionManager::find_installed_version(VersionRef const& version_ref, bool 
             },
             [&](LatestInstalledVersion) {
                 return latest_installed_version_no_locking(filter_experimental_versions);
+            },
+            [&](LatestInstalledStableVersion) {
+                return latest_installed_version_no_locking(/*filter_experimental_versions=*/true);
             },
             [&](VersionName const& name) {
                 return find(name, filter_experimental_versions);
@@ -472,6 +509,12 @@ auto VersionManager::label(VersionRef const& ref, bool filter_experimental_versi
                 if (!version)
                     version = latest_version_no_locking(filter_experimental_versions);
                 return fmt::format("Latest Installed ({})", version ? version->name.as_string() : "None");
+            },
+            [&](LatestInstalledStableVersion) {
+                auto const* version = latest_installed_version_no_locking(/*filter_experimental_versions=*/true);
+                if (!version)
+                    version = latest_version_no_locking(/*filter_experimental_versions=*/true);
+                return fmt::format("Latest Installed Stable ({})", version ? version->name.as_string() : "None");
             },
             [&](LatestVersion) {
                 auto const* const version = latest_version_no_locking(filter_experimental_versions);

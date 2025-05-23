@@ -7,6 +7,7 @@
 #include "LauncherSettings.hpp"
 #include "ProjectToOpenOrCreate.hpp"
 #include "Status.hpp"
+#include "Task_InstallVersion.hpp"
 #include "Version.hpp"
 #include "VersionName.hpp"
 #include "VersionRef.hpp"
@@ -45,6 +46,7 @@ private:
     void with_version_found_or_created(VersionName const& name, bool filter_experimental_versions, std::function<void(Version&)> const& callback);
     auto has_at_least_one_version_installed(bool filter_experimental_versions) const -> bool;
     auto get_latest_installing_version_if_any() const -> std::shared_ptr<Cool::Task>;
+    auto get_latest_installing_version_if_any(bool filter_experimental_versions) const -> std::shared_ptr<Cool::Task>;
 
     void install(Version const&);
     void uninstall(Version&);

@@ -121,7 +121,7 @@ auto VersionManager::after_version_installed(VersionRef const& version_ref) -> s
                 if (has_at_least_one_version_installed(true /*filter_experimental_versions*/))
                     return after_nothing();
 
-                auto const install_task = get_latest_installing_version_if_any();
+                auto const install_task = get_latest_installing_version_if_any(false);
                 if (install_task)
                     return after(install_task);
                 else // NOLINT(*else-after-return)
@@ -158,23 +158,6 @@ auto VersionManager::get_install_task_or_create_and_submit_it(VersionName const&
     Cool::task_manager().submit(after_has_fetched_list_of_versions(), install_task);
     _install_tasks.insert(std::make_pair(version_name, install_task));
     return install_task;
-}
-
-auto VersionManager::get_latest_installing_version_if_any() const -> std::shared_ptr<Cool::Task>
-{
-    auto res      = std::shared_ptr<Cool::Task>{};
-    auto ver_name = std::optional<VersionName>{};
-    for (auto const& [version_name, task] : _install_tasks)
-    {
-        if (task->has_been_canceled() || task->has_been_executed())
-            continue;
-        if (!ver_name || *ver_name < version_name)
-        {
-            ver_name = version_name;
-            res      = task;
-        }
-    }
-    return res;
 }
 
 auto VersionManager::get_latest_installing_version_if_any(bool filter_experimental_versions) const
@@ -514,7 +497,7 @@ auto VersionManager::label(VersionRef const& ref, bool filter_experimental_versi
                 auto const* version = latest_installed_version_no_locking(/*filter_experimental_versions=*/true);
                 if (!version)
                     version = latest_version_no_locking(/*filter_experimental_versions=*/true);
-                return fmt::format("Latest Installed Stable ({})", version ? version->name.as_string() : "None");
+                return fmt::format("Latest Installed ({})", version ? version->name.as_string() : "None");
             },
             [&](LatestVersion) {
                 auto const* const version = latest_version_no_locking(filter_experimental_versions);

@@ -30,7 +30,7 @@ private:
 
 private:
     ProjectManager        _project_manager{};
-    VersionRef            _version_to_use_for_new_project{LatestInstalledStableVersion{}};
+    VersionRef            _version_to_use_for_new_project{LatestInstalledVersion{}};
     Cool::Window&         _window; // NOLINT(*avoid-const-or-ref-data-members)
     std::filesystem::path _projects_folder{};
 

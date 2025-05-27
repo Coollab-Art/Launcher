@@ -8,14 +8,9 @@ struct LatestInstalledVersion {
     friend auto operator==(LatestInstalledVersion const&, LatestInstalledVersion const&) -> bool { return true; }
 };
 
-struct LatestInstalledStableVersion {
-    friend auto operator==(LatestInstalledStableVersion const&, LatestInstalledStableVersion const&) -> bool { return true; }
-};
-
 using VersionRef = std::variant<
     LatestVersion,
     LatestInstalledVersion,
-    LatestInstalledStableVersion,
     VersionName>;
 
 auto as_string(VersionRef const&) -> std::string;

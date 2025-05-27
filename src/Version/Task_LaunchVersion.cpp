@@ -75,7 +75,7 @@ void Task_LaunchVersion::cleanup(bool /* has_been_canceled */)
 
 void Task_LaunchVersion::execute()
 {
-    auto const* const version = version_manager().find_installed_version(_version_ref, false /*filter_experimental_versions*/);
+    auto const* const version = version_manager().find_installed_version(_version_ref, true /*filter_experimental_versions*/);
     if (!version || version->installation_status != InstallationStatus::Installed)
     {
         _error_message = fmt::format("Can't launch because we failed to install {}", as_string(_version_ref));

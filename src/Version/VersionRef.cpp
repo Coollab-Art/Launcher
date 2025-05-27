@@ -11,9 +11,6 @@ auto as_string(VersionRef const& version_ref) -> std::string
             [&](LatestInstalledVersion) {
                 return "latest installed version"s;
             },
-            [&](LatestInstalledStableVersion) {
-                return "latest installed stable version"s;
-            },
             [](VersionName const& name) {
                 return name.as_string();
             }

@@ -5,8 +5,8 @@
 struct LauncherSettings {
     bool automatically_install_latest_version{true};
     bool automatically_upgrade_projects_to_latest_compatible_version{true};
+    bool automatically_uninstall_unused_versions{true};
     bool show_experimental_versions{false};
-    bool automatically_uninstall_unused_versions{false};
 
     void imgui();
     void save() { _serializer.save(); }

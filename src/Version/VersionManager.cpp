@@ -248,7 +248,7 @@ void VersionManager::uninstall_unused_versions()
         {
             if(Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
             {
-                Cool::Log::internal_info("Uninstall unused versions", "Uninstalling version " + version.name.as_string() + "...");
+                Cool::Log::internal_info("Uninstall unused versions", fmt::format("Uninstalling version {}...", version.name.as_string()));
             }
 
             version_manager().uninstall(version);

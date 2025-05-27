@@ -53,9 +53,12 @@ ProjectManager::ProjectManager()
     });
 }
 
-static auto project_name_error_message(std::string const& name, std::string const& current_name, std::filesystem::path const& new_path) -> std::optional<std::string>
+static auto project_name_error_message(std::string const& name,
+                                       std::string const& current_name,
+                                       std::filesystem::path const& new_path,
+                                       std::filesystem::path const& current_path) -> std::optional<std::string>
 {
-    if (Cool::File::exists(new_path) && name != current_name)
+    if (Cool::File::exists(new_path) && name != current_name && !std::filesystem::equivalent(new_path, current_path))
         return "Name already used by another project";
 
     if (name.empty())
@@ -248,8 +251,9 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
         {
             if (ImGui::IsWindowAppearing())
                 ImGui::SetKeyboardFocusHere();
-            auto       new_path  = Cool::File::with_extension(Cool::File::without_file_name(project.file_path()) / project._next_name, COOLLAB_FILE_EXTENSION);
-            auto const maybe_err = project_name_error_message(project._next_name, project.name(), new_path);
+            auto new_path = Cool::File::with_extension(Cool::File::without_file_name(project.file_path()) / project._next_name, COOLLAB_FILE_EXTENSION);
+            auto current_path = Cool::File::with_extension(Cool::File::without_file_name(project.file_path()) / project.name(),COOLLAB_FILE_EXTENSION);
+            auto const maybe_err = project_name_error_message(project._next_name, project.name(), new_path, current_path);
             if (ImGui::InputText("##name", &project._next_name, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
             {
                 if (!maybe_err.has_value())
@@ -257,7 +261,10 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                     ImGui::CloseCurrentPopup();
                     if (project._next_name != project.name())
                     {
-                        new_path                   = Cool::File::find_available_path(new_path, Cool::PathChecks{});
+                        if (!std::filesystem::equivalent(new_path, project.file_path()))
+                        {
+                            new_path = Cool::File::find_available_path(new_path, Cool::PathChecks{});
+                        }
                         auto const old_info_folder = project.info_folder_path();
                         if (Cool::File::rename(project.file_path(), new_path))
                         {

@@ -1,0 +1,45 @@
+{
+    "Presets": {
+        "Underlying container": [
+            {
+                "first": "188ffcb7-94a6-4633-9c1e-b90124993356",
+                "second": {
+                    "Name": "Default",
+                    "Values": [
+                        {
+                            "index": 24,
+                            "data": {
+                                "Name": "Speed",
+                                "Value": 1.0,
+                                "Metadata": {
+                                    "Min": 0.0,
+                                    "Max": 1.0,
+                                    "Has min bound": false,
+                                    "Has max bound": false,
+                                    "Drag speed": 0.0010000000474974514
+                                }
+                            }
+                        },
+                        {
+                            "index": 26,
+                            "data": {
+                                "Name": "Offset",
+                                "Value": {
+                                    "Nanoseconds": 0
+                                },
+                                "Metadata": {
+                                    "Min": 0.0,
+                                    "Max": 10.0,
+                                    "Has min bound": false,
+                                    "Has max bound": false,
+                                    "Drag speed": 0.009999999776482582,
+                                    "Show milliseconds": true
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

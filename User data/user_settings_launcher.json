@@ -1,0 +1,5 @@
+{
+ "Automatically install latest version": true,
+ "Automatically uninstall unused versions": true,
+ "Automatically upgrade projects to latest compatible version": true
+}

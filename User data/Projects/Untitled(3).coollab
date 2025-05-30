@@ -1,0 +1,414 @@
+1.2.0 MacOS
+{
+    "Project": {
+        "Time": {
+            "Time": {
+                "Nanoseconds": 0
+            },
+            "Speed": {
+                "Ref": {
+                    "Variable": {
+                        "ptr_wrapper": {
+                            "id": 2147483649,
+                            "data": {
+                                "Name": "##TimeSpeed",
+                                "Value": 1.0,
+                                "Metadata": {
+                                    "Min": 0.0,
+                                    "Max": 1.0,
+                                    "Has min bound": true,
+                                    "Has max bound": false,
+                                    "Drag speed": 0.0010000000474974514
+                                },
+                                "Default Value": 1.0,
+                                "Default Metadata": {
+                                    "Min": 0.0,
+                                    "Max": 1.0,
+                                    "Has min bound": true,
+                                    "Has max bound": false,
+                                    "Drag speed": 0.0010000000474974514
+                                }
+                            }
+                        }
+                    },
+                    "Dirty flag": {
+                        "Is dirty": {
+                            "ptr_wrapper": {
+                                "id": 2147483650,
+                                "data": true
+                            }
+                        }
+                    },
+                    "Secondary dirty flag": {
+                        "Is dirty": {
+                            "ptr_wrapper": {
+                                "id": 2147483651,
+                                "data": true
+                            }
+                        }
+                    },
+                    "Desired color space": 0
+                }
+            },
+            "Is playing": false
+        },
+        "View Constraint": {
+            "Is controlling the number of pixels": false,
+            "Number of pixels": 250000
+        },
+        "Exporter (Image and Video)": {
+            "Exporter (Image and Video)": {
+                "Video Settings": {
+                    "FPS": 30.0,
+                    "Beginning": {
+                        "Nanoseconds": 0
+                    },
+                    "End": {
+                        "Nanoseconds": 10000000000
+                    }
+                },
+                "Image Size": {
+                    "Size": {
+                        "w": 1920,
+                        "h": 1080
+                    },
+                    "Aspect Ratio is Locked": true
+                },
+                "Image Output File": {
+                    "nullopt": true
+                },
+                "Video Output Folder": {
+                    "nullopt": true
+                }
+            }
+        },
+        "Camera 3D Manager": {
+            "Camera": {
+                "Ref": {
+                    "Variable": {
+                        "ptr_wrapper": {
+                            "id": 2147483652,
+                            "data": {
+                                "Name": "3D Camera",
+                                "Value": {
+                                    "Transform": {
+                                        "value0": 0.5494011640548706,
+                                        "value1": 0.8355584740638733,
+                                        "value2": 0.0,
+                                        "value3": -0.0,
+                                        "value4": -0.4202671945095062,
+                                        "value5": 0.2763364911079407,
+                                        "value6": 0.8642993569374085,
+                                        "value7": 0.0,
+                                        "value8": 0.7221728563308716,
+                                        "value9": -0.4748471975326538,
+                                        "value10": 0.5029775500297546,
+                                        "value11": -0.0,
+                                        "value12": 2.6478638648986818,
+                                        "value13": -1.7410386800765992,
+                                        "value14": 1.8441791534423829,
+                                        "value15": 1.0
+                                    },
+                                    "Projection": {
+                                        "Field of View (in radians)": 1.5707963705062867,
+                                        "Near Plane": 0.10000000149011612,
+                                        "Far Plane": 200.0
+                                    }
+                                },
+                                "Metadata": {},
+                                "Default Value": {
+                                    "Transform": {
+                                        "value0": 0.5494011640548706,
+                                        "value1": 0.8355584740638733,
+                                        "value2": 0.0,
+                                        "value3": -0.0,
+                                        "value4": -0.4202671945095062,
+                                        "value5": 0.2763364911079407,
+                                        "value6": 0.8642993569374085,
+                                        "value7": 0.0,
+                                        "value8": 0.7221728563308716,
+                                        "value9": -0.4748471975326538,
+                                        "value10": 0.5029775500297546,
+                                        "value11": -0.0,
+                                        "value12": 2.6478638648986818,
+                                        "value13": -1.7410386800765992,
+                                        "value14": 1.8441791534423829,
+                                        "value15": 1.0
+                                    },
+                                    "Projection": {
+                                        "Field of View (in radians)": 1.5707963705062867,
+                                        "Near Plane": 0.10000000149011612,
+                                        "Far Plane": 200.0
+                                    }
+                                },
+                                "Default Metadata": {}
+                            }
+                        }
+                    },
+                    "Dirty flag": {
+                        "Is dirty": {
+                            "ptr_wrapper": {
+                                "id": 2147483653,
+                                "data": false
+                            }
+                        }
+                    },
+                    "Secondary dirty flag": {
+                        "Is dirty": {
+                            "ptr_wrapper": {
+                                "id": 2147483654,
+                                "data": true
+                            }
+                        }
+                    },
+                    "Desired color space": 0
+                }
+            },
+            "View controller": {
+                "Mode": 1,
+                "Translation Speed": 0.009999999776482582,
+                "Rotation Speed": 0.009999999776482582,
+                "Distance to Orbit Center": 5.0
+            },
+            "Is editable in view": false
+        },
+        "Camera 2D Manager": {
+            "Camera": {
+                "Ref": {
+                    "Variable": {
+                        "ptr_wrapper": {
+                            "id": 2147483655,
+                            "data": {
+                                "Name": "2D Camera",
+                                "Value": {
+                                    "Translation": {
+                                        "x": 0.0,
+                                        "y": 0.0
+                                    },
+                                    "Zoom": 1.0,
+                                    "Rotation": {
+                                        "Radians": {
+                                            "Radians": 0.0
+                                        }
+                                    }
+                                },
+                                "Metadata": {
+                                    "Number of snaps": 24,
+                                    "Snaps offset (in radians)": 0.0,
+                                    "Always snap": false
+                                },
+                                "Default Value": {
+                                    "Translation": {
+                                        "x": 0.0,
+                                        "y": 0.0
+                                    },
+                                    "Zoom": 1.0,
+                                    "Rotation": {
+                                        "Radians": {
+                                            "Radians": 0.0
+                                        }
+                                    }
+                                },
+                                "Default Metadata": {
+                                    "Number of snaps": 24,
+                                    "Snaps offset (in radians)": 0.0,
+                                    "Always snap": false
+                                }
+                            }
+                        }
+                    },
+                    "Dirty flag": {
+                        "Is dirty": {
+                            "ptr_wrapper": {
+                                "id": 5
+                            }
+                        }
+                    },
+                    "Secondary dirty flag": {
+                        "Is dirty": {
+                            "ptr_wrapper": {
+                                "id": 2147483656,
+                                "data": true
+                            }
+                        }
+                    },
+                    "Desired color space": 0
+                }
+            },
+            "Is editable in view": true
+        },
+        "Modules Graph": {
+            "ptr_wrapper": {
+                "valid": 1,
+                "data": {
+                    "Modules": [
+                        {
+                            "polymorphic_id": 2147483649,
+                            "polymorphic_name": "Lab::Module_Default",
+                            "ptr_wrapper": {
+                                "id": 2147483657,
+                                "data": {
+                                    "Base Module": {
+                                        "Name": "Default 0",
+                                        "Dirty Flag: needs to rerender": {
+                                            "Is dirty": {
+                                                "ptr_wrapper": {
+                                                    "id": 2147483658,
+                                                    "data": false
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "Dirty flags": {
+                        "Rerender": {
+                            "Is dirty": {
+                                "ptr_wrapper": {
+                                    "id": 5
+                                }
+                            }
+                        },
+                        "Rebuild": {
+                            "Is dirty": {
+                                "ptr_wrapper": {
+                                    "id": 2147483659,
+                                    "data": false
+                                }
+                            }
+                        }
+                    },
+                    "Node editor": {
+                        "Pimpl": {
+                            "polymorphic_id": 2147483650,
+                            "polymorphic_name": "Cool::NodesEditorImpl",
+                            "ptr_wrapper": {
+                                "valid": 1,
+                                "data": {
+                                    "Graph": {
+                                        "Nodes": {
+                                            "Underlying container": []
+                                        },
+                                        "Links": {
+                                            "Underlying container": []
+                                        }
+                                    },
+                                    "Frame nodes": [],
+                                    "Context": {
+                                        "UI State": "{\"nodes\":null,\"selection\":null,\"view\":{\"scroll\":{\"x\":0,\"y\":0},\"visible_rect\":{\"max\":{\"x\":1248,\"y\":914},\"min\":{\"x\":0,\"y\":0}},\"zoom\":1}}"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Main node ID": "00000000-0000-0000-0000-000000000000"
+                }
+            }
+        },
+        "History": {
+            "History": {
+                "Commits": [],
+                "Position in history": {
+                    "nullopt": true
+                },
+                "Max size": 1000
+            },
+            "Max saved size": 100
+        },
+        "Audio": {
+            "Window": {
+                "Is open": false
+            },
+            "File input": {
+                "Path": "",
+                "Properties": {
+                    "Volume": 1.0,
+                    "Is muted": false,
+                    "Does loop": true
+                }
+            },
+            "Device input": {
+                "Input Device": {
+                    "index": 0,
+                    "data": {}
+                },
+                "Volume": 30.0
+            },
+            "Current input mode": 0,
+            "Window size for waveform": 0.05000000074505806,
+            "Window size for spectrum": 0.014999999664723874,
+            "Window size for volume": 0.20000000298023225,
+            "Spectrum max frequency in Hz": 2500.0,
+            "Spectrum height scale": 1.0,
+            "Spectrum display as bars": true
+        },
+        "Webcams": {
+            "Window": {
+                "Is open": false
+            },
+            "Resolutions": []
+        },
+        "MIDI": {
+            "Window": {
+                "Is open": false
+            },
+            "All Values": {
+                "Values": {
+                    "value0": [],
+                    "value1": [],
+                    "value2": [],
+                    "value3": []
+                },
+                "Last button pressed": -1,
+                "Last last button pressed": -1,
+                "Time of last button pressed": {
+                    "time_since_epoch": {
+                        "count": 108687816346100
+                    }
+                }
+            }
+        },
+        "OSC": {
+            "Window": {
+                "Is open": false
+            },
+            "Endpoint": {
+                "Port": -1,
+                "IP Address": "Auto-detect"
+            },
+            "Values": []
+        },
+        "Server": {
+            "Port": -1,
+            "Window": {
+                "Is open": false
+            }
+        },
+        "Shared Aspect Ratio": {
+            "Aspect Ratio": 1.2984496355056763,
+            "Fill the View": true
+        },
+        "3D Model export settings": {
+            "Path": "mesh(0).ply"
+        },
+        "3D Model generation": {
+            "Settings": {
+                "Box size": {
+                    "x": 2.0,
+                    "y": 2.0,
+                    "z": 2.0
+                },
+                "Samples count": {
+                    "x": 75,
+                    "y": 75,
+                    "z": 75
+                }
+            }
+        },
+        "Output view": {
+            "Is open": false
+        }
+    }
+}

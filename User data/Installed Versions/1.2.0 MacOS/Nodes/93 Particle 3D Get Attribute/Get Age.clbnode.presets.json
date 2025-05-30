@@ -1,0 +1,30 @@
+{
+    "Presets": {
+        "Underlying container": [
+            {
+                "first": "e095d171-9881-4cdd-9f0e-6654a5af2eb3",
+                "second": {
+                    "Name": "Default",
+                    "Values": [
+                        {
+                            "index": 0,
+                            "data": {
+                                "Name": "Is Relative",
+                                "Value": true,
+                                "Metadata": {}
+                            }
+                        },
+                        {
+                            "index": 0,
+                            "data": {
+                                "Name": "Is Increasing",
+                                "Value": true,
+                                "Metadata": {}
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

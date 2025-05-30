@@ -1,0 +1,6 @@
+INPUT float 'Threshold';
+
+float main(float Image)
+{
+    return antialiased_step('Threshold' - Image);
+}

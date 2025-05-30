@@ -1,0 +1,62 @@
+{
+    "Presets": {
+        "Underlying container": [
+            {
+                "first": "4d5d1906-a2ae-4173-9a13-8a0b19c561e8",
+                "second": {
+                    "Name": "Default",
+                    "Values": [
+                        {
+                            "index": 3,
+                            "data": {
+                                "Name": "Point 1",
+                                "Value": {
+                                    "Point2D": {
+                                        "x": -0.5,
+                                        "y": 0.0
+                                    }
+                                },
+                                "Metadata": {
+                                    "Drag speed": 0.00009999999747378752
+                                }
+                            }
+                        },
+                        {
+                            "index": 3,
+                            "data": {
+                                "Name": "Point 2",
+                                "Value": {
+                                    "Point2D": {
+                                        "x": 0.5,
+                                        "y": 0.0
+                                    }
+                                },
+                                "Metadata": {
+                                    "Drag speed": 0.00009999999747378752
+                                }
+                            }
+                        },
+                        {
+                            "index": 2,
+                            "data": {
+                                "Name": "Thickness",
+                                "Value": 0.019999999552965165,
+                                "Metadata": {
+                                    "Bounds": {
+                                        "Has min bound": true,
+                                        "Min": 0.0,
+                                        "Has max bound": false,
+                                        "Max": 1.0,
+                                        "Drag speed": 0.0010000000474974514,
+                                        "Use slider": false,
+                                        "Is logarithmic": false
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,66 @@
+{
+    "Presets": {
+        "Underlying container": [
+            {
+                "first": "3fc7d114-451c-4814-9d3e-5af5660f50ef",
+                "second": {
+                    "Name": "Default",
+                    "Values": [
+                        {
+                            "index": 2,
+                            "data": {
+                                "Name": "Time",
+                                "Value": 0.0,
+                                "Metadata": {
+                                    "Bounds": {
+                                        "Has min bound": false,
+                                        "Min": 0.0,
+                                        "Has max bound": false,
+                                        "Max": 1.0,
+                                        "Drag speed": 0.009999999776482582,
+                                        "Use slider": false,
+                                        "Is logarithmic": false
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "index": 1,
+                            "data": {
+                                "Name": "Splits",
+                                "Value": 6,
+                                "Metadata": {
+                                    "Bounds": {
+                                        "Has min bound": true,
+                                        "Min": 1,
+                                        "Has max bound": false,
+                                        "Max": 12,
+                                        "Drag speed": 0.019999999552965165,
+                                        "Use slider": false,
+                                        "Is logarithmic": false
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "index": 11,
+                            "data": {
+                                "Name": "Angle",
+                                "Value": {
+                                    "Radians": {
+                                        "Radians": 0.0
+                                    }
+                                },
+                                "Metadata": {
+                                    "Number of snaps": 24,
+                                    "Snaps offset (in radians)": 0.0,
+                                    "Always snap": false
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

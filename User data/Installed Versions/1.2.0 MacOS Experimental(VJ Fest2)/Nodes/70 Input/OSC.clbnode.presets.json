@@ -1,0 +1,24 @@
+{
+    "Presets": {
+        "Underlying container": [
+            {
+                "first": "a0195af1-336a-470b-af2b-9f74d68de0e1",
+                "second": {
+                    "Name": "Default",
+                    "Values": [
+                        {
+                            "index": 23,
+                            "data": {
+                                "Name": "Channel Name",
+                                "Value": {
+                                    "Name": ""
+                                },
+                                "Metadata": {}
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

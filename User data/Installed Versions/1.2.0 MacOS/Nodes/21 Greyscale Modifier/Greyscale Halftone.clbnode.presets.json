@@ -1,0 +1,48 @@
+{
+    "Presets": {
+        "Underlying container": [
+            {
+                "first": "dc7ba170-2f04-4487-894c-34035fcfb49e",
+                "second": {
+                    "Name": "Default",
+                    "Values": [
+                        {
+                            "index": 11,
+                            "data": {
+                                "Name": "Angle",
+                                "Value": {
+                                    "Radians": {
+                                        "Radians": 0.0
+                                    }
+                                },
+                                "Metadata": {
+                                    "Number of snaps": 24,
+                                    "Snaps offset (in radians)": 0.0,
+                                    "Always snap": false
+                                }
+                            }
+                        },
+                        {
+                            "index": 2,
+                            "data": {
+                                "Name": "Scale",
+                                "Value": 150.0,
+                                "Metadata": {
+                                    "Bounds": {
+                                        "Has min bound": false,
+                                        "Min": 0.0,
+                                        "Has max bound": false,
+                                        "Max": 1.0,
+                                        "Drag speed": 0.10000000149011612,
+                                        "Use slider": false,
+                                        "Is logarithmic": false
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

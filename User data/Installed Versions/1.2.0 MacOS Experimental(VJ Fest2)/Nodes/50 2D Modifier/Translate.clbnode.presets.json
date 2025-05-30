@@ -1,0 +1,29 @@
+{
+    "Presets": {
+        "Underlying container": [
+            {
+                "first": "ae0971bd-d562-4a3c-9050-2aaa25c9e664",
+                "second": {
+                    "Name": "Default",
+                    "Values": [
+                        {
+                            "index": 3,
+                            "data": {
+                                "Name": "Translation",
+                                "Value": {
+                                    "Point2D": {
+                                        "x": 0.5,
+                                        "y": 0.0
+                                    }
+                                },
+                                "Metadata": {
+                                    "Drag speed": 0.00009999999747378752
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

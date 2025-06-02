@@ -1,5 +1,7 @@
 #include "velopack/include/Velopack.hpp"
+#include <cstddef>
 #include <iostream>
+#include <fstream>
 
 static void update_app()
 {
@@ -33,16 +35,27 @@ static void update_app()
     }
 }
 
+void LoggerCallback(void* user_data, const char* level, const char* message) {
+    std::ofstream log("velopack_log.txt", std::ios::app);
+    log << "[" << level << "] " << message << std::endl;
+}
+
 int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 {
     // This should run as early as possible in the main method.
     // Velopack may exit / restart the app at this point. 
     // See VelopackApp class for more options/configuration.
-    Velopack::VelopackApp::Build().Run();
+    Velopack::VelopackApp::Build().SetLogger(LoggerCallback, nullptr).Run();
+
+    std::wcout << L"App launched with arguments: ";
+    for (int i = 0; i < argc; ++i) {
+        std::wcout << argv[i] << L" ";
+    }
+    std::wcout << std::endl;
 
     // ... your other startup code here
-    std::wcout << "Running version: 1.0.0\n" << std::endl;
     update_app();
+    std::wcout << "Running version: 1.0.3\n" << std::endl;
 
     return 0;
 }

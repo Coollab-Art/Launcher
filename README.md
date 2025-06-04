@@ -1,4 +1,4 @@
-# Velopack tests# Velopack C++ setup steps
+# Velopack C++ setup steps
 
 For any help with the instructions below, refer to the online documentation for Velopack: https://docs.velopack.io/
 

@@ -12,7 +12,7 @@ For any help with the instructions below, refer to the online documentation for 
 ## After an update
 - Rebuild your app
 - Pack the new update under a new version number
-- Make sure the local server hosting the updates is still running
+- Make sure the server hosting the updates is still running
 - Run the app again under `AppData/Local/your-app-name/current`. The app should detect the update and apply it. Running the app again should use the new version.
 
 ## Debug

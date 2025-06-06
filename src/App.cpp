@@ -5,6 +5,7 @@
 #include "Cool/File/File.h"
 #include "Cool/ImGui/ColorThemes.h"
 #include "Cool/ImGui/ImGuiExtras.h"
+#include "Cool/ImGui/ImGuiExtrasStyle.h"
 #include "Cool/Log/file_logger_path.hpp"
 #include "Cool/Log/message_console.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
@@ -170,12 +171,14 @@ void App::imgui_menus()
         ImGui::EndMenu();
     }
 
-    ImGui::SetCursorPosX( // HACK while waiting for ImGui to support right-to-left layout. See issue https://github.com/ocornut/imgui/issues/5875
-        ImGui::GetWindowSize().x
-        - ImGui::CalcTextSize("Debug").x
-        - 3.f * ImGui::GetStyle().ItemSpacing.x
-        - ImGui::GetStyle().WindowPadding.x
-    );
+    ImGui::Dummy({
+        // HACK while waiting for ImGui to support right-to-left layout. See issue https://github.com/ocornut/imgui/issues/5875
+        ImGui::GetContentRegionAvail().x
+            - ImGui::CalcTextSize("Debug").x
+            - 2.f * Cool::ImGuiExtras::GetStyle().menu_bar_spacing.x
+            - std::max(Cool::ImGuiExtras::GetStyle().menu_bar_spacing.x - ImGui::GetStyle().WindowPadding.x, 0.f),
+        0.f,
+    });
     if (ImGui::BeginMenu("Debug"))
     {
         DebugOptionsManager::imgui_ui_for_all_options();

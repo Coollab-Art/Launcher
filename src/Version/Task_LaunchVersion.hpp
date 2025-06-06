@@ -10,15 +10,11 @@ class Task_LaunchVersion : public Cool::Task {
 public:
     explicit Task_LaunchVersion(VersionRef version_ref, ProjectToOpenOrCreate project_to_open_or_create);
 
-    auto name() const -> std::string override;
-
 private:
     void on_submit() override;
-    void execute() override;
-    void cleanup(bool has_been_canceled) override;
+    auto execute() -> Cool::TaskCoroutine override;
+    void cleanup_impl(bool has_been_canceled) override;
 
-    auto is_quick_task() const -> bool override { return true; }
-    void cancel() override {}
     auto needs_user_confirmation_to_cancel_when_closing_app() const -> bool override { return false; }
 
 private:

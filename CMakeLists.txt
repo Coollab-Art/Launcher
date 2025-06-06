@@ -30,8 +30,6 @@ if(WARNINGS_AS_ERRORS_FOR_COOLLAB_LAUNCHER)
     endif()
 endif()
 
-include(FetchContent)
-
 # Make sure we link the static version
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)

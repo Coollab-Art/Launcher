@@ -8,16 +8,16 @@
 #include "make_http_request.hpp"
 #include "parse_compatibility_file_line.hpp"
 
-void Task_FetchCompatibilityFile::execute()
+auto Task_FetchCompatibilityFile::execute() -> Cool::TaskCoroutine
 {
     auto const res = make_http_request("https://raw.githubusercontent.com/Coollab-Art/Coollab/refs/heads/main/versions_compatibility.txt", [&](uint64_t, uint64_t) {
-        return !_cancel.load();
+        return !has_been_canceled();
     });
 
     if (!res || res->status != 200)
     {
         handle_error(res);
-        return;
+        co_return;
     }
 
     auto compatibility_entries = std::vector<CompatibilityEntry>{};

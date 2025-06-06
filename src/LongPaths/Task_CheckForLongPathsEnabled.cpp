@@ -4,13 +4,13 @@
 #include "Cool/Task/TaskManager.hpp"
 
 #if defined(_WIN32)
-void Task_CheckForLongPathsEnabled::execute()
+auto Task_CheckForLongPathsEnabled::execute() -> Cool::TaskCoroutine
 {
     if (Cool::has_long_paths_enabled())
     {
         if (_notification_id.has_value())
             ImGuiNotify::close_immediately(*_notification_id);
-        return;
+        co_return;
     }
 
     if (!_notification_id.has_value())

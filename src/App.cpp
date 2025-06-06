@@ -4,8 +4,10 @@
 #include "Cool/DebugOptions/debug_options_windows.h"
 #include "Cool/File/File.h"
 #include "Cool/ImGui/ColorThemes.h"
+#include "Cool/ImGui/IcoMoonCodepoints.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/ImGui/ImGuiExtrasStyle.h"
+#include "Cool/ImGui/icon_fmt.h"
 #include "Cool/Log/file_logger_path.hpp"
 #include "Cool/Log/message_console.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
@@ -139,11 +141,11 @@ void App::imgui_windows()
     {
         ImGui::Begin("Projects");
 
-        if (ImGui::Button("Open external project"))
+        if (ImGui::Button(Cool::icon_fmt("Import project", ICOMOON_FOLDER_OPEN).c_str()))
             open_external_project();
         ImGui::SetItemTooltip("Browse your files to open a project that does not appear in the list of projects below");
 
-        ImGui::BeginChild("##projects_list"); // Child window to make sure the "Open external project" button stays at the top, and the scrollbar only affects the list of projects
+        ImGui::BeginChild("##projects_list"); // Child window to make sure the "Import project" button stays at the top, and the scrollbar only affects the list of projects
         _project_manager.imgui([&](Project const& project) { launch(project); });
         ImGui::EndChild();
         ImGui::End();

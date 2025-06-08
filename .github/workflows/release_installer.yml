@@ -222,7 +222,11 @@ jobs:
           sudo apt-get install -y appstream
           wget https://github.com/linuxdeploy/linuxdeploy/releases/latest/download/linuxdeploy-x86_64.AppImage
           chmod +x linuxdeploy-x86_64.AppImage
-          ./linuxdeploy-x86_64.AppImage --appdir Coollab-Launcher.AppDir --output appimage
+          ./linuxdeploy-x86_64.AppImage \
+            --appdir Coollab-Launcher.AppDir \
+            --desktop-file Coollab-Launcher.AppDir/usr/share/applications/Coollab-Launcher.desktop \
+            --icon-file Coollab-Launcher.AppDir/usr/share/icons/hicolor/256x256/apps/Coollab-Launcher.png \
+            --output appimage
           mv Coollab_Launcher-x86_64.AppImage Coollab-Launcher.AppImage
 
       - name: Release (Windows)

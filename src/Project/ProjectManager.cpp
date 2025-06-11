@@ -239,6 +239,13 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
             {
                 ImGui::SetClipboardText(project.file_path().string().c_str());
             }
+            if (ImGui::Selectable("Remove project from list"))
+            {
+                if (boxer::Selection::OK == boxer::show("Are you sure? This will not delete the project file", fmt::format("Removing project \"{}\" from the list", project.name()).c_str(), boxer::Style::Warning, boxer::Buttons::OKCancel))
+                {
+                    project_to_remove = it;
+                }
+            }
 #if DEBUG
             if (ImGui::Selectable("DEBUG: Open info folder"))
             {

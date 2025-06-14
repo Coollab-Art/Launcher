@@ -23,7 +23,7 @@ Task_LaunchVersion::Task_LaunchVersion(VersionRef version_ref, ProjectToOpenOrCr
                                                                 return "a new project"s;
                                                             },
                                                         },
-                                                        _project_to_open_or_create)),
+                                                        project_to_open_or_create)),
                  reg::generate_uuid() /* give a unique id to this task, so that we can cancel it */}
     , _version_ref{std::move(version_ref)}
     , _project_to_open_or_create{std::move(project_to_open_or_create)}

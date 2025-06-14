@@ -108,7 +108,7 @@ void Task_FetchListOfVersions::handle_error(httplib::Result const& res)
 
     auto const notification = ImGuiNotify::Notification{
         .type     = ImGuiNotify::Type::Warning,
-        .title    = "Failed to check for new versions online",
+        .title    = "Can't check for new versions",
         .content  = !res ? "No Internet connection" : message.value_or("Oops, our online versions provider is unavailable"),
         .duration = std::nullopt,
     };

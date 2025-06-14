@@ -195,7 +195,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
         if (ImGui::BeginPopupContextItem("##project_context_menu"))
         {
             Cool::ImGuiExtras::disabled_if(project.file_not_found(), "File not found", [&]() {
-                if (ImGui::Selectable("Make a copy"))
+                if (ImGui::Selectable("Make a copy", false, ImGuiSelectableFlags_SpanAllColumns /* HACK to work around a bug in ImGui (https://github.com/ocornut/imgui/issues/8203)*/))
                 {
                     auto const new_path = Cool::File::find_available_path(project.file_path(), Cool::PathChecks{});
                     Cool::File::copy_file(project.file_path(), new_path);
@@ -208,7 +208,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                     long_paths_checker().check(project_to_add->file_path());
 #endif
                 }
-                if (ImGui::Selectable("Rename"))
+                if (ImGui::Selectable("Rename", false, ImGuiSelectableFlags_SpanAllColumns /* HACK to work around a bug in ImGui (https://github.com/ocornut/imgui/issues/8203)*/))
                     ImGui::OpenPopup(rename_popup_id);
             });
             if (ImGui::Selectable("Delete project"))

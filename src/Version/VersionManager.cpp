@@ -400,7 +400,7 @@ void VersionManager::imgui_manage_versions()
         if (ImGui::BeginPopupContextItem("##version_context_menu"))
         {
             Cool::ImGuiExtras::disabled_if(version.installation_status != InstallationStatus::Installed, "Version is not installed", [&]() {
-                if (ImGui::Selectable("Reveal in File Explorer"))
+                if (ImGui::Selectable("Reveal in File Explorer", false, ImGuiSelectableFlags_SpanAllColumns /* HACK to work around a bug in ImGui (https://github.com/ocornut/imgui/issues/8203)*/))
                     Cool::open_focused_in_explorer(executable_path(version.name));
             });
             ImGui::EndPopup();

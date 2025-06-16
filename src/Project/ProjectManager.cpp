@@ -37,7 +37,7 @@ public:
           original_file(file_path),
           restored_project(file_path)  // Save project object to re-add
     {
-        backup_folder = std::filesystem::temp_directory_path() / "project_backup" / std::to_string(std::time(nullptr));
+        backup_folder = Cool::Path::user_data() / "project_backup" / std::to_string(std::time(nullptr));
         std::filesystem::create_directories(backup_folder);
 
         std::filesystem::copy(info_path, backup_folder / "info_folder", std::filesystem::copy_options::recursive);

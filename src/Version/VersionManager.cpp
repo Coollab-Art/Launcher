@@ -148,8 +148,7 @@ auto VersionManager::get_install_task_or_create_and_submit_it(VersionName const&
     return install_task;
 }
 
-auto VersionManager::get_latest_installing_version_if_any() const
-    -> std::shared_ptr<Cool::Task>
+auto VersionManager::get_latest_installing_version_if_any() const -> std::shared_ptr<Cool::Task>
 {
     auto res      = std::shared_ptr<Cool::Task>{};
     auto ver_name = std::optional<VersionName>{};

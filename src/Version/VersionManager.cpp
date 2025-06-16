@@ -119,7 +119,7 @@ auto VersionManager::after_version_installed(VersionRef const& version_ref) -> s
                 if (has_at_least_one_version_installed(true /*filter_experimental_versions*/))
                     return after_nothing();
 
-                auto const install_task = get_latest_installing_version_if_any(launcher_settings().show_experimental_versions);
+                auto const install_task = get_latest_installing_version_if_any();
                 if (install_task)
                     return after(install_task);
                 else // NOLINT(*else-after-return)
@@ -148,7 +148,7 @@ auto VersionManager::get_install_task_or_create_and_submit_it(VersionName const&
     return install_task;
 }
 
-auto VersionManager::get_latest_installing_version_if_any(bool filter_experimental_versions) const
+auto VersionManager::get_latest_installing_version_if_any() const
     -> std::shared_ptr<Cool::Task>
 {
     auto res      = std::shared_ptr<Cool::Task>{};
@@ -157,9 +157,6 @@ auto VersionManager::get_latest_installing_version_if_any(bool filter_experiment
     for (auto const& [version_name, task] : _install_tasks)
     {
         if (task->has_been_canceled() || task->has_been_executed())
-            continue;
-
-        if (!filter_experimental_versions && version_name.is_experimental())
             continue;
 
         if (!ver_name || *ver_name < version_name)

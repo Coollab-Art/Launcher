@@ -53,11 +53,27 @@ private:
 
     auto versions(bool filter_experimental_versions) const
     {
-        return _versions | ranges::views::filter([filter_experimental_versions](Version const& version) { return !version.name.is_experimental() || !filter_experimental_versions || launcher_settings().show_experimental_versions; });
+        return _versions | ranges::views::filter([filter_experimental_versions](Version const& version) {
+                   return !version.name.is_experimental() || !filter_experimental_versions || launcher_settings().show_experimental_versions;
+               });
     }
     auto versions(bool filter_experimental_versions)
     {
-        return _versions | ranges::views::filter([filter_experimental_versions](Version const& version) { return !version.name.is_experimental() || !filter_experimental_versions || launcher_settings().show_experimental_versions; });
+        return _versions | ranges::views::filter([filter_experimental_versions](Version const& version) {
+                   return !version.name.is_experimental() || !filter_experimental_versions || launcher_settings().show_experimental_versions;
+               });
+    }
+    auto installed_versions(bool filter_experimental_versions) const
+    {
+        return versions(filter_experimental_versions) | ranges::views::filter([](Version const& version) {
+                   return version.installation_status == InstallationStatus::Installed;
+               });
+    }
+    auto installed_versions(bool filter_experimental_versions)
+    {
+        return versions(filter_experimental_versions) | ranges::views::filter([](Version const& version) {
+                   return version.installation_status == InstallationStatus::Installed;
+               });
     }
 
 private:

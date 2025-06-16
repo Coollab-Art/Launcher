@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <open/open.hpp>
 #include <optional>
-#include <set>
 #include <tl/expected.hpp>
 #include <utility>
 #include "Cool/ImGui/Fonts.h"
@@ -211,43 +210,34 @@ void VersionManager::uninstall(Version& version)
 
 void VersionManager::uninstall_unused_versions()
 {
-    if (Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
+    if (!launcher_settings().automatically_upgrade_projects_to_latest_compatible_version)
     {
-        Cool::Log::internal_info("Uninstall unused versions", "Checking versions...");
+        if (Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
+            Cool::Log::internal_info("Uninstall unused versions", "Not checking because automatically_upgrade_projects_to_latest_compatible_version is disabled");
+        return;
     }
 
-    for (auto& version : version_manager().versions(false))
+    if (Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
+        Cool::Log::internal_info("Uninstall unused versions", "Checking for versions to uninstall");
+
+    for (auto& version : version_manager().installed_versions(false /*filter_experimental_versions*/))
     {
-        std::set<VersionName> keep_versions{};
+        auto const compatible_versions      = version_compatibility().compatible_versions(version.name);
+        bool const has_compatible_installed = std::any_of(compatible_versions.begin(), compatible_versions.end(), [&](auto const& version_name) {
+            return version_manager().is_installed(version_name, false /*filter_experimental_versions*/);
+        });
 
-        auto compatibles              = version_compatibility().compatible_versions(version.name);
-        bool has_compatible_installed = std::any_of(
-            compatibles.begin(), compatibles.end(),
-            [&](auto const& v) {
-                return version_manager().find(v.name, true) != nullptr;
-            }
-        );
-
-        if (!has_compatible_installed)
-        {
-            keep_versions.insert(version.name);
-        }
-
-        if (!keep_versions.contains(version.name) && version.installation_status == InstallationStatus::Installed)
+        if (has_compatible_installed)
         {
             if (Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
-            {
-                Cool::Log::internal_info("Uninstall unused versions", fmt::format("Uninstalling version {}...", version.name.as_string()));
-            }
+                Cool::Log::internal_info("Uninstall unused versions", fmt::format("Uninstalling {}", version.name.as_string()));
 
             version_manager().uninstall(version);
         }
     }
 
     if (Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
-    {
-        Cool::Log::internal_info("Uninstall unused versions", "Check complete");
-    }
+        Cool::Log::internal_info("Uninstall unused versions", "Done");
 }
 
 auto VersionManager::find(VersionName const& name, bool filter_experimental_versions) const -> Version const*

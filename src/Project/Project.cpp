@@ -127,7 +127,7 @@ void Project::imgui_version_to_upgrade_to()
         return;
     }
 
-    auto const compatible_versions = version_compatibility().compatible_versions(*current_version());
+    auto const compatible_versions = version_compatibility().compatible_and_semi_compatible_versions(*current_version());
     if (compatible_versions.empty())
     {
         Cool::ImGuiExtras::disabled_if(true, fmt::format("This project is already using the latest version compatible with {}", current_version()->as_string()).c_str(), [&]() {

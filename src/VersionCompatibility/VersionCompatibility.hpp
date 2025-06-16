@@ -11,7 +11,8 @@ struct VersionNameAndUpgradeInstructions {
 class VersionCompatibility {
 public:
     VersionCompatibility();
-    auto compatible_versions(VersionName const&) const -> std::vector<VersionNameAndUpgradeInstructions>;
+    auto compatible_and_semi_compatible_versions(VersionName const&) const -> std::vector<VersionNameAndUpgradeInstructions>;
+    auto compatible_versions(VersionName const&) const -> std::vector<VersionName>;
     auto version_to_upgrade_to_automatically(VersionName const&) const -> VersionToUpgradeTo;
 
 private:

@@ -22,7 +22,7 @@ VersionCompatibility::VersionCompatibility()
     Cool::task_manager().submit(std::make_shared<Task_FetchCompatibilityFile>()); // It's simpler to submit the task after parsing the file, it avoids concurrency if the fetch finishes before we finished parsing the file here
 }
 
-auto VersionCompatibility::compatible_versions(VersionName const& version_name) const -> std::vector<VersionNameAndUpgradeInstructions>
+auto VersionCompatibility::compatible_and_semi_compatible_versions(VersionName const& version_name) const -> std::vector<VersionNameAndUpgradeInstructions>
 {
     std::unique_lock lock{_mutex};
 
@@ -50,6 +50,49 @@ auto VersionCompatibility::compatible_versions(VersionName const& version_name) 
                 [&](SemiIncompatibility const& semi_incompatibility) {
                     if (found)
                         upgrade_instructions.push_back(semi_incompatibility.upgrade_instruction);
+                },
+                [&](Incompatibility) {
+                    if (found)
+                        do_break = true;
+                },
+            },
+            entry
+        );
+
+        if (do_break)
+            break;
+    }
+
+    return res;
+}
+
+auto VersionCompatibility::compatible_versions(VersionName const& version_name) const -> std::vector<VersionName>
+{
+    std::unique_lock lock{_mutex};
+
+    auto res = std::vector<VersionName>{};
+
+    bool found{false};
+    for (auto const& entry : _compatibility_entries | ranges::views::reverse)
+    {
+        bool do_break{false};
+        std::visit(
+            Cool::overloaded{
+                [&](VersionName const& ver) {
+                    if (found)
+                    {
+                        if (version_manager().find(ver, true /*filter_experimental_versions*/) != nullptr)
+                            res.emplace_back(VersionName{ver});
+                    }
+                    else
+                    {
+                        if (ver == version_name)
+                            found = true;
+                    }
+                },
+                [&](SemiIncompatibility const&) {
+                    if (found)
+                        do_break = true;
                 },
                 [&](Incompatibility) {
                     if (found)

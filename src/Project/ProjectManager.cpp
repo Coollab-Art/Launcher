@@ -16,6 +16,48 @@
 #include "boxer/boxer.h"
 #include "imgui.h"
 #include "open/open.hpp"
+#include <stack>
+
+class UndoAction {
+public:
+    virtual void undo() = 0;
+    virtual ~UndoAction() = default;
+};
+
+class UndoDeleteProjectAction : public UndoAction {
+    std::filesystem::path backup_folder;
+    std::filesystem::path original_folder;
+    std::filesystem::path original_file;
+    Project restored_project;
+
+public:
+    UndoDeleteProjectAction(const std::filesystem::path& info_path,
+                            const std::filesystem::path& file_path)
+        : original_folder(info_path),
+          original_file(file_path),
+          restored_project(file_path)  // Save project object to re-add
+    {
+        backup_folder = std::filesystem::temp_directory_path() / "project_backup" / std::to_string(std::time(nullptr));
+        std::filesystem::create_directories(backup_folder);
+
+        std::filesystem::copy(info_path, backup_folder / "info_folder", std::filesystem::copy_options::recursive);
+        std::filesystem::copy(file_path, backup_folder / "project_file");
+    }
+
+    Project undo_and_return_project() {
+        std::filesystem::copy(backup_folder / "info_folder", original_folder, std::filesystem::copy_options::recursive);
+        std::filesystem::copy(backup_folder / "project_file", original_file, std::filesystem::copy_options::overwrite_existing);
+        std::cout << "Restored deleted project from backup." << std::endl;
+        return restored_project;
+    }
+
+    void undo() override {
+        // Not used anymore, fallback
+        undo_and_return_project();
+    }
+};
+
+std::stack<std::unique_ptr<UndoAction>> undo_stack;
 
 ProjectManager::ProjectManager()
 {
@@ -99,6 +141,22 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
 {
     auto project_to_remove = _projects.end();
     auto project_to_add    = std::optional<Project>{};
+
+    std::optional<Project> restored_project{};
+
+    if (ImGui::IsKeyPressed(ImGuiKey_Z) && ImGui::GetIO().KeyCtrl)
+    {
+        if (!undo_stack.empty()) {
+            auto* action = dynamic_cast<UndoDeleteProjectAction*>(undo_stack.top().get());
+            if (action != nullptr) {
+                restored_project = action->undo_and_return_project();
+            } else {
+                undo_stack.top()->undo(); // fallback for other undo types
+            }
+            undo_stack.pop();
+        }
+    }
+
     for (auto it = _projects.begin(); it != _projects.end(); ++it)
     {
         // Items that are outside of the view can be "clipped". We still need to render them because otherwise ImGui doesn't know the
@@ -216,8 +274,16 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
             });
             if (ImGui::Selectable("Delete project"))
             {
-                if (boxer::Selection::OK == boxer::show("Are you sure? This cannot be undone", fmt::format("Deleting project \"{}\"", project.name()).c_str(), boxer::Style::Warning, boxer::Buttons::OKCancel))
+                if (boxer::Selection::OK == boxer::show(
+                        "Are you sure? This cannot be undone",
+                        fmt::format("Deleting project \"{}\"", project.name()).c_str(),
+                        boxer::Style::Warning,
+                        boxer::Buttons::OKCancel))
                 {
+                    // Backup before deleting
+                    undo_stack.push(std::make_unique<UndoDeleteProjectAction>(
+                        project.info_folder_path(), project.file_path()));
+
                     Cool::File::remove_folder(project.info_folder_path());
                     Cool::File::remove_file(project.file_path());
                     project_to_remove = it;
@@ -243,6 +309,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
             {
                 if (boxer::Selection::OK == boxer::show("Are you sure? This will not delete the project file", fmt::format("Removing project \"{}\" from the list", project.name()).c_str(), boxer::Style::Warning, boxer::Buttons::OKCancel))
                 {
+                    Cool::File::remove_folder(project.info_folder_path());
                     project_to_remove = it;
                 }
             }
@@ -303,4 +370,8 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
         _projects.erase(project_to_remove);
     if (project_to_add.has_value())
         _projects.insert(_projects.begin(), *project_to_add);
+
+    if (restored_project.has_value()) {
+        _projects.insert(_projects.begin(), *restored_project);
+}
 }

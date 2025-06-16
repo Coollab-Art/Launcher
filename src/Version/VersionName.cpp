@@ -1,7 +1,6 @@
 #include "VersionName.hpp"
 #include <cassert>
 #include <compare>
-#include "LauncherSettings.hpp"
 
 static auto is_number(char c) -> bool
 {

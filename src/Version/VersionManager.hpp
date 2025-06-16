@@ -11,8 +11,6 @@
 #include "Version.hpp"
 #include "VersionName.hpp"
 #include "VersionRef.hpp"
-#include "../VersionCompatibility/VersionCompatibility.hpp"
-#include <set>
 #include "range/v3/view.hpp"
 
 class VersionManager {
@@ -49,7 +47,7 @@ private:
 
     void install(Version const&);
     void uninstall(Version&);
-    
+
     auto after_version_installed(VersionRef const& version_ref) -> std::shared_ptr<Cool::WaitToExecuteTask>;
     auto get_install_task_or_create_and_submit_it(VersionName const&) -> std::shared_ptr<Cool::Task>;
 

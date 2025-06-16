@@ -1,6 +1,5 @@
 #include "parse_compatibility_file_line.hpp"
 #include "Cool/String/String.h"
-#include "LauncherSettings.hpp"
 
 void parse_compatibility_file_line(std::string const& line, std::vector<CompatibilityEntry>& entries)
 {

@@ -215,7 +215,6 @@ void App::launch(Project const& project)
         });
         return;
     }
-
     version_manager().install_ifn_and_launch(*version, FileToOpen{project.file_path()});
 }
 

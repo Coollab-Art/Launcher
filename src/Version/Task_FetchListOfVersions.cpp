@@ -1,7 +1,5 @@
 #include "Task_FetchListOfVersions.hpp"
 #include "Cool/Task/TaskManager.hpp"
-#include "DebugOptions/DebugOptions.hpp"
-#include "LauncherSettings.hpp"
 #include "Status.hpp"
 #include "VersionManager.hpp"
 #include "make_http_request.hpp"

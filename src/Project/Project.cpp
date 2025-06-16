@@ -50,7 +50,7 @@ auto Project::version_to_upgrade_to() const -> VersionToUpgradeTo
 
 auto Project::version_to_launch() const -> std::optional<VersionName>
 {
-    auto const use_version = std::visit(
+    return std::visit(
         Cool::overloaded{
             [](VersionName const& version_name) -> std::optional<VersionName> {
                 return version_name;
@@ -61,8 +61,6 @@ auto Project::version_to_launch() const -> std::optional<VersionName>
         },
         version_to_upgrade_to()
     );
-
-    return use_version;
 }
 
 auto Project::time_of_last_change() const -> std::filesystem::file_time_type const&

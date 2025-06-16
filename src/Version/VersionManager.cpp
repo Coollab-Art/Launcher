@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <open/open.hpp>
 #include <optional>
+#include <set>
 #include <tl/expected.hpp>
 #include <utility>
 #include "Cool/ImGui/Fonts.h"
@@ -26,8 +27,9 @@
 #include "VersionCompatibility/VersionCompatibility.hpp"
 #include "VersionName.hpp"
 #include "VersionRef.hpp"
-#include "installation_path.hpp"
 #include "fmt/format.h"
+#include "installation_path.hpp"
+
 
 static auto get_all_locally_installed_versions() -> std::vector<Version>
 {
@@ -71,8 +73,6 @@ VersionManager::VersionManager()
 {
     // TODO(Launcher) make sure to not send a request if we know which project to launch, and we already have that version, to save on the number of requests allowed by Github
     Cool::task_manager().submit(std::make_shared<Task_FetchListOfVersions>());
-
-    // if(_status_of_fetch_list_of_versions.load() == Status::Completed)
 }
 
 class WaitToExecuteTask_HasFetchedListOfVersions : public Cool::WaitToExecuteTask {
@@ -212,31 +212,31 @@ void VersionManager::uninstall(Version& version)
 
 void VersionManager::uninstall_unused_versions()
 {
-    if(Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
+    if (Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
     {
         Cool::Log::internal_info("Uninstall unused versions", "Checking versions...");
     }
 
-    for(auto& version : version_manager().versions(false))
+    for (auto& version : version_manager().versions(false))
     {
         std::set<VersionName> keep_versions{};
 
-        auto compatibles = version_compatibility().compatible_versions(version.name);
+        auto compatibles              = version_compatibility().compatible_versions(version.name);
         bool has_compatible_installed = std::any_of(
             compatibles.begin(), compatibles.end(),
-            [&](auto const& v){
+            [&](auto const& v) {
                 return version_manager().find(v.name, true) != nullptr;
             }
         );
 
-        if(!has_compatible_installed)
+        if (!has_compatible_installed)
         {
             keep_versions.insert(version.name);
         }
 
-        if(!keep_versions.contains(version.name) && version.installation_status == InstallationStatus::Installed)
+        if (!keep_versions.contains(version.name) && version.installation_status == InstallationStatus::Installed)
         {
-            if(Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
+            if (Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
             {
                 Cool::Log::internal_info("Uninstall unused versions", fmt::format("Uninstalling version {}...", version.name.as_string()));
             }
@@ -245,7 +245,7 @@ void VersionManager::uninstall_unused_versions()
         }
     }
 
-    if(Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
+    if (Launcher::DebugOptions::log_when_uninstalling_versions_automatically())
     {
         Cool::Log::internal_info("Uninstall unused versions", "Check complete");
     }
@@ -374,7 +374,7 @@ void VersionManager::on_finished_fetching_list_of_versions()
     if (launcher_settings().automatically_install_latest_version)
         install_latest_version(true /*filter_experimental_versions*/);
 
-    if(launcher_settings().automatically_uninstall_unused_versions)
+    if (launcher_settings().automatically_uninstall_unused_versions)
         uninstall_unused_versions();
 }
 
@@ -462,7 +462,8 @@ void VersionManager::imgui_manage_versions()
             ImGui::EndPopup();
         }
         ImGui::PopID();
-        if(version_manager().status_of_fetch_list_of_versions() == Status::Waiting){
+        if (version_manager().status_of_fetch_list_of_versions() == Status::Waiting)
+        {
             ImGui::PushFont(Cool::Font::italic());
             ImGui::Text("Loading...");
             ImGui::PopFont();

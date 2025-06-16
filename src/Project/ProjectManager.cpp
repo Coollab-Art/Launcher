@@ -289,6 +289,14 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                     project_to_remove = it;
                 }
             }
+            if (ImGui::Selectable("Remove from list"))
+            {
+                if (boxer::Selection::OK == boxer::show("Are you sure? This will not delete the project file", fmt::format("Removing project \"{}\" from the list", project.name()).c_str(), boxer::Style::Warning, boxer::Buttons::OKCancel))
+                {
+                    Cool::File::remove_folder(project.info_folder_path());
+                    project_to_remove = it;
+                }
+            }
 
             project.imgui_version_to_upgrade_to();
 
@@ -304,14 +312,6 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
             if (ImGui::Selectable("Copy file path"))
             {
                 ImGui::SetClipboardText(project.file_path().string().c_str());
-            }
-            if (ImGui::Selectable("Remove project from list"))
-            {
-                if (boxer::Selection::OK == boxer::show("Are you sure? This will not delete the project file", fmt::format("Removing project \"{}\" from the list", project.name()).c_str(), boxer::Style::Warning, boxer::Buttons::OKCancel))
-                {
-                    Cool::File::remove_folder(project.info_folder_path());
-                    project_to_remove = it;
-                }
             }
 #if DEBUG
             if (ImGui::Selectable("DEBUG: Open info folder"))

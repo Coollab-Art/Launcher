@@ -3,6 +3,8 @@
 #include <Cool/get_system_error.hpp>
 #include "Cool/File/File.h"
 #include "Cool/ImGui/markdown.h"
+#include "Cool/Task/TaskManager.hpp"
+#include "Cool/Task/TaskWithProgressBar.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "Version.hpp"
 #include "VersionManager.hpp"
@@ -173,11 +175,22 @@ void Task_InstallVersion::on_submit()
         version_manager().set_installation_status(*_version_name, InstallationStatus::Installing);
 }
 
-auto Task_InstallVersion::text_in_notification_while_waiting_to_execute() const -> std::string
+auto Task_InstallVersion::notification_when_submitted() const -> ImGuiNotify::Notification
 {
     if (version_manager().status_of_fetch_list_of_versions() == Status::Completed)
-        return Cool::TaskWithProgressBar::text_in_notification_while_waiting_to_execute();
-    return "Waiting to connect to the Internet";
+        return Cool::TaskWithProgressBar::notification_when_submitted();
+
+    return ImGuiNotify::Notification{
+        .type                 = ImGuiNotify::Type::Info,
+        .title                = name(),
+        .content              = "Waiting to connect to the Internet",
+        .custom_imgui_content = [task_id = owner_id()]() {
+            if (ImGui::Button("Cancel"))
+                Cool::task_manager().cancel_all(task_id);
+        },
+        .duration = std::nullopt,
+        .closable = false,
+    };
 }
 
 auto Task_InstallVersion::notification_after_execution_completes() const -> ImGuiNotify::Notification
@@ -208,9 +221,9 @@ auto Task_InstallVersion::extra_imgui_below_progress_bar() const -> std::functio
     };
 }
 
-void Task_InstallVersion::cleanup(bool has_been_canceled)
+void Task_InstallVersion::cleanup_impl(bool has_been_canceled)
 {
-    Cool::TaskWithProgressBar::cleanup(has_been_canceled);
+    Cool::TaskWithProgressBar::cleanup_impl(has_been_canceled);
 
     if (!_version_name.has_value())
         return;
@@ -226,7 +239,7 @@ void Task_InstallVersion::cleanup(bool has_been_canceled)
     }
 }
 
-void Task_InstallVersion::execute()
+auto Task_InstallVersion::execute() -> Cool::TaskCoroutine
 {
     // Find version name and/or download url if necessary
     // We need to do this in execute, because we might have been waiting for FetchListOfVersions to finish, so we didn't have access to the download url before that point
@@ -236,7 +249,7 @@ void Task_InstallVersion::execute()
         if (!version || !version->download_url.has_value())
         {
             _error_message = "Didn't find any version to install";
-            return;
+            co_return;
         }
         _version_name  = version->name;
         _download_url  = version->download_url;
@@ -249,32 +262,31 @@ void Task_InstallVersion::execute()
         if (!version || !version->download_url.has_value())
         {
             _error_message = "This version is not available online";
-            return;
+            co_return;
         }
         _download_url  = version->download_url;
         _changelog_url = version->changelog_url;
     }
-
-    TaskWithProgressBar::change_notification_when_execution_starts(); // Must be done after finding the _changelog_url, because this will call extra_imgui_below_progress_bar(), which needs _changelog_url
+    change_notification(notification_while_in_progress()); // Must be done after finding the _changelog_url, because this will call extra_imgui_below_progress_bar(), which needs _changelog_url
 
     // Download zip
-    auto const zip = download_zip(*_download_url, [&](float progress) { set_progress(progress * 0.99f); }, [&]() { return cancel_requested(); });
-    if (cancel_requested())
-        return;
+    auto const zip = download_zip(*_download_url, [&](float progress) { set_progress(progress * 0.99f); }, [&]() { return has_been_canceled(); });
+    if (has_been_canceled())
+        co_return;
     if (!zip.has_value())
     {
         _error_message = zip.error();
-        return;
+        co_return;
     }
 
     { // Extract zip
-        auto const success = extract_zip(*zip, *_version_name, [&]() { return cancel_requested(); });
-        if (cancel_requested())
-            return;
+        auto const success = extract_zip(*zip, *_version_name, [&]() { return has_been_canceled(); });
+        if (has_been_canceled())
+            co_return;
         if (!success.has_value())
         {
             _error_message = success.error();
-            return;
+            co_return;
         }
     }
 
@@ -283,7 +295,7 @@ void Task_InstallVersion::execute()
         if (!success.has_value())
         {
             _error_message = success.error();
-            return;
+            co_return;
         }
     }
 }

@@ -2,9 +2,9 @@
 #include <exe_path/exe_path.h>
 #include <ImGuiNotify/ImGuiNotify.hpp>
 #include <filesystem>
+#include <variant>
 #include <vector>
 #include "Cool/AppManager/close_application.hpp"
-#include "Cool/DebugOptions/DebugOptions.h"
 #include "Cool/File/File.h"
 #include "Cool/Task/TaskManager.hpp"
 #include "Cool/Utils/overloaded.hpp"
@@ -14,26 +14,17 @@
 #include "VersionManager.hpp"
 #include "installation_path.hpp"
 
-auto Task_LaunchVersion::name() const -> std::string
-{
-    return fmt::format(
-        "Launching {}",
-        std::visit(
-            Cool::overloaded{
-                [&](FileToOpen const& file) {
-                    return fmt::format("\"{}\"", Cool::File::file_name_without_extension(file.path));
-                },
-                [&](FolderToCreateNewProject const&) {
-                    return "a new project"s;
-                },
-            },
-            _project_to_open_or_create
-        )
-    );
-}
-
 Task_LaunchVersion::Task_LaunchVersion(VersionRef version_ref, ProjectToOpenOrCreate project_to_open_or_create)
-    : Cool::Task{reg::generate_uuid() /* give a unique id to this task, so that we can cancel it */}
+    : Cool::Task{fmt::format("Launching {}", std::visit(Cool::overloaded{
+                                                            [&](FileToOpen const& file) {
+                                                                return fmt::format("\"{}\"", Cool::File::file_name_without_extension(file.path));
+                                                            },
+                                                            [&](FolderToCreateNewProject const&) {
+                                                                return "a new project"s;
+                                                            },
+                                                        },
+                                                        project_to_open_or_create)),
+                 reg::generate_uuid() /* give a unique id to this task, so that we can cancel it */}
     , _version_ref{std::move(version_ref)}
     , _project_to_open_or_create{std::move(project_to_open_or_create)}
 {}
@@ -53,7 +44,7 @@ void Task_LaunchVersion::on_submit()
     });
 }
 
-void Task_LaunchVersion::cleanup(bool /* has_been_canceled */)
+void Task_LaunchVersion::cleanup_impl(bool /* has_been_canceled */)
 {
     if (!_error_message.empty())
     {
@@ -73,13 +64,13 @@ void Task_LaunchVersion::cleanup(bool /* has_been_canceled */)
     }
 }
 
-void Task_LaunchVersion::execute()
+auto Task_LaunchVersion::execute() -> Cool::TaskCoroutine
 {
     auto const* const version = version_manager().find_installed_version(_version_ref, true /*filter_experimental_versions*/);
     if (!version || version->installation_status != InstallationStatus::Installed)
     {
         _error_message = fmt::format("Can't launch because we failed to install {}", as_string(_version_ref));
-        return;
+        co_return;
     }
 
     auto const path_arg = [](std::filesystem::path const& path) {
@@ -118,7 +109,7 @@ void Task_LaunchVersion::execute()
     {
         Cool::Log::internal_warning("Launch", *maybe_error);
         _error_message = fmt::format("{} is corrupted. You should uninstall and reinstall it.", as_string(_version_ref));
-        return;
+        co_return;
     }
 
     Cool::close_application_if_all_tasks_are_done(); // If some installations are still in progress we want to keep the launcher open so that they can finish. And once they are done, if we were to close the launcher it would feel weird for the user that it suddenly closed, so we just keep it open.

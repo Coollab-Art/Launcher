@@ -6,15 +6,12 @@
 class Task_CheckForLongPathsEnabled : public Cool::Task {
 public:
     explicit Task_CheckForLongPathsEnabled(std::optional<ImGuiNotify::NotificationId> notification_id = {})
-        : _notification_id{notification_id}
+        : Cool::Task{"Checking if Long Paths are enabled in the Windows settings"}
+        , _notification_id{notification_id}
     {}
 
-    auto name() const -> std::string override { return "Checking if Long Paths are enabled in the Windows settings"; }
-
 private:
-    void execute() override;
-    auto is_quick_task() const -> bool override { return true; }
-    void cancel() override {}
+    auto execute() -> Cool::TaskCoroutine override;
     auto needs_user_confirmation_to_cancel_when_closing_app() const -> bool override { return false; }
 
 private:

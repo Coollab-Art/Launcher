@@ -4,8 +4,10 @@
 #include "Cool/DebugOptions/debug_options_windows.h"
 #include "Cool/File/File.h"
 #include "Cool/ImGui/ColorThemes.h"
+#include "Cool/ImGui/IcoMoonCodepoints.h"
 #include "Cool/ImGui/ImGuiExtras.h"
-#include "Cool/Log/Log.hpp"
+#include "Cool/ImGui/ImGuiExtrasStyle.h"
+#include "Cool/ImGui/icon_fmt.h"
 #include "Cool/Log/file_logger_path.hpp"
 #include "Cool/Log/message_console.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
@@ -139,11 +141,11 @@ void App::imgui_windows()
     {
         ImGui::Begin("Projects");
 
-        if (ImGui::Button("Open external project"))
+        if (ImGui::Button(Cool::icon_fmt("Import project", ICOMOON_FOLDER_OPEN).c_str()))
             open_external_project();
         ImGui::SetItemTooltip("Browse your files to open a project that does not appear in the list of projects below");
 
-        ImGui::BeginChild("##projects_list"); // Child window to make sure the "Open external project" button stays at the top, and the scrollbar only affects the list of projects
+        ImGui::BeginChild("##projects_list"); // Child window to make sure the "Import project" button stays at the top, and the scrollbar only affects the list of projects
         _project_manager.imgui([&](Project const& project) { launch(project); });
         ImGui::EndChild();
         ImGui::End();
@@ -171,12 +173,14 @@ void App::imgui_menus()
         ImGui::EndMenu();
     }
 
-    ImGui::SetCursorPosX( // HACK while waiting for ImGui to support right-to-left layout. See issue https://github.com/ocornut/imgui/issues/5875
-        ImGui::GetWindowSize().x
-        - ImGui::CalcTextSize("Debug").x
-        - 3.f * ImGui::GetStyle().ItemSpacing.x
-        - ImGui::GetStyle().WindowPadding.x
-    );
+    ImGui::Dummy({
+        // HACK while waiting for ImGui to support right-to-left layout. See issue https://github.com/ocornut/imgui/issues/5875
+        ImGui::GetContentRegionAvail().x
+            - ImGui::CalcTextSize("Debug").x
+            - 2.f * Cool::ImGuiExtras::GetStyle().menu_bar_spacing.x
+            - std::max(Cool::ImGuiExtras::GetStyle().menu_bar_spacing.x - ImGui::GetStyle().WindowPadding.x, 0.f),
+        0.f,
+    });
     if (ImGui::BeginMenu("Debug"))
     {
         DebugOptionsManager::imgui_ui_for_all_options();

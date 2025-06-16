@@ -20,16 +20,16 @@ static auto asset_name_for_current_os() -> std::string
 #endif
 }
 
-void Task_FetchListOfVersions::execute()
+auto Task_FetchListOfVersions::execute() -> Cool::TaskCoroutine
 {
     auto const res = make_http_request("https://api.github.com/repos/Coollab-Art/Coollab/releases", [&](uint64_t, uint64_t) {
-        return !_cancel.load();
+        return !has_been_canceled();
     });
 
     if (!res || res->status != 200)
     {
         handle_error(res);
-        return;
+        co_return;
     }
 
     try
@@ -37,8 +37,8 @@ void Task_FetchListOfVersions::execute()
         auto const json_response = nlohmann::json::parse(res->body);
         for (auto const& version_json : json_response)
         {
-            if (_cancel.load())
-                return;
+            if (has_been_canceled())
+                co_return;
 
             try
             {
@@ -110,7 +110,7 @@ void Task_FetchListOfVersions::handle_error(httplib::Result const& res)
 
     auto const notification = ImGuiNotify::Notification{
         .type     = ImGuiNotify::Type::Warning,
-        .title    = "Failed to check for new versions online",
+        .title    = "Can't check for new versions",
         .content  = !res ? "No Internet connection" : message.value_or("Oops, our online versions provider is unavailable"),
         .duration = std::nullopt,
     };

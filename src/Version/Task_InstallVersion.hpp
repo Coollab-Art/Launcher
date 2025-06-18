@@ -7,7 +7,7 @@ class Task_InstallVersion : public Cool::TaskWithProgressBar {
 public:
     /// Will install the latest version if we pass nullopt
     explicit Task_InstallVersion(std::optional<VersionName> version_name = {})
-        : Cool::TaskWithProgressBar{fmt::format("Installing {}", version_name ? version_name->as_string() : "latest version")}
+        : Cool::TaskWithProgressBar{fmt::format("Installing {}", version_name ? version_name->as_string_pretty() : "latest version")}
         , _version_name{std::move(version_name)}
     {}
 

@@ -1,6 +1,7 @@
 #include "VersionName.hpp"
 #include <cassert>
 #include <compare>
+#include "Cool/String/String.h"
 
 static auto is_number(char c) -> bool
 {
@@ -13,8 +14,8 @@ auto VersionName::from(std::string name) -> std::optional<VersionName>
         return std::nullopt;
 
     VersionName ver;
-    ver._name            = std::move(name);
-    ver._is_experimental = ver._name.find("Experimental(") != std::string::npos;
+    ver._raw_name        = std::move(name);
+    ver._is_experimental = ver._raw_name.find("Experimental(") != std::string::npos;
 
     auto       acc                           = std::string{};
     auto       nb_dots                       = 0;
@@ -40,20 +41,20 @@ auto VersionName::from(std::string name) -> std::optional<VersionName>
         }
     };
 
-    for (size_t i = 0; i <= ver._name.size(); ++i)
+    for (size_t i = 0; i <= ver._raw_name.size(); ++i)
     {
-        if (i == ver._name.size())
+        if (i == ver._raw_name.size())
         {
             if (!register_current_version_part())
                 return std::nullopt;
             break;
         }
 
-        if (is_number(ver._name[i]))
+        if (is_number(ver._raw_name[i]))
         {
-            acc += ver._name[i];
+            acc += ver._raw_name[i];
         }
-        else if (ver._name[i] == '.')
+        else if (ver._raw_name[i] == '.')
         {
             if (!register_current_version_part())
                 return std::nullopt;
@@ -61,7 +62,7 @@ auto VersionName::from(std::string name) -> std::optional<VersionName>
             if (nb_dots > 2)
                 break;
         }
-        else if (ver._name[i] == ' ')
+        else if (ver._raw_name[i] == ' ')
         {
             if (!register_current_version_part())
                 return std::nullopt;
@@ -70,6 +71,19 @@ auto VersionName::from(std::string name) -> std::optional<VersionName>
         else
         {
             return std::nullopt;
+        }
+    }
+
+    {
+        auto const start = ver._raw_name.find(' ');
+        if (start == std::string::npos || start == ver._raw_name.size() - 1)
+        {
+            ver._pretty_name = ver._raw_name;
+        }
+        else
+        {
+            ver._pretty_name = Cool::String::substring(ver._raw_name, 0, start + 1) + '"'
+                               + Cool::String::substring(ver._raw_name, start + 1, ver._raw_name.size()) + '"';
         }
     }
 
@@ -100,12 +114,12 @@ auto operator<=>(VersionName const& a, VersionName const& b) -> std::strong_orde
     if (!a._is_experimental && !b._is_experimental)
         return std::strong_ordering::equal;
 
-    return a._name <=> b._name; // Experimental versions can have the same semantic version, and just differ by their name (eg. "1.2.0 Experimental(LED)" and "1.2.0 Experimental(WebGPU)")
+    return a._raw_name <=> b._raw_name; // Experimental versions can have the same semantic version, and just differ by their name (eg. "1.2.0 Experimental(LED)" and "1.2.0 Experimental(WebGPU)")
 }
 
 auto operator==(VersionName const& a, VersionName const& b) -> bool
 {
-    return a._name == b._name;
+    return a._raw_name == b._raw_name;
 }
 
 #if defined(COOLLAB_LAUNCHER_TESTS)

@@ -1,8 +1,8 @@
 #include "Task_FetchCompatibilityFile.hpp"
 #include <sstream>
-#include "Cool/DebugOptions/DebugOptions.h"
 #include "Cool/File/File.h"
 #include "Cool/Task/TaskManager.hpp"
+#include "Cool/Utils/getline.hpp"
 #include "Path.hpp"
 #include "VersionCompatibility.hpp"
 #include "make_http_request.hpp"
@@ -23,7 +23,7 @@ auto Task_FetchCompatibilityFile::execute() -> Cool::TaskCoroutine
     auto compatibility_entries = std::vector<CompatibilityEntry>{};
     auto string_stream         = std::stringstream{res->body};
     auto line                  = std::string{};
-    while (std::getline(string_stream, line))
+    while (Cool::getline(string_stream, line))
         parse_compatibility_file_line(line, compatibility_entries);
     version_compatibility().set_compatibility_entries(std::move(compatibility_entries));
 

@@ -9,6 +9,7 @@
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/TextureSource/TextureLibrary_Image.h"
 #include "Cool/TextureSource/default_textures.h"
+#include "Cool/Utils/getline.hpp"
 #include "Cool/Utils/overloaded.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "LongPaths/LongPathsChecker.hpp"
@@ -77,7 +78,7 @@ ProjectManager::ProjectManager()
                 continue;
             }
             std::string path;
-            std::getline(file, path);
+            Cool::getline(file, path);
             _projects.emplace_back(path);
 #if defined(_WIN32)
             long_paths_checker().check(path);
@@ -185,7 +186,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
             ImGui::BeginGroup();
             ImGui::TextUnformatted(project.file_path().string().c_str());
             if (project.current_version().has_value())
-                ImGui::TextUnformatted(project.current_version()->as_string().c_str());
+                ImGui::TextUnformatted(project.current_version()->as_string_pretty().c_str());
             else if (project.file_not_found())
                 Cool::ImGuiExtras::warning_text("Project file not found");
             else
@@ -194,7 +195,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                 Cool::overloaded{
                     [](VersionName const& version_name) {
                         ImGui::SameLine();
-                        ImGui::Text("(Will be upgraded to %s)", version_name.as_string().c_str());
+                        ImGui::Text("(Will be upgraded to %s)", version_name.as_string_pretty().c_str());
                     },
                     [&](DontUpgrade) {},
                 },

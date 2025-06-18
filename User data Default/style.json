@@ -91,7 +91,7 @@
   "TreeLinesSize": 1.0,
   "WindowBorderHoverPadding": 4.0,
   "WindowBorderSize": 1.0,
-  "WindowMenuButtonPosition": 1,
+  "WindowMenuButtonPosition": -1,
   "WindowMinSize": {
    "x": 25.0,
    "y": 25.0

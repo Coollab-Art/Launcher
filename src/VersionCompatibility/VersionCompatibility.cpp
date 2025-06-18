@@ -1,5 +1,6 @@
 #include "VersionCompatibility.hpp"
 #include "Cool/Task/TaskManager.hpp"
+#include "Cool/Utils/getline.hpp"
 #include "Cool/Utils/overloaded.hpp"
 #include "LauncherSettings.hpp"
 #include "Path.hpp"
@@ -15,7 +16,7 @@ VersionCompatibility::VersionCompatibility()
     if (ifs.is_open())
     {
         auto line = std::string{};
-        while (std::getline(ifs, line))
+        while (Cool::getline(ifs, line))
             parse_compatibility_file_line(line, _compatibility_entries);
     }
 

@@ -8,6 +8,7 @@
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/TextureSource/TextureLibrary_Image.h"
 #include "Cool/TextureSource/default_textures.h"
+#include "Cool/Utils/getline.hpp"
 #include "Cool/Utils/overloaded.hpp"
 #include "ImGuiNotify/ImGuiNotify.hpp"
 #include "LongPaths/LongPathsChecker.hpp"
@@ -36,7 +37,7 @@ ProjectManager::ProjectManager()
                 continue;
             }
             std::string path;
-            std::getline(file, path);
+            Cool::getline(file, path);
             _projects.emplace_back(path);
 #if defined(_WIN32)
             long_paths_checker().check(path);

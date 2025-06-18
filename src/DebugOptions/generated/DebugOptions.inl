@@ -20,7 +20,17 @@ namespace Launcher {
 
 class DebugOptions {
 public:
-    [[nodiscard]] static auto log_when_uninstalling_versions_automatically() -> bool& { return instance().log_when_uninstalling_versions_automatically; }
+    [[nodiscard]] static auto log_when_uninstalling_versions_automatically() -> bool { return instance().log_when_uninstalling_versions_automatically; }
+
+    struct Set {
+        static void log_when_uninstalling_versions_automatically(bool val)
+        {
+            if (val == instance().log_when_uninstalling_versions_automatically)
+                return;
+            instance().log_when_uninstalling_versions_automatically = val;
+            save();
+        }
+    };
 
     static void save() { instance()._serializer.save(); }
 

@@ -3,6 +3,7 @@
 #include "Cool/ImGui/IcoMoonCodepoints.h"
 #include "Cool/ImGui/ImGuiExtras.h"
 #include "Cool/ImGui/ImGuiExtras_dropdown.hpp"
+#include "Cool/Utils/getline.hpp"
 #include "Cool/Utils/overloaded.hpp"
 #include "LauncherSettings.hpp"
 #include "Version/VersionName.hpp"
@@ -29,7 +30,7 @@ auto Project::current_version() const -> std::optional<VersionName>
         if (!file.is_open())
             return std::nullopt;
         auto version = ""s;
-        std::getline(file, version);
+        Cool::getline(file, version);
         return VersionName::from(version);
     });
 }

@@ -125,7 +125,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
             ImGui::BeginGroup();
             ImGui::TextUnformatted(project.file_path().string().c_str());
             if (project.current_version().has_value())
-                ImGui::TextUnformatted(project.current_version()->as_string().c_str());
+                ImGui::TextUnformatted(project.current_version()->as_string_pretty().c_str());
             else if (project.file_not_found())
                 Cool::ImGuiExtras::warning_text("Project file not found");
             else
@@ -134,7 +134,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                 Cool::overloaded{
                     [](VersionName const& version_name) {
                         ImGui::SameLine();
-                        ImGui::Text("(Will be upgraded to %s)", version_name.as_string().c_str());
+                        ImGui::Text("(Will be upgraded to %s)", version_name.as_string_pretty().c_str());
                     },
                     [&](DontUpgrade) {},
                 },

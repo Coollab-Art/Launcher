@@ -34,7 +34,7 @@ void Task_LaunchVersion::on_submit()
     _notification_id = ImGuiNotify::send({
         .type                 = ImGuiNotify::Type::Info,
         .title                = name(),
-        .content              = fmt::format("Waiting for {} to install", as_string(_version_ref)),
+        .content              = fmt::format("Waiting for {} to install", as_string_pretty(_version_ref)),
         .custom_imgui_content = [task_id = owner_id()]() {
             if (ImGui::Button("Cancel"))
                 Cool::task_manager().cancel_all(task_id);
@@ -69,7 +69,7 @@ auto Task_LaunchVersion::execute() -> Cool::TaskCoroutine
     auto const* const version = version_manager().find_installed_version(_version_ref, false /*filter_experimental_versions*/);
     if (!version || version->installation_status != InstallationStatus::Installed)
     {
-        _error_message = fmt::format("Can't launch because we failed to install {}", as_string(_version_ref));
+        _error_message = fmt::format("Can't launch because we failed to install {}", as_string_pretty(_version_ref));
         co_return;
     }
 
@@ -108,7 +108,7 @@ auto Task_LaunchVersion::execute() -> Cool::TaskCoroutine
     if (maybe_error.has_value())
     {
         Cool::Log::internal_warning("Launch", *maybe_error);
-        _error_message = fmt::format("{} is corrupted. You should uninstall and reinstall it.", as_string(_version_ref));
+        _error_message = fmt::format("{} is corrupted. You should uninstall and reinstall it.", as_string_pretty(_version_ref));
         co_return;
     }
 

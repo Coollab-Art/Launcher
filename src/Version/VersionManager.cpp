@@ -39,7 +39,7 @@ static auto get_all_locally_installed_versions() -> std::vector<Version>
                     continue;
                 auto const name = entry.path().filename().string(); // Use filename() and not stem(), because stem() would stop at the first dot (e.g. "folder/19.0.3" would become "19" instead of "19.0.3")
                 if (std::none_of(versions.begin(), versions.end(), [&](Version const& version) {
-                        return version.name.as_string() == name;
+                        return version.name.as_string_raw() == name;
                     }))
                 {
                     auto const version_name = VersionName::from(name);
@@ -379,12 +379,12 @@ void VersionManager::imgui_manage_versions()
     {
         ImGui::PushID(&version);
         ImGui::BeginGroup();
-        ImGui::SeparatorText(version.name.as_string().c_str());
+        ImGui::SeparatorText(version.name.as_string_pretty().c_str());
         if (version.changelog_url.has_value())
         {
             if (Cool::ImGuiExtras::button_with_text_icon(ICOMOON_INFO))
                 Cool::open_link(version.changelog_url->c_str());
-            ImGui::SetItemTooltip("%s", fmt::format("View the changes added in {}", version.name.as_string()).c_str());
+            ImGui::SetItemTooltip("%s", fmt::format("View the changes added in {}", version.name.as_string_pretty()).c_str());
             ImGui::SameLine();
         }
         Cool::ImGuiExtras::disabled_if(version.installation_status != InstallationStatus::NotInstalled, version.installation_status == InstallationStatus::Installing ? "Installing" : "Already installed", [&]() {
@@ -417,14 +417,14 @@ auto VersionManager::label(VersionRef const& ref, bool filter_experimental_versi
                 auto const* version = latest_installed_version_no_locking(filter_experimental_versions);
                 if (!version)
                     version = latest_version_no_locking(filter_experimental_versions);
-                return fmt::format("Latest Installed ({})", version ? version->name.as_string() : "None");
+                return fmt::format("Latest Installed ({})", version ? version->name.as_string_pretty() : "None");
             },
             [&](LatestVersion) {
                 auto const* const version = latest_version_no_locking(filter_experimental_versions);
-                return fmt::format("Latest ({})", version ? version->name.as_string() : "None");
+                return fmt::format("Latest ({})", version ? version->name.as_string_pretty() : "None");
             },
             [](VersionName const& name) {
-                return name.as_string();
+                return name.as_string_pretty();
             }
         },
         ref

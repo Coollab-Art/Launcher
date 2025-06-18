@@ -71,12 +71,12 @@ auto Project::time_of_last_change() const -> std::filesystem::file_time_type con
     });
 }
 
-static auto as_string(VersionToUpgradeTo const& version) -> std::string
+static auto as_string_pretty(VersionToUpgradeTo const& version) -> std::string
 {
     return std::visit(
         Cool::overloaded{
             [&](VersionName const& version_name) {
-                return version_name.as_string();
+                return version_name.as_string_pretty();
             },
             [](DontUpgrade) {
                 return "Don't upgrade"s;
@@ -99,7 +99,7 @@ struct DropdownEntry_VersionToUpgradeTo {
 
     auto get_label() const -> std::string
     {
-        return fmt::format("{}{}", has_semi_incompatibilities ? ICOMOON_WARNING "" : "", as_string(this_entry));
+        return fmt::format("{}{}", has_semi_incompatibilities ? ICOMOON_WARNING "" : "", as_string_pretty(this_entry));
     }
 
     void apply_value()
@@ -131,7 +131,7 @@ void Project::imgui_version_to_upgrade_to()
     auto const compatible_versions = version_compatibility().compatible_versions(*current_version());
     if (compatible_versions.empty())
     {
-        Cool::ImGuiExtras::disabled_if(true, fmt::format("This project is already using the latest version compatible with {}", current_version()->as_string()).c_str(), [&]() {
+        Cool::ImGuiExtras::disabled_if(true, fmt::format("This project is already using the latest version compatible with {}", current_version()->as_string_pretty()).c_str(), [&]() {
             ImGui::TextUnformatted(label);
         });
         return;
@@ -144,7 +144,7 @@ void Project::imgui_version_to_upgrade_to()
         dropdown_entries.push_back(DropdownEntry_VersionToUpgradeTo{DontUpgrade{}, &ver_to_upgrade_to, &_version_to_upgrade_to_selected_by_user, false /*has_semi_incompatibilities*/});
         for (auto const& version : compatible_versions | ranges::views::reverse)
             dropdown_entries.push_back(DropdownEntry_VersionToUpgradeTo{version.name, &ver_to_upgrade_to, &_version_to_upgrade_to_selected_by_user, !version.upgrade_instructions.empty() /*has_semi_incompatibilities*/});
-        Cool::ImGuiExtras::dropdown("##Upgrade version", as_string(version_to_upgrade_to()).c_str(), dropdown_entries);
+        Cool::ImGuiExtras::dropdown("##Upgrade version", as_string_pretty(version_to_upgrade_to()).c_str(), dropdown_entries);
 
         std::visit(
             Cool::overloaded{

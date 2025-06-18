@@ -3,7 +3,7 @@
 
 auto installation_path(VersionName const& name) -> std::filesystem::path
 {
-    return Path::installed_versions_folder() / name.as_string();
+    return Path::installed_versions_folder() / name.as_string_raw();
 }
 
 static auto exe_name() -> std::filesystem::path

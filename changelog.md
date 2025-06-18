@@ -1,5 +1,6 @@
 ## 2.1.0
 
+- 🤏 Added quotes around the name of the version to make it clearer it is just a name (e.g. `1.2.0 "MacOS"`)
 - 🐛 Fixed: A project file saved on Windows would fail to open on Linux
 - 🐛 Fixed connecting to the internet on some Linux distributions (missing CA cert path)
 - 🐛 Fixed the UI being a bit buggy on Linux Wayland and clicks being offset

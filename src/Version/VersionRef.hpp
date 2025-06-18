@@ -13,4 +13,4 @@ using VersionRef = std::variant<
     LatestInstalledVersion,
     VersionName>;
 
-auto as_string(VersionRef const&) -> std::string;
+auto as_string_pretty(VersionRef const&) -> std::string;

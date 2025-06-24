@@ -28,6 +28,9 @@ public:
 
     void imgui_version_to_upgrade_to();
 
+    auto category() const -> std::string { return _category; }
+    void set_category(std::string const& category) { _category = category; }
+
 private:
     friend class ProjectManager;
 
@@ -36,4 +39,5 @@ private:
     mutable Cool::Cached<std::optional<VersionName>>      _version_name{};
     std::optional<VersionToUpgradeTo>                     _version_to_upgrade_to_selected_by_user{std::nullopt};
     mutable Cool::Cached<std::filesystem::file_time_type> _time_of_last_change{};
+    std::string                                           _category{};
 };

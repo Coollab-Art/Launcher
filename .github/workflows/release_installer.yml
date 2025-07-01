@@ -251,34 +251,22 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       if: runner.os == 'Windows'
-    - name: Deploy contents of /Releases to gh-pages branch
+    - name: Deploy contents of /Releases to gh-pages branch of external repo
       shell: pwsh
-      run: 'git config --global user.name "github-actions"
-
+      run: |
+        git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
 
-
         mkdir gh-pages
-
         cd gh-pages
 
-
         git init
-
-        git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{
-        github.repository }}
-
+        git remote add origin https://x-access-token:${{ secrets.GH_PAGES_DEPLOY_TOKEN }}@github.com/Coollab-Art/Launcher-Velopack-Tests.git
         git checkout -b gh-pages
-
 
         Copy-Item ../Releases/* -Destination . -Recurse -Force
 
-
         git add .
-
         git commit -m "Deploy release ${{ github.ref_name }}"
-
         git push origin gh-pages --force
-
-        '
       if: runner.os == 'Windows'

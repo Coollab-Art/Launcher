@@ -8,6 +8,28 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Coollab-Launcher-Properties)
 
 target_compile_features(Coollab-Launcher-Properties INTERFACE cxx_std_20)
 
+# ---------------------
+# --- Velopack Setup ---
+# ---------------------
+
+# Include Velopack headers
+include_directories(${CMAKE_SOURCE_DIR}/velopack/include)
+
+# Link Velopack depending on the platform
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/velopack/lib/velopack_libc_win_x64_msvc.dll.lib)
+
+    # Copy the required Velopack DLL after build
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/velopack/activeLib/velopack_libc.dll"
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>
+    )
+elseif(UNIX)
+    # Uncomment this if using Velopack on Linux
+    # target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/velopack/lib/libVelopack.a)
+endif()
+
 # Set the folder where the executable is created
 set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})

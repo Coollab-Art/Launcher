@@ -36,7 +36,7 @@ public:
         : original_folder(info_path), original_file(file_path), restored_project(file_path) // Save project object to re-add
     {
         backup_folder = Cool::Path::user_data() / "project_backup" / std::to_string(std::time(nullptr));
-        std::filesystem::create_directories(backup_folder);
+        std::filesystem::create_directories(backup_folder); // TODO(Launcher) use Cool::File instead of std::filesystem
 
         std::filesystem::copy(info_path, backup_folder / "info_folder", std::filesystem::copy_options::recursive);
         std::filesystem::copy(file_path, backup_folder / "project_file");
@@ -278,9 +278,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                 if (boxer::Selection::OK == boxer::show("Are you sure? This cannot be undone", fmt::format("Deleting project \"{}\"", project.name()).c_str(), boxer::Style::Warning, boxer::Buttons::OKCancel))
                 {
                     // Backup before deleting
-                    undo_stack.push(std::make_unique<UndoDeleteProjectAction>(
-                        project.info_folder_path(), project.file_path()
-                    ));
+                    undo_stack.push(std::make_unique<UndoDeleteProjectAction>(project.info_folder_path(), project.file_path()));
 
                     Cool::File::remove_folder(project.info_folder_path());
                     Cool::File::remove_file(project.file_path());

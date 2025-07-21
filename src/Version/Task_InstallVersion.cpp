@@ -28,15 +28,9 @@ static auto download_zip(std::string const& download_url, std::function<void(flo
     if (wants_to_cancel())
         return "";
     if (!res)
-    {
-        Cool::Log::internal_warning("Download version", httplib::to_string(res.error()));
         return tl::make_unexpected("No Internet connection");
-    }
     if (res->status != 200)
-    {
-        Cool::Log::internal_warning("Download version", fmt::format("Status code {}", std::to_string(res->status)));
         return tl::make_unexpected("Oops, our online versions provider is unavailable, please check back later");
-    }
 
     return res->body;
 }

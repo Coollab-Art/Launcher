@@ -6,10 +6,12 @@
 
 class PathsConfig : public Cool::PathsConfig {
 public:
+#if !defined(DEBUG)
     [[nodiscard]] auto user_data_shared() const -> std::filesystem::path override
     {
         return exe_path::user_data() / "Coollab"; // Use the same folder for Coollab and the Launcher, so that they share the same color theme and style settings
     }
+#endif
 };
 
 auto main(int argc, char** argv) -> int

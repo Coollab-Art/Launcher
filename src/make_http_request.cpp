@@ -39,6 +39,8 @@ auto make_http_request(std::string_view url, std::function<bool(uint64_t current
     cli.set_connection_timeout(15min);
     cli.set_read_timeout(15min);
     cli.set_write_timeout(15min);
+    cli.set_path_encode(false); // HACK while we wait for this PR to be merged https://github.com/yhirose/cpp-httplib/pull/2184
+                                // Otherwise we fail to download assets from github https://github.com/yhirose/cpp-httplib/issues/2185
 
     auto res = cli.Get(std::string{url}, std::move(progress_callback));
 

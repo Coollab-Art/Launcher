@@ -1,3 +1,8 @@
+## 2.2.0
+
+- 🐛 Fixed: We couldn't install any versions anymore
+<img width="342" height="100" alt="image" src="https://github.com/user-attachments/assets/678eae8b-99d1-41ab-bfa5-8b20665399a9" />
+
 ## 2.1.0
 
 - 🤏 Added quotes around the name of the version to make it clearer it is just a name (e.g. `1.2.0 "MacOS"`)

@@ -46,7 +46,7 @@ auto make_http_request(std::string_view url, std::function<bool(uint64_t current
 
     if (!res)
         Cool::Log::internal_warning("make_http_request", httplib::to_string(res.error()));
-    if (res->status != 200)
+    else if (res->status != 200)
         Cool::Log::internal_warning("make_http_request", fmt::format("Error {}\n{}", std::to_string(res->status), res->body));
 
     return res;

@@ -1,3 +1,7 @@
+## 2.2.1
+
+- 🐛 Fix crash when cancelling the installation of a version 
+
 ## 2.2.0
 
 - 🐛 Fixed: We couldn't install any versions anymore

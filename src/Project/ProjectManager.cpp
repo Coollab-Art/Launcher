@@ -146,7 +146,7 @@ void ProjectManager::imgui(std::function<void(Project const&)> const& launch_pro
                 {
                     auto const path = Cool::File::file_opening_dialog({
                         .file_filters   = {{"Coollab project", COOLLAB_FILE_EXTENSION}},
-                        .initial_folder = Cool::File::find_closest_existing_folder(project.file_path()),
+                        .initial_folder = Cool::File::find_first_existing_folder_in_path(project.file_path()),
                     });
                     if (path.has_value())
                     {

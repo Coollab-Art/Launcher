@@ -1,3 +1,7 @@
+##
+
+- 🐛 Don't show Midi error if a Midi controller is plugged in and user in another software
+
 ## 2.2.1
 
 - 🐛 Fix crash when cancelling the installation of a version 

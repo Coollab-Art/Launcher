@@ -35,6 +35,12 @@
         <key>NSRemovableVolumesUsageDescription</key>
         <string>Coollab Launcher needs access to external drives to save and load projects.</string>
 
+        <key>NSMicrophoneUsageDescription</key>
+        <string>Coollab would like to access the microphone for audio input usage</string>
+
+        <key>NSCameraUsageDescription</key>
+        <string>Coollab would like to access the camera for webcam node usage</string>
+
         <key>CFBundleDocumentTypes</key>
         <array>
             <dict>

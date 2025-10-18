@@ -200,6 +200,12 @@ jobs:
           xcrun notarytool submit Coollab-Launcher.zip --apple-id "$APPLE_ID_USERNAME" --password "$APPLE_ID_APP_SPECIFIC_PASSWORD" --team-id "$TEAM_ID" --wait
           xcrun stapler staple "${{github.workspace}}/app-resources/Coollab-Launcher.app"
 
+      - name: Install NSIS (Windows)
+        if: runner.os == 'Windows'
+        uses: repolevedavaj/install-nsis@v1.1.0
+        with:
+          nsis-version: 'latest'
+
       - name: Create Installer (Windows)
         if: runner.os == 'Windows'
         run: |

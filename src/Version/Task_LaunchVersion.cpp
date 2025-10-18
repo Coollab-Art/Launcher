@@ -104,6 +104,7 @@ auto Task_LaunchVersion::execute() -> Cool::TaskCoroutine
         .executable_absolute_path = executable_path(version->name),
         .command_line_args        = args,
         .working_directory        = exe_path::dir(), // To make sure Coollab will find the DLLs
+        .use_app_bundle_on_macos  = true,
     });
     if (maybe_error.has_value())
     {

@@ -19,7 +19,7 @@ auto Task_CheckForLongPathsEnabled::execute() -> Cool::TaskCoroutine
             .type                 = ImGuiNotify::Type::Warning,
             .title                = "Need to enable long file paths support",
             .content              = "Some of your projects have too long of a file path.\nTo support them we need to activate a simple option in Windows:",
-            .custom_imgui_content = []() {
+            .custom_imgui_content = [](ImGuiNotify::NotificationId const&) {
                 if (ImGui::Button("Enable long paths"))
                     Cool::enable_long_paths_by_asking_user_permission();
             },

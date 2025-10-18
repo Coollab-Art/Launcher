@@ -177,7 +177,7 @@ auto Task_InstallVersion::notification_when_submitted() const -> ImGuiNotify::No
         .type                 = ImGuiNotify::Type::Info,
         .title                = name(),
         .content              = "Waiting to connect to the Internet",
-        .custom_imgui_content = [task_id = owner_id()]() {
+        .custom_imgui_content = [task_id = owner_id()](ImGuiNotify::NotificationId const&) {
             if (ImGui::Button("Cancel"))
                 Cool::task_manager().cancel_all(task_id);
         },
@@ -203,13 +203,13 @@ auto Task_InstallVersion::notification_after_execution_completes() const -> ImGu
     };
 }
 
-auto Task_InstallVersion::extra_imgui_below_progress_bar() const -> std::function<void()>
+auto Task_InstallVersion::extra_imgui_below_progress_bar() const -> std::function<void(ImGuiNotify::NotificationId const&)>
 {
     if (!_changelog_url.has_value())
-        return []() {
+        return [](ImGuiNotify::NotificationId const&) {
         };
 
-    return [url = *_changelog_url]() {
+    return [url = *_changelog_url](ImGuiNotify::NotificationId const&) {
         Cool::ImGuiExtras::markdown(fmt::format("[View changes added in this version]({})", url));
     };
 }

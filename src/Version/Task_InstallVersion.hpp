@@ -19,7 +19,7 @@ private:
     auto needs_user_confirmation_to_cancel_when_closing_app() const -> bool override { return true; }
     auto notification_when_submitted() const -> ImGuiNotify::Notification override;
     auto notification_after_execution_completes() const -> ImGuiNotify::Notification override;
-    auto extra_imgui_below_progress_bar() const -> std::function<void()> override;
+    auto extra_imgui_below_progress_bar() const -> std::function<void(ImGuiNotify::NotificationId const&)> override;
 
 private:
     std::optional<VersionName> _version_name{};

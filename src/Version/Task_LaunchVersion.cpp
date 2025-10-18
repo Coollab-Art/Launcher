@@ -35,7 +35,7 @@ void Task_LaunchVersion::on_submit()
         .type                 = ImGuiNotify::Type::Info,
         .title                = name(),
         .content              = fmt::format("Waiting for {} to install", as_string_pretty(_version_ref)),
-        .custom_imgui_content = [task_id = owner_id()]() {
+        .custom_imgui_content = [task_id = owner_id()](ImGuiNotify::NotificationId const&) {
             if (ImGui::Button("Cancel"))
                 Cool::task_manager().cancel_all(task_id);
         },

@@ -202,9 +202,7 @@ jobs:
 
       - name: Install NSIS (Windows)
         if: runner.os == 'Windows'
-        uses: repolevedavaj/install-nsis@v1.1.0
-        with:
-          nsis-version: 'latest'
+        run: choco install nsis -y
 
       - name: Create Installer (Windows)
         if: runner.os == 'Windows'

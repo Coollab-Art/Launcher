@@ -1,6 +1,3 @@
-[submodule "Lab"]
-	path = Lab
-	url = https://github.com/CoolLibs/Lab.git
 [submodule "tooling"]
 	path = tooling
 	url = https://github.com/CoolLibs/tooling
@@ -10,3 +7,6 @@
 [submodule "lib/minizip-ng"]
 	path = lib/minizip-ng
 	url = https://github.com/CoolLibs/minizip-ng
+[submodule "Coollab"]
+	path = Coollab
+	url = https://github.com/Coollab-Art/Coollab

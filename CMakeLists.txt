@@ -55,7 +55,7 @@ target_link_libraries(Coollab-Launcher-Properties INTERFACE MINIZIP::minizip)
 install(FILES "lib/minizip-ng/LICENSE" DESTINATION "license/minizip-ng")
 
 # License
-include("Lab/Cool/CMakeUtils/files_and_folders.cmake")
+include("Coollab/Cool/CMakeUtils/files_and_folders.cmake")
 install(FILES "LICENSE.txt" DESTINATION "license" RENAME "Coollab-Launcher-LICENSE.txt")
 Cool__target_copy_file(${PROJECT_NAME} LICENSE.txt)
 
@@ -64,7 +64,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
 target_include_directories(Coollab-Launcher-Properties INTERFACE
     ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/Lab/src/ProjectManager # Hack to access COOLLAB_FILE_EXTENSION in the launcher
+    ${PROJECT_SOURCE_DIR}/Coollab/src/ProjectManager # Hack to access COOLLAB_FILE_EXTENSION in the launcher
 )
 
 # Embed the manifest file into the executable. This manifest tells windows that our app supports long paths
@@ -78,25 +78,25 @@ set(HTTPLIB_REQUIRE_OPENSSL ON CACHE BOOL "" FORCE)
 set(HTTPLIB_INSTALL OFF CACHE BOOL "" FORCE)
 set(HTTPLIB_USE_ZSTD_IF_AVAILABLE OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(Lab/lib/cpp-httplib)
+add_subdirectory(Coollab/lib/cpp-httplib)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE httplib)
-install(FILES "Lab/lib/cpp-httplib/LICENSE" DESTINATION "license/cpp-httplib")
-install(FILES "Lab/lib/openssl/LICENSE.txt" DESTINATION "license/openssl")
+install(FILES "Coollab/lib/cpp-httplib/LICENSE" DESTINATION "license/cpp-httplib")
+install(FILES "Coollab/lib/openssl/LICENSE.txt" DESTINATION "license/openssl")
 
 # Include range-v3
-target_include_directories(Coollab-Launcher-Properties SYSTEM INTERFACE Lab/lib/range-v3/include)
-install(FILES "Lab/lib/range-v3/LICENSE.txt" DESTINATION "license/range-v3")
+target_include_directories(Coollab-Launcher-Properties SYSTEM INTERFACE Coollab/lib/range-v3/include)
+install(FILES "Coollab/lib/range-v3/LICENSE.txt" DESTINATION "license/range-v3")
 
 # Include Cool
 set(COOL_USE_OPENGL 410)
 set(COOL_USE_MACOS_BUNDLE ON)
 set(COOL_APP_NAME "Coollab Launcher")
-add_subdirectory(Lab/Cool)
+add_subdirectory(Coollab/Cool)
 target_link_libraries(Coollab-Launcher-Properties INTERFACE Cool::Core)
 cool_setup(${PROJECT_NAME})
-Cool__set_app_icon(${PROJECT_NAME} "Lab/res/logo.png" "${CMAKE_SOURCE_DIR}/Lab/app-resources/icon.rc")
-Cool__target_copy_file(${PROJECT_NAME} "Lab/res/logo.png")
-install(FILES "Lab/res/logo.png" DESTINATION "bin/Lab/res")
+Cool__set_app_icon(${PROJECT_NAME} "Coollab/res/logo.png" "${CMAKE_SOURCE_DIR}/Coollab/app-resources/icon.rc")
+Cool__target_copy_file(${PROJECT_NAME} "Coollab/res/logo.png")
+install(FILES "Coollab/res/logo.png" DESTINATION "bin/Coollab/res")
 
 function(Launcher_copy_folder FOLDER_RELATIVE_PATH)
     Cool__target_copy_folder(${PROJECT_NAME} ${FOLDER_RELATIVE_PATH})
@@ -124,8 +124,8 @@ endif()
 set(CPACK_PACKAGE_NAME "Coollab Launcher")
 set(CPACK_PACKAGE_VERSION "1.0")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Coollab Launcher") # Don't put this in a Coollab parent folder. In NSIS this messes up the install and prevents our app to appear in "Apps and Features" to uninstall it for example.
-set(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}${SEP}Lab${SEP}app-resources${SEP}installer_banner.bmp") # Seems like it has to be .bmp, at least for NSIS. NB: if there is any transparency in the image, NSIS won't be able to render it at all. Exporting a fully opaque .bmp from Paint.net works. 150x57 pixels is the ideal size to avoid uggly downscale artifacts.
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}${SEP}Lab${SEP}LICENSE.txt")
+set(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}${SEP}Coollab${SEP}app-resources${SEP}installer_banner.bmp") # Seems like it has to be .bmp, at least for NSIS. NB: if there is any transparency in the image, NSIS won't be able to render it at all. Exporting a fully opaque .bmp from Paint.net works. 150x57 pixels is the ideal size to avoid uggly downscale artifacts.
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}${SEP}Coollab${SEP}LICENSE.txt")
 set(CPACK_PACKAGE_VENDOR "Coollab")
 set(CPACK_PACKAGE_EXECUTABLES "Coollab-Launcher" "Coollab Launcher") # Creates Start Menu shortcuts
 set(CPACK_PACKAGE_CONTACT "coollab.lib@gmail.com")

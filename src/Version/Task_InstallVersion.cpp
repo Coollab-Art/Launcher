@@ -15,6 +15,7 @@
 #include "mz_strm_mem.h"
 #include "mz_zip.h"
 #include "mz_zip_rw.h"
+#include "suggest_dl_from_github.hpp"
 #include "tl/expected.hpp"
 
 static auto download_zip(std::string const& download_url, std::function<void(float)> const& set_progress, std::function<bool()> const& wants_to_cancel)
@@ -28,9 +29,9 @@ static auto download_zip(std::string const& download_url, std::function<void(flo
     if (wants_to_cancel())
         return "";
     if (!res)
-        return tl::make_unexpected("No Internet connection");
+        return tl::make_unexpected("No Internet connection.\n\n" + suggest_dl_from_github());
     if (res->status != 200)
-        return tl::make_unexpected("Oops, our online versions provider is unavailable, please check back later");
+        return tl::make_unexpected("Oops, our online versions provider is unavailable, please check back later.\n\n" + suggest_dl_from_github());
 
     return res->body;
 }
@@ -176,8 +177,8 @@ auto Task_InstallVersion::notification_when_submitted() const -> ImGuiNotify::No
     return ImGuiNotify::Notification{
         .type                 = ImGuiNotify::Type::Info,
         .title                = name(),
-        .content              = "Waiting to connect to the Internet",
         .custom_imgui_content = [task_id = owner_id()](ImGuiNotify::NotificationId const&) {
+            Cool::ImGuiExtras::markdown("Waiting to connect to the Internet.\n\n" + suggest_dl_from_github());
             if (ImGui::Button("Cancel"))
                 Cool::task_manager().cancel_all(task_id);
         },
@@ -196,9 +197,11 @@ auto Task_InstallVersion::notification_after_execution_completes() const -> ImGu
     }
 
     return ImGuiNotify::Notification{
-        .type     = ImGuiNotify::Type::Error,
-        .title    = name(),
-        .content  = *_error_message,
+        .type                 = ImGuiNotify::Type::Error,
+        .title                = name(),
+        .custom_imgui_content = [error_message = *_error_message](auto&&) {
+            Cool::ImGuiExtras::markdown(error_message);
+        },
         .duration = std::nullopt,
     };
 }

@@ -1,9 +1,11 @@
 #include "Task_FetchListOfVersions.hpp"
+#include "Cool/ImGui/markdown.h"
 #include "Cool/Task/TaskManager.hpp"
 #include "Status.hpp"
 #include "VersionManager.hpp"
 #include "make_http_request.hpp"
 #include "nlohmann/json.hpp"
+#include "suggest_dl_from_github.hpp"
 
 static auto asset_name_for_current_os() -> std::string
 {
@@ -106,10 +108,13 @@ void Task_FetchListOfVersions::handle_error(httplib::Result const& res)
         }
     }
 
+    auto const content      = !res ? ("No Internet connection.\n\n" + suggest_dl_from_github()) : message.value_or("Oops, our online versions provider is unavailable.\n\n" + suggest_dl_from_github());
     auto const notification = ImGuiNotify::Notification{
-        .type     = ImGuiNotify::Type::Warning,
-        .title    = "Can't check for new versions",
-        .content  = !res ? "No Internet connection" : message.value_or("Oops, our online versions provider is unavailable"),
+        .type                 = ImGuiNotify::Type::Warning,
+        .title                = "Can't check for new versions",
+        .custom_imgui_content = [content](auto&&) {
+            Cool::ImGuiExtras::markdown(content);
+        },
         .duration = std::nullopt,
     };
 

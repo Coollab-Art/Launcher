@@ -9,7 +9,7 @@ static auto zip_name_to_manually_install_from_github() -> const char*
 #elif defined(__APPLE__)
     return "Coollab-MacOS.zip";
 #else
-#error "Unknown OS
+#error "Unknown OS"
 #endif
 }
 

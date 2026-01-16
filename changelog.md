@@ -1,5 +1,6 @@
-##
+## 2.2.2
 
+- 🤏 When failing to connect to the internet, suggest to download from Github directly
 - 🐛 Don't show Midi error if a Midi controller is plugged in and user in another software
 
 ## 2.2.1
